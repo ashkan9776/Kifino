@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'company_registry.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
@@ -100,9 +99,9 @@ class AppDatabase extends _$AppDatabase {
   static LazyDatabase _openConnection(String? companyDbName) {
     return LazyDatabase(() async {
       final dbFolder = await getApplicationDocumentsDirectory();
-      final fileName =
-          CompanyRegistry.dbFileNameFor(companyDbName ?? CompanyRegistry.defaultCompanyId);
-      final file = File(p.join(dbFolder.path, fileName));
+      // companyDbName is already the final file name (mapped once in
+      // ServiceLocator.init) — never re-wrap it.
+      final file = File(p.join(dbFolder.path, companyDbName ?? 'kifino_local.db'));
       return NativeDatabase.createInBackground(file);
     });
   }

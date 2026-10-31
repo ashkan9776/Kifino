@@ -14,9 +14,7 @@ void main() async {
   await ServiceLocator.initRoot();
 
   // 2. Company scope: database + services of the ACTIVE company.
-  await ServiceLocator.init(
-    companyDbName: CompanyRegistry.dbFileNameFor(registry.activeCompanyId),
-  );
+  await ServiceLocator.init(companyId: registry.activeCompanyId);
 
   runApp(const KifinoApp());
 }

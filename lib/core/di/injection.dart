@@ -48,6 +48,7 @@ import '../../features/accounting/presentation/bloc/financial_statements_bloc.da
 import '../../features/accounting/presentation/bloc/ledger_bloc.dart';
 import '../../features/accounting/presentation/bloc/trial_balance_bloc.dart';
 import '../database/app_database.dart';
+import 'company_controller.dart';
 import '../database/company_registry.dart';
 
 final sl = GetIt.instance;
@@ -74,13 +75,17 @@ class ServiceLocator {
 
     sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(sharedPreferences));
 
+    sl.registerLazySingleton<CompanyController>(
+      () => CompanyController(sl<CompanyRegistry>()),
+    );
+
     const secureStorage = FlutterSecureStorage(
       aOptions: AndroidOptions(resetOnError: true),
     );
     sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
   }
 
-  static Future<void> init({String? companyDbName}) async {
+  static Future<void> init({String? companyId}) async {
     if (sl.hasScope(companyScopeName)) {
       await sl.popScope();
     }
@@ -96,7 +101,10 @@ class ServiceLocator {
     sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
 
     // 3. Local Database — company-specific file
-    final database = AppDatabase(null, companyDbName);
+    final database = AppDatabase(
+      null,
+      CompanyRegistry.dbFileNameFor(companyId ?? CompanyRegistry.defaultCompanyId),
+    );
     sl.registerLazySingleton<AppDatabase>(() => database);
 
     // 4. Repositories
@@ -213,6 +221,9 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<AccountingExportService>(
       () => AccountingExportService(sl<AccountingRepository>()),
+    );
+    sl.registerLazySingleton<VoucherSettingsService>(
+      () => VoucherSettingsService(sl<SharedPreferences>()),
     );
 
     sl.registerFactory<AccountingDocumentBloc>(

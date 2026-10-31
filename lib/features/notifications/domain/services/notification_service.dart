@@ -35,7 +35,11 @@ class NotificationService {
     );
 
     try {
-      await _localNotifications.initialize(settings: initSettings);
+      // Some hosts never answer the plugin channel (e.g. widget tests) — a
+      // hard timeout keeps startup from hanging forever.
+      await _localNotifications
+          .initialize(settings: initSettings)
+          .timeout(const Duration(seconds: 3));
       await _requestAndroidPermission();
       _initTimezone();
     } catch (_) {

@@ -51,9 +51,7 @@ class CompanyController extends ChangeNotifier {
     notifyListeners();
     try {
       await _closeActiveDatabaseSafely();
-      await ServiceLocator.init(
-        companyDbName: CompanyRegistry.dbFileNameFor(companyId),
-      );
+      await ServiceLocator.init(companyId: companyId);
       await registry.setActiveCompanyId(companyId);
       notifyListeners();
     } finally {
