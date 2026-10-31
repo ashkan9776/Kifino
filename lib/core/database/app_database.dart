@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'company_registry.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
@@ -45,7 +46,11 @@ part 'app_database.g.dart';
   AccountingDocumentDetailLinksTable,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
+  /// [companyDbName] selects the company file (Phase 5). When null the
+  /// default company's legacy file (kifino_local.db) is used, so existing
+  /// installs keep their data. Tests pass an explicit [executor] instead.
+  AppDatabase([QueryExecutor? executor, String? companyDbName])
+      : super(executor ?? _openConnection(companyDbName));
 
   @override
   int get schemaVersion => AppConstants.databaseVersion;
@@ -92,10 +97,12 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  static LazyDatabase _openConnection() {
+  static LazyDatabase _openConnection(String? companyDbName) {
     return LazyDatabase(() async {
       final dbFolder = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dbFolder.path, AppConstants.databaseName));
+      final fileName =
+          CompanyRegistry.dbFileNameFor(companyDbName ?? CompanyRegistry.defaultCompanyId);
+      final file = File(p.join(dbFolder.path, fileName));
       return NativeDatabase.createInBackground(file);
     });
   }

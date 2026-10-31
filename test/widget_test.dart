@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kifino/app/app.dart';
+import 'package:kifino/core/di/company_controller.dart';
+import 'package:kifino/core/database/company_registry.dart';
 import 'package:kifino/core/database/app_database.dart';
 import 'package:kifino/core/di/injection.dart';
 import 'package:kifino/features/accounting/data/repositories/accounting_repository_impl.dart';
@@ -112,6 +114,8 @@ void main() {
     sl.registerLazySingleton<BackupService>(() => BackupService(db));
     sl.registerLazySingleton<NotificationService>(() => NotificationService(db: db));
 
+    sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(prefs));
+    sl.registerLazySingleton<CompanyController>(() => CompanyController(CompanyRegistry(prefs)));
     sl.registerLazySingleton<SettingsService>(() => SettingsService(prefs));
     sl.registerFactory<SettingsCubit>(() => SettingsCubit(sl<SettingsService>()));
 

@@ -48,15 +48,46 @@ import '../../features/accounting/presentation/bloc/financial_statements_bloc.da
 import '../../features/accounting/presentation/bloc/ledger_bloc.dart';
 import '../../features/accounting/presentation/bloc/trial_balance_bloc.dart';
 import '../database/app_database.dart';
+import '../database/company_registry.dart';
 
 final sl = GetIt.instance;
 final getIt = sl;
 
 class ServiceLocator {
-  static Future<void> init() async {
-    // 1. SharedPreferences
+  /// All company-scoped singletons (database, repositories, services, blocs)
+  /// are registered inside the 'company' scope so switching companies can
+  /// dispose the whole set atomically. Root-scope singletons (prefs,
+  /// registry, company controller, settings service) survive the switch.
+  static const String companyScopeName = 'company';
+
+  static Future<void> resetCompanyScope() async {
+    if (sl.hasScope(companyScopeName)) {
+      await sl.popScope();
+    }
+  }
+
+  /// Root-scope singletons that must survive a company switch. Called from
+  /// bootstrap (main) before the first company-scope init.
+  static Future<void> initRoot() async {
     final sharedPreferences = await SharedPreferences.getInstance();
     sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
+
+    sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(sharedPreferences));
+
+    const secureStorage = FlutterSecureStorage(
+      aOptions: AndroidOptions(resetOnError: true),
+    );
+    sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
+  }
+
+  static Future<void> init({String? companyDbName}) async {
+    if (sl.hasScope(companyScopeName)) {
+      await sl.popScope();
+    }
+    sl.pushNewScope(scopeName: companyScopeName);
+
+    // 1. SharedPreferences: registered once in root scope (initRoot) and
+    // looked up here so company-scoped services share the same instance.
 
     // 2. Secure Storage
     const secureStorage = FlutterSecureStorage(
@@ -64,8 +95,8 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
 
-    // 3. Local Database
-    final database = AppDatabase();
+    // 3. Local Database — company-specific file
+    final database = AppDatabase(null, companyDbName);
     sl.registerLazySingleton<AppDatabase>(() => database);
 
     // 4. Repositories

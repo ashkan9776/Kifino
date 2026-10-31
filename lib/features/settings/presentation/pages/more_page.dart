@@ -7,7 +7,11 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
+import '../../../../core/di/company_controller.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../widgets/company_switcher_sheet.dart';
+import '../../../../core/database/company_registry.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 
@@ -44,6 +48,8 @@ class MorePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
+          _CompanyCard(isPersian: isPersian),
+          const SizedBox(height: AppSpacing.lg),
           _SettingsSection(isPersian: isPersian),
           const SizedBox(height: AppSpacing.lg),
 
@@ -148,6 +154,76 @@ class MorePage extends StatelessWidget {
           )),
         ],
       ),
+    );
+  }
+}
+
+/// Company switcher entry (Phase 5): shows the active دفتر and opens the
+/// switcher sheet. Switching rebuilds the whole app under the new company.
+class _CompanyCard extends StatelessWidget {
+  final bool isPersian;
+
+  const _CompanyCard({required this.isPersian});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = sl<CompanyController>();
+    return FutureBuilder<List<CompanyInfo>>(
+      future: controller.companies(),
+      builder: (context, snapshot) {
+        final activeId = controller.activeCompanyId;
+        CompanyInfo? active;
+        if (snapshot.hasData) {
+          for (final c in snapshot.data!) {
+            if (c.id == activeId) active = c;
+          }
+        }
+        return AppCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          onTap: () => showCompanySwitcherSheet(context),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.domain_outlined,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPersian ? 'شرکت / دفتر فعال' : 'Active company',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      active?.name ?? (isPersian ? '…' : '…'),
+                      style: AppTypography.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_left_rounded,
+                size: 20,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

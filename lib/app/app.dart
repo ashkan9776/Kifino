@@ -26,6 +26,7 @@ import '../features/security/presentation/cubit/security_cubit.dart';
 import '../features/security/presentation/cubit/security_state.dart';
 import '../features/security/presentation/pages/lock_page.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
+import '../core/di/company_controller.dart';
 import '../features/settings/presentation/cubit/settings_state.dart';
 import '../features/sync/presentation/bloc/sync_bloc.dart';
 import '../features/sync/presentation/bloc/sync_event.dart';
@@ -91,6 +92,19 @@ class KifinoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final companyController = sl<CompanyController>();
+    return ListenableBuilder(
+      listenable: companyController,
+      builder: (context, _) => KeyedSubtree(
+        // Phase 5: switching companies disposes and re-creates every
+        // company-scoped bloc — the key forces the whole tree to remount.
+        key: ValueKey('company-${companyController.activeCompanyId}'),
+        child: _buildApp(),
+      ),
+    );
+  }
+
+  Widget _buildApp() {
     return BlocProvider<SettingsCubit>(
       create: (_) => sl<SettingsCubit>()..init(),
       child: BlocBuilder<SettingsCubit, SettingsState>(
