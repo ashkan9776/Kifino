@@ -6,39 +6,72 @@ import '../../../checks/domain/entities/check_entity.dart';
 import '../entities/accounting_document_entity.dart';
 import '../entities/accounting_transaction_entity.dart';
 import '../repositories/accounting_repository.dart';
+import 'voucher_settings_service.dart';
 
 class AutoVoucherService {
   final AccountingRepository _accountingRepository;
+  final VoucherSettingsService settingsService;
   final Uuid _uuid;
 
   AutoVoucherService(
     this._accountingRepository, {
+    required this.settingsService,
     Uuid? uuid,
-  }) : _uuid = uuid ?? const Uuid();
+  })  : _uuid = uuid ?? const Uuid();
+
+  /// Vouchers are linked to their invoice via referenceType+referenceId;
+  /// this lookup makes generation idempotent — one invoice, one voucher.
+  Future<bool> _hasVoucherFor(String referenceId) async {
+    final existing = await _accountingRepository.getDocuments();
+    return existing.any((d) =>
+        d.referenceId == referenceId &&
+        (d.referenceType == 'invoice' || d.referenceType == 'cheque'));
+  }
+
+  /// Voids (soft-deletes) the voucher linked to a reference (e.g. when the
+  /// invoice itself is deleted). Quietly ignores period-lock errors — the
+  /// caller's business flow must not break on accounting cleanup.
+  Future<void> voidVoucherFor(String referenceId) async {
+    try {
+      final existing = await _accountingRepository.getDocuments();
+      for (final doc in existing) {
+        if (doc.referenceId == referenceId &&
+            (doc.referenceType == 'invoice' || doc.referenceType == 'cheque')) {
+          await _accountingRepository.deleteDocument(doc.id);
+        }
+      }
+    } catch (_) {}
+  }
 
   /// Automatically generates balanced double-entry accounting document for an invoice
   Future<AccountingDocumentEntity> generateInvoiceVoucher(
     InvoiceEntity invoice, {
     String? fiscalYearId,
   }) async {
+    // Idempotency: one invoice ↔ one voucher.
+    if (await _hasVoucherFor(invoice.id)) {
+      throw StateError('برای این فاکتور قبلاً سند حسابداری صادر شده است.');
+    }
+
+    final cfg = settingsService.load();
     final now = DateTime.now();
     final docId = _uuid.v4();
     final docNumber = await _accountingRepository.getNextDocumentNumber(fiscalYearId);
 
-    // Look up required subjects
-    final salesSubject = await _accountingRepository.getSubjectByCode('060001') ??
+    // Look up required subjects from the configurable mapping
+    final salesSubject = await _accountingRepository.getSubjectByCode(cfg.salesCode) ??
         await _accountingRepository.getSubjectByCode('060');
-    final customerSubject = await _accountingRepository.getSubjectByCode('012001') ??
+    final customerSubject = await _accountingRepository.getSubjectByCode(cfg.receivableCode) ??
         await _accountingRepository.getSubjectByCode('012');
-    final vatOutputSubject = await _accountingRepository.getSubjectByCode('023001');
-    final discountSubject = await _accountingRepository.getSubjectByCode('061001');
-    final inventorySubject = await _accountingRepository.getSubjectByCode('015002') ??
+    final vatOutputSubject = await _accountingRepository.getSubjectByCode(cfg.vatOutputCode);
+    final discountSubject = await _accountingRepository.getSubjectByCode(cfg.discountSalesCode);
+    final inventorySubject = await _accountingRepository.getSubjectByCode(cfg.inventoryCode) ??
         await _accountingRepository.getSubjectByCode('015');
 
-    final supplierSubject = await _accountingRepository.getSubjectByCode('023003') ??
+    final supplierSubject = await _accountingRepository.getSubjectByCode(cfg.payableCode) ??
         await _accountingRepository.getSubjectByCode('023');
-    final vatInputSubject = await _accountingRepository.getSubjectByCode('018001');
-    final purchaseDiscountSubject = await _accountingRepository.getSubjectByCode('066001');
+    final vatInputSubject = await _accountingRepository.getSubjectByCode(cfg.vatInputCode);
+    final purchaseDiscountSubject = await _accountingRepository.getSubjectByCode(cfg.purchaseDiscountCode);
 
     final List<AccountingTransactionEntity> txs = [];
     int order = 1;

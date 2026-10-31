@@ -38,6 +38,7 @@ import 'package:kifino/features/backup/domain/services/backup_service.dart';
 import 'package:kifino/features/notifications/domain/services/notification_service.dart';
 import 'package:kifino/features/security/domain/services/security_service.dart';
 import 'package:kifino/features/security/presentation/cubit/security_cubit.dart';
+import 'package:kifino/features/accounting/domain/services/voucher_settings_service.dart';
 import 'package:kifino/features/settings/domain/services/settings_service.dart';
 import 'package:kifino/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:kifino/features/sync/data/repositories/sync_repository_impl.dart';
@@ -77,7 +78,10 @@ void main() {
     sl.registerLazySingleton<GoalRepository>(() => GoalRepositoryImpl(db));
 
     sl.registerLazySingleton<AccountingRepository>(() => AccountingRepositoryImpl(db));
-    sl.registerLazySingleton<AutoVoucherService>(() => AutoVoucherService(sl<AccountingRepository>()));
+        sl.registerLazySingleton<VoucherSettingsService>(() => VoucherSettingsService(prefs));
+    sl.registerLazySingleton<AutoVoucherService>(
+      () => AutoVoucherService(sl<AccountingRepository>(), settingsService: sl<VoucherSettingsService>()),
+    );
     sl.registerFactory<AccountingDocumentBloc>(() => AccountingDocumentBloc(sl<AccountingRepository>()));
     sl.registerFactory<ChartOfAccountsCubit>(() => ChartOfAccountsCubit(sl<AccountingRepository>()));
     sl.registerFactory<TrialBalanceBloc>(() => TrialBalanceBloc(sl<AccountingRepository>()));

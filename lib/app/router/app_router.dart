@@ -22,6 +22,7 @@ import '../../features/transactions/domain/entities/transaction_entity.dart';
 import '../../features/transactions/presentation/pages/activity_page.dart';
 import '../../features/transactions/presentation/pages/fast_add_transaction_page.dart';
 import '../../features/accounting/presentation/pages/accounting_dashboard_page.dart';
+import '../../features/accounting/presentation/pages/voucher_settings_page.dart';
 import '../../features/accounting/presentation/pages/accounting_documents_page.dart';
 import '../../features/accounting/presentation/pages/audit_log_page.dart';
 import '../../features/accounting/presentation/pages/create_accounting_document_page.dart';
@@ -249,6 +250,11 @@ class AppRouter {
                 extra is DetailReportSelection ? extra : null,
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/voucher-settings',
+        builder: (context, state) => const VoucherSettingsPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

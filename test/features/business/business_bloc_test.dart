@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kifino/core/database/app_database.dart';
 import 'package:kifino/features/accounting/data/repositories/accounting_repository_impl.dart';
 import 'package:kifino/features/accounting/domain/services/auto_voucher_service.dart';
+import 'package:kifino/features/accounting/domain/services/voucher_settings_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kifino/features/business/data/repositories/business_repository_impl.dart';
 import 'package:kifino/features/business/presentation/bloc/business_bloc.dart';
 import 'package:kifino/features/business/presentation/bloc/business_event.dart';
@@ -13,10 +15,18 @@ void main() {
   late BusinessRepositoryImpl repo;
   late BusinessBloc bloc;
 
-  setUp(() {
+  setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     repo = BusinessRepositoryImpl(db);
-    bloc = BusinessBloc(repo, AutoVoucherService(AccountingRepositoryImpl(db)));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    bloc = BusinessBloc(
+      repo,
+      AutoVoucherService(
+        AccountingRepositoryImpl(db),
+        settingsService: VoucherSettingsService(prefs),
+      ),
+    );
   });
 
   tearDown(() async {

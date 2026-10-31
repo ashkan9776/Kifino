@@ -306,6 +306,13 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         color: Colors.deepPurple,
         route: '/accounting/fiscal-years',
       ),
+      const _ModuleItem(
+        title: 'حساب‌های سند خودکار',
+        subtitle: 'تنظیم حساب‌های طرف مقابل فاکتور',
+        icon: Icons.tune,
+        color: Colors.blue,
+        route: '/accounting/voucher-settings',
+      ),
     ];
 
     return GridView.builder(

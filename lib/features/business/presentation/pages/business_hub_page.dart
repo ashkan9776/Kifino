@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -15,6 +16,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
+import '../../../debts/domain/entities/debt_entity.dart';
+import '../../../debts/presentation/bloc/debt_bloc.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../../domain/entities/inventory_log_entity.dart';
 import '../../domain/entities/invoice_entity.dart';
@@ -372,6 +375,12 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                             icon: const Icon(Icons.payment_outlined, size: 16),
                             label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
                             onPressed: () => _showPaymentSheet(context, invoice),
+                          ),
+                        if (invoice.type == InvoiceType.sale && !isPaid)
+                          TextButton.icon(
+                            icon: const Icon(Icons.handshake_outlined, size: 16),
+                            label: Text(l10n.isPersian ? 'تبدیل به طلب' : 'To receivable'),
+                            onPressed: () => _convertInvoiceToReceivable(context, invoice),
                           ),
                       ],
                     ),
@@ -1027,6 +1036,40 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
           },
         );
       },
+    );
+  }
+
+  /// Links an unpaid sale invoice into the debts module as a receivable
+  /// (Phase 2 payment-status integration). Notes marker 'INV:{id}' makes the
+  /// link detectable and prevents duplicates.
+  void _convertInvoiceToReceivable(BuildContext context, InvoiceEntity invoice) {
+    final debtBloc = context.read<DebtBloc>();
+    final already = debtBloc.state is DebtLoaded &&
+        (debtBloc.state as DebtLoaded)
+            .debts
+            .any((d) => d.notes == 'INV:${invoice.id}');
+    final l10n = context.l10n;
+    if (already) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.isPersian ? 'این فاکتور قبلاً به طلب تبدیل شده است.' : 'Already converted to a receivable.')),
+      );
+      return;
+    }
+    debtBloc.add(DebtCreateSubmitted(
+      DebtEntity(
+        id: const Uuid().v4(),
+        contactName: invoice.contactName ?? (l10n.isPersian ? 'مشتری' : 'Customer'),
+        type: DebtType.receivable,
+        totalAmount: invoice.remainingBalance,
+        paidAmount: Money.fromMinor(0, invoice.remainingBalance.currency),
+        status: DebtStatus.active,
+        notes: 'INV:${invoice.id}',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.isPersian ? 'طلب در ماژول بدهی و طلب ثبت شد.' : 'Receivable created in the debts module.')),
     );
   }
 
