@@ -313,6 +313,13 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         color: Colors.blue,
         route: '/accounting/voucher-settings',
       ),
+      const _ModuleItem(
+        title: 'خزانه',
+        subtitle: 'موجودی نقد و بانک و مغایرت‌گیری چک',
+        icon: Icons.account_balance_wallet_outlined,
+        color: Colors.teal,
+        route: '/accounting/treasury',
+      ),
     ];
 
     return GridView.builder(

@@ -154,4 +154,96 @@ void main() {
       );
     });
   });
+
+  group('Phase 3 — warehouse & کاردکس', () {
+    test('purchase invoice ADDS stock and writes purchase movement', () async {
+      final now = DateTime.now();
+      await repo.createContact(ContactEntity(
+        id: 'sup-1',
+        name: 'تأمین‌کننده',
+        type: ContactType.supplier,
+        outstandingBalance: Money.zero(Currency.irr),
+        createdAt: now,
+        updatedAt: now,
+      ));
+      await repo.createProduct(ProductEntity(
+        id: 'p-pur',
+        name: 'هارد اکسترنال',
+        purchasePrice: Money.fromMinor(5000000, Currency.irr),
+        sellingPrice: Money.fromMinor(6500000, Currency.irr),
+        currentStock: 2.0,
+        createdAt: now,
+        updatedAt: now,
+      ));
+
+      final invoice = InvoiceEntity(
+        id: 'inv-pur-1',
+        invoiceNumber: 'PUR-1001',
+        contactId: 'sup-1',
+        type: InvoiceType.purchase,
+        status: InvoiceStatus.paid,
+        issueDate: now,
+        dueDate: now,
+        subtotal: Money.fromMinor(10000000, Currency.irr),
+        discount: Money.fromMinor(0, Currency.irr),
+        tax: Money.fromMinor(0, Currency.irr),
+        total: Money.fromMinor(10000000, Currency.irr),
+        paidAmount: Money.fromMinor(10000000, Currency.irr),
+        createdAt: now,
+        updatedAt: now,
+        items: [
+          InvoiceItemEntity(
+            id: 'it-1',
+            invoiceId: 'inv-pur-1',
+            productId: 'p-pur',
+            description: 'هارد',
+            quantity: 3,
+            unitPrice: Money.fromMinor(10000000, Currency.irr),
+            discount: Money.fromMinor(0, Currency.irr),
+            tax: Money.fromMinor(0, Currency.irr),
+            total: Money.fromMinor(10000000, Currency.irr),
+          ),
+        ],
+      );
+
+      final res = await repo.createInvoice(invoice);
+      expect(res.isSuccess, isTrue);
+
+      final products = await repo.getProducts();
+      expect(products.dataOrNull!.first.currentStock, equals(5.0)); // 2 + 3
+    });
+
+    test('getProductCard returns chronological movements with running balance', () async {
+      final now = DateTime.now();
+      await repo.createProduct(ProductEntity(
+        id: 'p-card',
+        name: 'کالا کاردکس',
+        purchasePrice: Money.fromMinor(100000, Currency.irr),
+        sellingPrice: Money.fromMinor(150000, Currency.irr),
+        currentStock: 10.0,
+        createdAt: now,
+        updatedAt: now,
+      ));
+
+      await repo.adjustStock(
+        productId: 'p-card',
+        changeQuantity: 5.0,
+        type: InventoryMovementType.purchase,
+        notes: 'ورود',
+      );
+      await repo.adjustStock(
+        productId: 'p-card',
+        changeQuantity: -2.0,
+        type: InventoryMovementType.loss,
+        notes: 'ضایعات',
+      );
+
+      final card = await repo.getProductCard('p-card');
+      expect(card.length, equals(2));
+      expect(card[0].inQuantity, equals(5.0));
+      expect(card[0].balance, equals(5.0));
+      expect(card[1].outQuantity, equals(2.0));
+      expect(card[1].balance, equals(3.0));
+    });
+  });
 }

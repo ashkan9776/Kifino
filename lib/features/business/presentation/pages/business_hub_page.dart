@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -511,10 +512,20 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         ],
                       ],
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.swap_vert_outlined, size: 16),
-                      label: Text(l10n.isPersian ? 'تغییر موجودی' : 'Adjust Stock'),
-                      onPressed: () => _showAdjustStockSheet(context, product),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                          tooltip: l10n.isPersian ? 'کاردکس' : 'Stock card',
+                          onPressed: () =>
+                              context.push('/business/products/card', extra: product.id),
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.swap_vert_outlined, size: 16),
+                          label: Text(l10n.isPersian ? 'تغییر موجودی' : 'Adjust Stock'),
+                          onPressed: () => _showAdjustStockSheet(context, product),
+                        ),
+                      ],
                     ),
                   ],
                 ),

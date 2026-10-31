@@ -10103,6 +10103,29 @@ class $ProductsTableTable extends ProductsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('unit'),
   );
+  static const VerificationMeta _secondaryUnitMeta = const VerificationMeta(
+    'secondaryUnit',
+  );
+  @override
+  late final GeneratedColumn<String> secondaryUnit = GeneratedColumn<String>(
+    'secondary_unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _conversionFactorMeta = const VerificationMeta(
+    'conversionFactor',
+  );
+  @override
+  late final GeneratedColumn<int> conversionFactor = GeneratedColumn<int>(
+    'conversion_factor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _purchasePriceMinorMeta =
       const VerificationMeta('purchasePriceMinor');
   @override
@@ -10237,6 +10260,8 @@ class $ProductsTableTable extends ProductsTable
     barcode,
     description,
     unit,
+    secondaryUnit,
+    conversionFactor,
     purchasePriceMinor,
     sellingPriceMinor,
     currency,
@@ -10299,6 +10324,24 @@ class $ProductsTableTable extends ProductsTable
       context.handle(
         _unitMeta,
         unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('secondary_unit')) {
+      context.handle(
+        _secondaryUnitMeta,
+        secondaryUnit.isAcceptableOrUnknown(
+          data['secondary_unit']!,
+          _secondaryUnitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('conversion_factor')) {
+      context.handle(
+        _conversionFactorMeta,
+        conversionFactor.isAcceptableOrUnknown(
+          data['conversion_factor']!,
+          _conversionFactorMeta,
+        ),
       );
     }
     if (data.containsKey('purchase_price_minor')) {
@@ -10420,6 +10463,14 @@ class $ProductsTableTable extends ProductsTable
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      secondaryUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_unit'],
+      ),
+      conversionFactor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}conversion_factor'],
+      )!,
       purchasePriceMinor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}purchase_price_minor'],
@@ -10480,6 +10531,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
   final String? barcode;
   final String? description;
   final String unit;
+  final String? secondaryUnit;
+  final int conversionFactor;
   final int purchasePriceMinor;
   final int sellingPriceMinor;
   final String currency;
@@ -10498,6 +10551,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     this.barcode,
     this.description,
     required this.unit,
+    this.secondaryUnit,
+    required this.conversionFactor,
     required this.purchasePriceMinor,
     required this.sellingPriceMinor,
     required this.currency,
@@ -10525,6 +10580,10 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       map['description'] = Variable<String>(description);
     }
     map['unit'] = Variable<String>(unit);
+    if (!nullToAbsent || secondaryUnit != null) {
+      map['secondary_unit'] = Variable<String>(secondaryUnit);
+    }
+    map['conversion_factor'] = Variable<int>(conversionFactor);
     map['purchase_price_minor'] = Variable<int>(purchasePriceMinor);
     map['selling_price_minor'] = Variable<int>(sellingPriceMinor);
     map['currency'] = Variable<String>(currency);
@@ -10555,6 +10614,10 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           ? const Value.absent()
           : Value(description),
       unit: Value(unit),
+      secondaryUnit: secondaryUnit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondaryUnit),
+      conversionFactor: Value(conversionFactor),
       purchasePriceMinor: Value(purchasePriceMinor),
       sellingPriceMinor: Value(sellingPriceMinor),
       currency: Value(currency),
@@ -10585,6 +10648,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       barcode: serializer.fromJson<String?>(json['barcode']),
       description: serializer.fromJson<String?>(json['description']),
       unit: serializer.fromJson<String>(json['unit']),
+      secondaryUnit: serializer.fromJson<String?>(json['secondaryUnit']),
+      conversionFactor: serializer.fromJson<int>(json['conversionFactor']),
       purchasePriceMinor: serializer.fromJson<int>(json['purchasePriceMinor']),
       sellingPriceMinor: serializer.fromJson<int>(json['sellingPriceMinor']),
       currency: serializer.fromJson<String>(json['currency']),
@@ -10608,6 +10673,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       'barcode': serializer.toJson<String?>(barcode),
       'description': serializer.toJson<String?>(description),
       'unit': serializer.toJson<String>(unit),
+      'secondaryUnit': serializer.toJson<String?>(secondaryUnit),
+      'conversionFactor': serializer.toJson<int>(conversionFactor),
       'purchasePriceMinor': serializer.toJson<int>(purchasePriceMinor),
       'sellingPriceMinor': serializer.toJson<int>(sellingPriceMinor),
       'currency': serializer.toJson<String>(currency),
@@ -10629,6 +10696,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     Value<String?> barcode = const Value.absent(),
     Value<String?> description = const Value.absent(),
     String? unit,
+    Value<String?> secondaryUnit = const Value.absent(),
+    int? conversionFactor,
     int? purchasePriceMinor,
     int? sellingPriceMinor,
     String? currency,
@@ -10647,6 +10716,10 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     barcode: barcode.present ? barcode.value : this.barcode,
     description: description.present ? description.value : this.description,
     unit: unit ?? this.unit,
+    secondaryUnit: secondaryUnit.present
+        ? secondaryUnit.value
+        : this.secondaryUnit,
+    conversionFactor: conversionFactor ?? this.conversionFactor,
     purchasePriceMinor: purchasePriceMinor ?? this.purchasePriceMinor,
     sellingPriceMinor: sellingPriceMinor ?? this.sellingPriceMinor,
     currency: currency ?? this.currency,
@@ -10669,6 +10742,12 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           ? data.description.value
           : this.description,
       unit: data.unit.present ? data.unit.value : this.unit,
+      secondaryUnit: data.secondaryUnit.present
+          ? data.secondaryUnit.value
+          : this.secondaryUnit,
+      conversionFactor: data.conversionFactor.present
+          ? data.conversionFactor.value
+          : this.conversionFactor,
       purchasePriceMinor: data.purchasePriceMinor.present
           ? data.purchasePriceMinor.value
           : this.purchasePriceMinor,
@@ -10704,6 +10783,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           ..write('barcode: $barcode, ')
           ..write('description: $description, ')
           ..write('unit: $unit, ')
+          ..write('secondaryUnit: $secondaryUnit, ')
+          ..write('conversionFactor: $conversionFactor, ')
           ..write('purchasePriceMinor: $purchasePriceMinor, ')
           ..write('sellingPriceMinor: $sellingPriceMinor, ')
           ..write('currency: $currency, ')
@@ -10727,6 +10808,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     barcode,
     description,
     unit,
+    secondaryUnit,
+    conversionFactor,
     purchasePriceMinor,
     sellingPriceMinor,
     currency,
@@ -10749,6 +10832,8 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           other.barcode == this.barcode &&
           other.description == this.description &&
           other.unit == this.unit &&
+          other.secondaryUnit == this.secondaryUnit &&
+          other.conversionFactor == this.conversionFactor &&
           other.purchasePriceMinor == this.purchasePriceMinor &&
           other.sellingPriceMinor == this.sellingPriceMinor &&
           other.currency == this.currency &&
@@ -10769,6 +10854,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
   final Value<String?> barcode;
   final Value<String?> description;
   final Value<String> unit;
+  final Value<String?> secondaryUnit;
+  final Value<int> conversionFactor;
   final Value<int> purchasePriceMinor;
   final Value<int> sellingPriceMinor;
   final Value<String> currency;
@@ -10788,6 +10875,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     this.barcode = const Value.absent(),
     this.description = const Value.absent(),
     this.unit = const Value.absent(),
+    this.secondaryUnit = const Value.absent(),
+    this.conversionFactor = const Value.absent(),
     this.purchasePriceMinor = const Value.absent(),
     this.sellingPriceMinor = const Value.absent(),
     this.currency = const Value.absent(),
@@ -10808,6 +10897,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     this.barcode = const Value.absent(),
     this.description = const Value.absent(),
     this.unit = const Value.absent(),
+    this.secondaryUnit = const Value.absent(),
+    this.conversionFactor = const Value.absent(),
     this.purchasePriceMinor = const Value.absent(),
     required int sellingPriceMinor,
     required String currency,
@@ -10833,6 +10924,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     Expression<String>? barcode,
     Expression<String>? description,
     Expression<String>? unit,
+    Expression<String>? secondaryUnit,
+    Expression<int>? conversionFactor,
     Expression<int>? purchasePriceMinor,
     Expression<int>? sellingPriceMinor,
     Expression<String>? currency,
@@ -10853,6 +10946,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
       if (barcode != null) 'barcode': barcode,
       if (description != null) 'description': description,
       if (unit != null) 'unit': unit,
+      if (secondaryUnit != null) 'secondary_unit': secondaryUnit,
+      if (conversionFactor != null) 'conversion_factor': conversionFactor,
       if (purchasePriceMinor != null)
         'purchase_price_minor': purchasePriceMinor,
       if (sellingPriceMinor != null) 'selling_price_minor': sellingPriceMinor,
@@ -10876,6 +10971,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     Value<String?>? barcode,
     Value<String?>? description,
     Value<String>? unit,
+    Value<String?>? secondaryUnit,
+    Value<int>? conversionFactor,
     Value<int>? purchasePriceMinor,
     Value<int>? sellingPriceMinor,
     Value<String>? currency,
@@ -10896,6 +10993,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
       barcode: barcode ?? this.barcode,
       description: description ?? this.description,
       unit: unit ?? this.unit,
+      secondaryUnit: secondaryUnit ?? this.secondaryUnit,
+      conversionFactor: conversionFactor ?? this.conversionFactor,
       purchasePriceMinor: purchasePriceMinor ?? this.purchasePriceMinor,
       sellingPriceMinor: sellingPriceMinor ?? this.sellingPriceMinor,
       currency: currency ?? this.currency,
@@ -10931,6 +11030,12 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     }
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
+    }
+    if (secondaryUnit.present) {
+      map['secondary_unit'] = Variable<String>(secondaryUnit.value);
+    }
+    if (conversionFactor.present) {
+      map['conversion_factor'] = Variable<int>(conversionFactor.value);
     }
     if (purchasePriceMinor.present) {
       map['purchase_price_minor'] = Variable<int>(purchasePriceMinor.value);
@@ -10980,6 +11085,8 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
           ..write('barcode: $barcode, ')
           ..write('description: $description, ')
           ..write('unit: $unit, ')
+          ..write('secondaryUnit: $secondaryUnit, ')
+          ..write('conversionFactor: $conversionFactor, ')
           ..write('purchasePriceMinor: $purchasePriceMinor, ')
           ..write('sellingPriceMinor: $sellingPriceMinor, ')
           ..write('currency: $currency, ')
@@ -25025,6 +25132,8 @@ typedef $$ProductsTableTableCreateCompanionBuilder =
       Value<String?> barcode,
       Value<String?> description,
       Value<String> unit,
+      Value<String?> secondaryUnit,
+      Value<int> conversionFactor,
       Value<int> purchasePriceMinor,
       required int sellingPriceMinor,
       required String currency,
@@ -25046,6 +25155,8 @@ typedef $$ProductsTableTableUpdateCompanionBuilder =
       Value<String?> barcode,
       Value<String?> description,
       Value<String> unit,
+      Value<String?> secondaryUnit,
+      Value<int> conversionFactor,
       Value<int> purchasePriceMinor,
       Value<int> sellingPriceMinor,
       Value<String> currency,
@@ -25096,6 +25207,16 @@ class $$ProductsTableTableFilterComposer
 
   ColumnFilters<String> get unit => $composableBuilder(
     column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryUnit => $composableBuilder(
+    column: $table.secondaryUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get conversionFactor => $composableBuilder(
+    column: $table.conversionFactor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25194,6 +25315,16 @@ class $$ProductsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get secondaryUnit => $composableBuilder(
+    column: $table.secondaryUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get conversionFactor => $composableBuilder(
+    column: $table.conversionFactor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get purchasePriceMinor => $composableBuilder(
     column: $table.purchasePriceMinor,
     builder: (column) => ColumnOrderings(column),
@@ -25279,6 +25410,16 @@ class $$ProductsTableTableAnnotationComposer
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
 
+  GeneratedColumn<String> get secondaryUnit => $composableBuilder(
+    column: $table.secondaryUnit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get conversionFactor => $composableBuilder(
+    column: $table.conversionFactor,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get purchasePriceMinor => $composableBuilder(
     column: $table.purchasePriceMinor,
     builder: (column) => column,
@@ -25362,6 +25503,8 @@ class $$ProductsTableTableTableManager
                 Value<String?> barcode = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<String?> secondaryUnit = const Value.absent(),
+                Value<int> conversionFactor = const Value.absent(),
                 Value<int> purchasePriceMinor = const Value.absent(),
                 Value<int> sellingPriceMinor = const Value.absent(),
                 Value<String> currency = const Value.absent(),
@@ -25381,6 +25524,8 @@ class $$ProductsTableTableTableManager
                 barcode: barcode,
                 description: description,
                 unit: unit,
+                secondaryUnit: secondaryUnit,
+                conversionFactor: conversionFactor,
                 purchasePriceMinor: purchasePriceMinor,
                 sellingPriceMinor: sellingPriceMinor,
                 currency: currency,
@@ -25402,6 +25547,8 @@ class $$ProductsTableTableTableManager
                 Value<String?> barcode = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<String?> secondaryUnit = const Value.absent(),
+                Value<int> conversionFactor = const Value.absent(),
                 Value<int> purchasePriceMinor = const Value.absent(),
                 required int sellingPriceMinor,
                 required String currency,
@@ -25421,6 +25568,8 @@ class $$ProductsTableTableTableManager
                 barcode: barcode,
                 description: description,
                 unit: unit,
+                secondaryUnit: secondaryUnit,
+                conversionFactor: conversionFactor,
                 purchasePriceMinor: purchasePriceMinor,
                 sellingPriceMinor: sellingPriceMinor,
                 currency: currency,

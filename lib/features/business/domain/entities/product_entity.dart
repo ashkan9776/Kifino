@@ -8,6 +8,8 @@ class ProductEntity extends Equatable {
   final String? barcode;
   final String? description;
   final String unit;
+  final String? secondaryUnit;
+  final int conversionFactor;
   final Money purchasePrice;
   final Money sellingPrice;
   final double currentStock;
@@ -25,6 +27,8 @@ class ProductEntity extends Equatable {
     this.barcode,
     this.description,
     this.unit = 'عدد',
+    this.secondaryUnit,
+    this.conversionFactor = 1,
     required this.purchasePrice,
     required this.sellingPrice,
     this.currentStock = 0.0,
@@ -69,6 +73,7 @@ class ProductEntity extends Equatable {
       barcode: barcode ?? this.barcode,
       description: description ?? this.description,
       unit: unit ?? this.unit,
+      secondaryUnit: secondaryUnit,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       sellingPrice: sellingPrice ?? this.sellingPrice,
       currentStock: currentStock ?? this.currentStock,

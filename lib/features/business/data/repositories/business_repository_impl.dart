@@ -11,6 +11,7 @@ import '../../domain/entities/business_metrics_entity.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../../domain/entities/inventory_log_entity.dart';
 import '../../domain/entities/invoice_entity.dart';
+import '../../domain/entities/product_card_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/business_repository.dart';
 
@@ -50,6 +51,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
       barcode: data.barcode,
       description: data.description,
       unit: data.unit,
+      secondaryUnit: data.secondaryUnit,
+      conversionFactor: data.conversionFactor,
       purchasePrice: Money.fromMinor(data.purchasePriceMinor, currency),
       sellingPrice: Money.fromMinor(data.sellingPriceMinor, currency),
       currentStock: data.currentStock,
@@ -306,6 +309,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
               barcode: Value(product.barcode),
               description: Value(product.description),
               unit: Value(product.unit),
+              secondaryUnit: Value(product.secondaryUnit),
+              conversionFactor: Value(product.conversionFactor),
               purchasePriceMinor: Value(product.purchasePrice.minorUnits),
               sellingPriceMinor: product.sellingPrice.minorUnits,
               currency: product.sellingPrice.currency.code,
@@ -345,6 +350,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
           barcode: Value(product.barcode),
           description: Value(product.description),
           unit: Value(product.unit),
+          secondaryUnit: Value(product.secondaryUnit),
+          conversionFactor: Value(product.conversionFactor),
           purchasePriceMinor: Value(product.purchasePrice.minorUnits),
           sellingPriceMinor: Value(product.sellingPrice.minorUnits),
           currency: Value(product.sellingPrice.currency.code),
@@ -606,7 +613,35 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 ),
               );
 
-          // 3. Deduct product inventory if sale invoice
+          // 3. Stock movement: sale deducts, purchase adds
+          if (invoice.type == InvoiceType.purchase && item.productId != null) {
+            final product = await (_db.select(_db.productsTable)..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
+            if (product != null) {
+              final newStock = (product.currentStock + item.quantity).clamp(0.0, 99999999.0);
+              await (_db.update(_db.productsTable)..where((t) => t.id.equals(product.id))).write(
+                ProductsTableCompanion(
+                  currentStock: Value(newStock),
+                  updatedAt: Value(now),
+                ),
+              );
+
+              await _db.into(_db.inventoryLogsTable).insert(
+                    InventoryLogsTableCompanion.insert(
+                      id: _uuid.v4(),
+                      productId: product.id,
+                      changeQuantity: item.quantity,
+                      movementType: InventoryMovementType.purchase.code,
+                      referenceId: Value(invId),
+                      costPerUnitMinor: Value(item.unitPrice.minorUnits),
+                      notes: Value('فاکتور خرید $invId'),
+                      createdAt: now,
+                      updatedAt: now,
+                    ),
+                  );
+            }
+          }
+
+          // 3b. Deduct product inventory if sale invoice
           if (invoice.type == InvoiceType.sale && item.productId != null) {
             final product = await (_db.select(_db.productsTable)..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
             if (product != null) {
@@ -831,6 +866,37 @@ class BusinessRepositoryImpl implements BusinessRepository {
   // ----------------------------------------------------
   // METRICS STREAM
   // ----------------------------------------------------
+  @override
+  /// کاردکس — chronological stock card for one product with running balance.
+  Future<List<ProductCardEntry>> getProductCard(String productId) async {
+    try {
+      final logs = await (_db.select(_db.inventoryLogsTable)
+            ..where((tbl) =>
+                tbl.productId.equals(productId) & tbl.deletedAt.isNull()))
+          .get();
+      final sorted = logs..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      double running = 0;
+
+      final entries = <ProductCardEntry>[];
+      for (final log in sorted) {
+        running += log.changeQuantity;
+        entries.add(ProductCardEntry(
+          date: DateTime.fromMillisecondsSinceEpoch(log.createdAt),
+          movementType: InventoryMovementType.fromCode(log.movementType),
+          description: log.notes ?? '',
+          inQuantity: log.changeQuantity > 0 ? log.changeQuantity : 0,
+          outQuantity: log.changeQuantity < 0 ? -log.changeQuantity : 0,
+          balance: running,
+          referenceId: log.referenceId,
+        ));
+      }
+      return entries;
+    } catch (e) {
+      throw StateError('خواندن کاردکس انجام نشد.');
+    }
+  }
+
   @override
   Stream<BusinessMetricsEntity> watchBusinessMetrics() {
     final currency = Currency.fromCode(AppConstants.defaultCurrencyCode);

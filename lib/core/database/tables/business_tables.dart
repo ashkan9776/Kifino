@@ -35,6 +35,9 @@ class ProductsTable extends Table {
   TextColumn get barcode => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get unit => text().withDefault(const Constant('unit'))();
+  TextColumn get secondaryUnit => text().nullable()(); // e.g. 'کارتن' when unit is 'عدد'
+  IntColumn get conversionFactor => integer()
+      .withDefault(const Constant(1))(); // base units per secondary unit
   IntColumn get purchasePriceMinor => integer().withDefault(const Constant(0))();
   IntColumn get sellingPriceMinor => integer()();
   TextColumn get currency => text()();

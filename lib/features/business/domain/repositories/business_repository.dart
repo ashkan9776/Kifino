@@ -4,6 +4,7 @@ import '../entities/business_metrics_entity.dart';
 import '../entities/contact_entity.dart';
 import '../entities/inventory_log_entity.dart';
 import '../entities/invoice_entity.dart';
+import '../entities/product_card_entity.dart';
 import '../entities/product_entity.dart';
 
 abstract interface class BusinessRepository {
@@ -41,4 +42,7 @@ abstract interface class BusinessRepository {
   Stream<BusinessMetricsEntity> watchBusinessMetrics();
 
   // Seeding
+
+  /// کاردکس — chronological stock card with running balance.
+  Future<List<ProductCardEntry>> getProductCard(String productId);
 }

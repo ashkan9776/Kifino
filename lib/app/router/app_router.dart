@@ -25,6 +25,7 @@ import '../../features/accounting/presentation/pages/accounting_dashboard_page.d
 import '../../features/accounting/presentation/pages/voucher_settings_page.dart';
 import '../../features/accounting/presentation/pages/accounting_documents_page.dart';
 import '../../features/accounting/presentation/pages/audit_log_page.dart';
+import '../../features/accounting/presentation/pages/bank_reconciliation_page.dart';
 import '../../features/accounting/presentation/pages/create_accounting_document_page.dart';
 import '../../features/accounting/presentation/pages/chart_of_accounts_page.dart';
 import '../../features/accounting/presentation/pages/detail_ledgers_page.dart';
@@ -32,8 +33,10 @@ import '../../features/accounting/presentation/pages/detail_report_page.dart';
 import '../../features/accounting/presentation/pages/fiscal_years_page.dart';
 import '../../features/accounting/presentation/pages/journal_page.dart';
 import '../../features/accounting/presentation/pages/ledger_page.dart';
+import '../../features/accounting/presentation/pages/treasury_page.dart';
 import '../../features/accounting/presentation/pages/trial_balance_page.dart';
 import '../../features/accounting/presentation/pages/financial_statements_page.dart';
+import '../../features/business/presentation/pages/product_card_page.dart';
 import '../../core/design_system/showcase/design_system_showcase_page.dart';
 import 'scaffold_with_nav_bar.dart';
 
@@ -215,9 +218,7 @@ class AppRouter {
         path: '/accounting/ledger',
         builder: (context, state) {
           final extra = state.extra;
-          return LedgerPage(
-            initialSubjectId: extra is String ? extra : null,
-          );
+          return LedgerPage(initialSubjectId: extra is String ? extra : null);
         },
       ),
       GoRoute(
@@ -246,8 +247,7 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra;
           return DetailReportPage(
-            initialSelection:
-                extra is DetailReportSelection ? extra : null,
+            initialSelection: extra is DetailReportSelection ? extra : null,
           );
         },
       ),
@@ -260,6 +260,29 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/accounting/fiscal-years',
         builder: (context, state) => const FiscalYearsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/treasury',
+        builder: (context, state) => const TreasuryPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/treasury/reconcile',
+        builder: (context, state) {
+          final extra = state.extra;
+          return BankReconciliationPage(
+            accountId: extra is String ? extra : '',
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/business/products/card',
+        builder: (context, state) {
+          final extra = state.extra;
+          return ProductCardPage(productId: extra is String ? extra : '');
+        },
       ),
     ],
   );

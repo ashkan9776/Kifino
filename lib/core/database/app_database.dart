@@ -65,6 +65,11 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(accountingTransactionsTable);
             await m.createTable(fiscalYearsTable);
           }
+          if (from < 6) {
+            // Warehouse light (Phase 3): secondary unit + conversion factor.
+            await m.addColumn(productsTable, productsTable.secondaryUnit);
+            await m.addColumn(productsTable, productsTable.conversionFactor);
+          }
           if (from < 5) {
             await m.createTable(accountingAuditLogsTable);
             await m.createTable(accountingDetailLedgersTable);
