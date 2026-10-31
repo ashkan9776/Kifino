@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
+import '../../domain/repositories/accounting_repository.dart';
 import '../bloc/accounting_document_bloc.dart';
 import '../services/accounting_voucher_pdf_generator.dart';
 
@@ -21,6 +24,33 @@ class AccountingDocumentsPage extends StatefulWidget {
 
 class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
   DocumentStatus? _selectedStatus;
+
+  /// Lazily cached lookups for rendering تفصیلی شناور chips on document cards.
+  final Map<String, Future<List<DocumentDetailTag>>> _tagsFutures = {};
+  Future<Map<String, String>>? _tagTitlesFuture;
+
+  Future<Map<String, String>> _tagTitles() {
+    return _tagTitlesFuture ??= _loadTagTitles();
+  }
+
+  Future<Map<String, String>> _loadTagTitles() async {
+    final ledgers = await getIt<AccountingRepository>().getDetailLedgers();
+    final titles = <String, String>{};
+    for (final l in ledgers) {
+      titles[l.ledger.id] = l.ledger.title;
+      for (final v in l.values) {
+        titles[v.id] = v.title;
+      }
+    }
+    return titles;
+  }
+
+  Future<List<DocumentDetailTag>> _tagsFor(String documentId) {
+    return _tagsFutures.putIfAbsent(
+      documentId,
+      () => getIt<AccountingRepository>().getDocumentDetails(documentId),
+    );
+  }
 
   @override
   void initState() {
@@ -271,12 +301,19 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              _DetailTagsRow(
+                tagsFuture: _tagsFor(doc.id),
+                titlesFuture: _tagTitles(),
+                colors: colors,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
 
   void _showDocumentDetails(BuildContext context, AccountingDocumentEntity doc, KifinoColorsExtension colors) {
     showModalBottomSheet(
@@ -463,6 +500,60 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   ),
                 ],
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Small تفصیلی شناور chips under each document card — fetched lazily and
+/// cached per document; hidden entirely when the document has no tags.
+class _DetailTagsRow extends StatelessWidget {
+  final Future<List<DocumentDetailTag>> tagsFuture;
+  final Future<Map<String, String>> titlesFuture;
+  final KifinoColorsExtension colors;
+
+  const _DetailTagsRow({
+    required this.tagsFuture,
+    required this.titlesFuture,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<DocumentDetailTag>>(
+      future: tagsFuture,
+      builder: (context, tagsSnap) {
+        final tags = tagsSnap.data;
+        if (tags == null || tags.isEmpty) return const SizedBox.shrink();
+        return FutureBuilder<Map<String, String>>(
+          future: titlesFuture,
+          builder: (context, titlesSnap) {
+            final titles = titlesSnap.data;
+            if (titles == null) return const SizedBox.shrink();
+            return Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: tags.map((tag) {
+                final ledgerTitle = titles[tag.ledgerId] ?? 'تفصیلی';
+                final valueTitle = titles[tag.valueId] ?? '?';
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.receivable.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$ledgerTitle: $valueTitle',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: colors.receivable,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }).toList(),
             );
           },
         );

@@ -11,6 +11,7 @@ import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/accounting_transaction_entity.dart';
@@ -33,12 +34,18 @@ class _CreateAccountingDocumentPageState
   List<AccountingSubjectEntity> _availableSubjects = [];
   bool _isLoadingSubjects = true;
 
+  /// Active تفصیلی شناور ledgers (and their active values) for optional
+  /// document tagging.
+  List<DetailLedgerWithValues> _detailLedgers = [];
+  final Map<String, String?> _selectedDetailValues = {};
+
   final List<_VoucherRowItem> _rows = [];
 
   @override
   void initState() {
     super.initState();
     _loadSubjects();
+    _loadDetailLedgers();
     // Start with 2 empty rows (Debit & Credit)
     _rows.add(_VoucherRowItem());
     _rows.add(_VoucherRowItem());
@@ -51,6 +58,24 @@ class _CreateAccountingDocumentPageState
       _availableSubjects = subjects;
       _isLoadingSubjects = false;
     });
+  }
+
+  Future<void> _loadDetailLedgers() async {
+    try {
+      final ledgers = await getIt<AccountingRepository>().getDetailLedgers();
+      if (!mounted) return;
+      setState(() {
+        _detailLedgers = ledgers
+            .where((l) => l.ledger.isActive)
+            .map((l) => DetailLedgerWithValues(
+                  ledger: l.ledger,
+                  values: l.values.where((v) => v.isActive).toList(),
+                ))
+            .toList();
+      });
+    } catch (_) {
+      // Detail tagging is optional — never block document creation on it.
+    }
   }
 
   @override
@@ -95,8 +120,21 @@ class _CreateAccountingDocumentPageState
       ),
       body: _isLoadingSubjects
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
+          : BlocListener<AccountingDocumentBloc, AccountingDocumentState>(
+              listener: (context, state) {
+                if (state is AccountingDocumentOperationSuccess) {
+                  context.pop();
+                } else if (state is AccountingDocumentError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: colors.expense,
+                    ),
+                  );
+                }
+              },
+              child: Column(
+                children: [
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.all(16),
@@ -177,6 +215,12 @@ class _CreateAccountingDocumentPageState
                       ...List.generate(_rows.length, (index) {
                         return _buildRowCard(index, colors);
                       }),
+
+                      // Optional تفصیلی شناور tagging
+                      if (_detailLedgers.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _buildDetailTagsSection(colors),
+                      ],
                       const SizedBox(height: 80),
                     ],
                   ),
@@ -185,6 +229,7 @@ class _CreateAccountingDocumentPageState
                 // Sticky Bottom Balance & Save Bar
                 _buildStickyBottomBar(colors),
               ],
+              ),
             ),
     );
   }
@@ -325,6 +370,66 @@ class _CreateAccountingDocumentPageState
                     EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailTagsSection(KifinoColorsExtension colors) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.category_outlined, size: 18, color: colors.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text('تفصیلی شناور', style: AppTypography.titleSmall)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'برچسب تحلیلی سند برای گزارش‌گیری به تفکیک مشتری، پروژه و... (اختیاری)',
+              style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+            ),
+            const SizedBox(height: 10),
+            ..._detailLedgers.map((l) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedDetailValues[l.ledger.id],
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: '${l.ledger.title} (اختیاری)',
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('بدون تفصیلی'),
+                    ),
+                    ...l.values.map(
+                      (v) => DropdownMenuItem<String>(
+                        value: v.id,
+                        child: Text(v.title, overflow: TextOverflow.ellipsis),
+                      ),
+                    ),
+                  ],
+                  onChanged: (valueId) {
+                    setState(() => _selectedDetailValues[l.ledger.id] = valueId);
+                  },
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -562,10 +667,16 @@ class _CreateAccountingDocumentPageState
       updatedAt: now,
     );
 
+    final detailTags = <DocumentDetailTag>[];
+    for (final entry in _selectedDetailValues.entries) {
+      final valueId = entry.value;
+      if (valueId == null || valueId.isEmpty) continue;
+      detailTags.add(DocumentDetailTag(ledgerId: entry.key, valueId: valueId));
+    }
+
     context
         .read<AccountingDocumentBloc>()
-        .add(CreateAccountingDocumentSubmitted(doc));
-    context.pop();
+        .add(CreateAccountingDocumentSubmitted(doc, details: detailTags));
   }
 }
 

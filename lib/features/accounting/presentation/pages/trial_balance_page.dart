@@ -16,7 +16,7 @@ class TrialBalancePage extends StatefulWidget {
 }
 
 class _TrialBalancePageState extends State<TrialBalancePage> {
-  bool _isEightColumn = false;
+  int _columnCount = 4;
   AccountingSubjectLevel _selectedLevel = AccountingSubjectLevel.kol;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -65,16 +65,18 @@ class _TrialBalancePageState extends State<TrialBalancePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                // 4 or 8 column toggle
+                // 4 / 6 / 8 column toggle
                 Expanded(
-                  child: SegmentedButton<bool>(
+                  child: SegmentedButton<int>(
                     segments: const [
-                      ButtonSegment(value: false, label: Text('۴ ستونی')),
-                      ButtonSegment(value: true, label: Text('۸ ستونی')),
+                      ButtonSegment(value: 4, label: Text('۴ ستونی')),
+                      ButtonSegment(value: 6, label: Text('۶ ستونی')),
+                      ButtonSegment(value: 8, label: Text('۸ ستونی')),
                     ],
-                    selected: {_isEightColumn},
+                    selected: {_columnCount},
+                    showSelectedIcon: false,
                     onSelectionChanged: (set) {
-                      setState(() => _isEightColumn = set.first);
+                      setState(() => _columnCount = set.first);
                     },
                   ),
                 ),
@@ -130,9 +132,11 @@ class _TrialBalancePageState extends State<TrialBalancePage> {
                           scrollDirection: Axis.vertical,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
-                            child: _isEightColumn
-                                ? _buildEightColumnTable(report, colors)
-                                : _buildFourColumnTable(report, colors),
+                            child: _columnCount == 6
+                                ? _buildSixColumnTable(report, colors)
+                                : _columnCount == 8
+                                    ? _buildEightColumnTable(report, colors)
+                                    : _buildFourColumnTable(report, colors),
                           ),
                         ),
                       ),
@@ -204,6 +208,49 @@ class _TrialBalancePageState extends State<TrialBalancePage> {
             DataCell(Text(entry.endingCredit.minorUnits > 0
                 ? entry.endingCredit.formatted
                 : '-')),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  /// 6-column: opening (بد/بس) + period turnover (بد/بس) + ending (بد/بس).
+  Widget _buildSixColumnTable(TrialBalanceReport report, KifinoColorsExtension colors) {
+    return DataTable(
+      headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.1)),
+      columnSpacing: 14,
+      horizontalMargin: 10,
+      columns: const [
+        DataColumn(label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('نام حساب', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('ابتدای بد', style: TextStyle(fontSize: 11)), numeric: true),
+        DataColumn(label: Text('ابتدای بس', style: TextStyle(fontSize: 11)), numeric: true),
+        DataColumn(label: Text('دوره بد', style: TextStyle(fontSize: 11)), numeric: true),
+        DataColumn(label: Text('دوره بس', style: TextStyle(fontSize: 11)), numeric: true),
+        DataColumn(
+          label: Text('پایان بد',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('پایان بس',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 11)),
+          numeric: true,
+        ),
+      ],
+      rows: report.entries.map((entry) {
+        return DataRow(
+          cells: [
+            DataCell(Text(entry.subject.formattedCode,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11))),
+            DataCell(Text(entry.subject.name,
+                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
+            DataCell(Text(entry.openingDebit.minorUnits > 0 ? entry.openingDebit.formatted : '-')),
+            DataCell(Text(entry.openingCredit.minorUnits > 0 ? entry.openingCredit.formatted : '-')),
+            DataCell(Text(entry.periodDebit.minorUnits > 0 ? entry.periodDebit.formatted : '-')),
+            DataCell(Text(entry.periodCredit.minorUnits > 0 ? entry.periodCredit.formatted : '-')),
+            DataCell(Text(entry.endingDebit.minorUnits > 0 ? entry.endingDebit.formatted : '-')),
+            DataCell(Text(entry.endingCredit.minorUnits > 0 ? entry.endingCredit.formatted : '-')),
           ],
         );
       }).toList(),

@@ -65,6 +65,12 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
             _buildModulesGrid(context, colors),
             const SizedBox(height: 20),
 
+            // Quick Access: Phase-1 tools (audit, floating details, fiscal years)
+            Text('ابزارهای تکمیلی', style: AppTypography.titleMedium),
+            const SizedBox(height: 10),
+            _buildQuickAccessGrid(context, colors),
+            const SizedBox(height: 20),
+
             // Quick Trial Balance Equilibrium Card
             _buildEquilibriumCard(colors),
             const SizedBox(height: 20),
@@ -227,6 +233,93 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       ),
       itemBuilder: (context, index) {
         final item = modules[index];
+        return AppCard(
+          onTap: () => context.push(item.route),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: item.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(item.icon, color: item.color, size: 22),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                        fontSize: 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickAccessGrid(BuildContext context, KifinoColorsExtension colors) {
+    final items = [
+      const _ModuleItem(
+        title: 'لاگ حسابرسی',
+        subtitle: 'تاریخچه تغییرات اسناد',
+        icon: Icons.history,
+        color: Colors.blueGrey,
+        route: '/accounting/audit-logs',
+      ),
+      const _ModuleItem(
+        title: 'تفصیلی شناور',
+        subtitle: 'تعریف ابعاد تحلیلی و مقادیر',
+        icon: Icons.category_outlined,
+        color: Colors.teal,
+        route: '/accounting/detail-ledgers',
+      ),
+      const _ModuleItem(
+        title: 'گزارش تفصیلی',
+        subtitle: 'گردش و مانده به تفکیک مقدار',
+        icon: Icons.assessment_outlined,
+        color: Colors.indigo,
+        route: '/accounting/detail-ledgers/report',
+      ),
+      const _ModuleItem(
+        title: 'سال مالی',
+        subtitle: 'بستن دوره و سند افتتاحیه',
+        icon: Icons.calendar_month,
+        color: Colors.deepPurple,
+        route: '/accounting/fiscal-years',
+      ),
+    ];
+
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.45,
+      ),
+      itemBuilder: (context, index) {
+        final item = items[index];
         return AppCard(
           onTap: () => context.push(item.route),
           child: Padding(

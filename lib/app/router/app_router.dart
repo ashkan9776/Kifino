@@ -23,8 +23,12 @@ import '../../features/transactions/presentation/pages/activity_page.dart';
 import '../../features/transactions/presentation/pages/fast_add_transaction_page.dart';
 import '../../features/accounting/presentation/pages/accounting_dashboard_page.dart';
 import '../../features/accounting/presentation/pages/accounting_documents_page.dart';
+import '../../features/accounting/presentation/pages/audit_log_page.dart';
 import '../../features/accounting/presentation/pages/create_accounting_document_page.dart';
 import '../../features/accounting/presentation/pages/chart_of_accounts_page.dart';
+import '../../features/accounting/presentation/pages/detail_ledgers_page.dart';
+import '../../features/accounting/presentation/pages/detail_report_page.dart';
+import '../../features/accounting/presentation/pages/fiscal_years_page.dart';
 import '../../features/accounting/presentation/pages/journal_page.dart';
 import '../../features/accounting/presentation/pages/ledger_page.dart';
 import '../../features/accounting/presentation/pages/trial_balance_page.dart';
@@ -224,6 +228,32 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/accounting/financial-statements',
         builder: (context, state) => const FinancialStatementsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/audit-logs',
+        builder: (context, state) => const AuditLogPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/detail-ledgers',
+        builder: (context, state) => const DetailLedgersPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/detail-ledgers/report',
+        builder: (context, state) {
+          final extra = state.extra;
+          return DetailReportPage(
+            initialSelection:
+                extra is DetailReportSelection ? extra : null,
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/accounting/fiscal-years',
+        builder: (context, state) => const FiscalYearsPage(),
       ),
     ],
   );

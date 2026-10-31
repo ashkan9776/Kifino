@@ -39,6 +39,10 @@ part 'app_database.g.dart';
   AccountingDocumentsTable,
   AccountingTransactionsTable,
   FiscalYearsTable,
+  AccountingAuditLogsTable,
+  AccountingDetailLedgersTable,
+  AccountingDetailValuesTable,
+  AccountingDocumentDetailLinksTable,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
@@ -60,6 +64,12 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(accountingDocumentsTable);
             await m.createTable(accountingTransactionsTable);
             await m.createTable(fiscalYearsTable);
+          }
+          if (from < 5) {
+            await m.createTable(accountingAuditLogsTable);
+            await m.createTable(accountingDetailLedgersTable);
+            await m.createTable(accountingDetailValuesTable);
+            await m.createTable(accountingDocumentDetailLinksTable);
           }
           if (from < 4) {
             // Sync-readiness for the accounting tables added in v3.

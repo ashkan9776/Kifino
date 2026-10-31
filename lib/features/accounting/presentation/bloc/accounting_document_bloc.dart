@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
 
@@ -30,9 +31,14 @@ final class LoadAccountingDocuments extends AccountingDocumentEvent {
 
 final class CreateAccountingDocumentSubmitted extends AccountingDocumentEvent {
   final AccountingDocumentEntity document;
-  const CreateAccountingDocumentSubmitted(this.document);
+
+  /// Optional تفصیلی شناور tags (one value per ledger) applied right after
+  /// the document is saved.
+  final List<DocumentDetailTag> details;
+
+  const CreateAccountingDocumentSubmitted(this.document, {this.details = const []});
   @override
-  List<Object?> get props => [document];
+  List<Object?> get props => [document, details];
 }
 
 final class ApproveAccountingDocumentSubmitted extends AccountingDocumentEvent {
@@ -127,7 +133,7 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
         ),
       );
     } catch (e) {
-      emit(AccountingDocumentError(e.toString()));
+      emit(AccountingDocumentError(_cleanError(e)));
     }
   }
 
@@ -136,11 +142,14 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
     Emitter<AccountingDocumentState> emit,
   ) async {
     try {
-      await _repository.createDocument(event.document);
+      final saved = await _repository.createDocument(event.document);
+      if (event.details.isNotEmpty) {
+        await _repository.setDocumentDetails(documentId: saved.id, tags: event.details);
+      }
       emit(const AccountingDocumentOperationSuccess('سند حسابداری با موفقیت ثبت شد'));
       add(const LoadAccountingDocuments());
     } catch (e) {
-      emit(AccountingDocumentError(e.toString()));
+      emit(AccountingDocumentError(_cleanError(e)));
     }
   }
 
@@ -153,7 +162,7 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
       emit(const AccountingDocumentOperationSuccess('سند حسابداری تأیید شد'));
       add(const LoadAccountingDocuments());
     } catch (e) {
-      emit(AccountingDocumentError(e.toString()));
+      emit(AccountingDocumentError(_cleanError(e)));
     }
   }
 
@@ -166,7 +175,12 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
       emit(const AccountingDocumentOperationSuccess('سند حسابداری با موفقیت حذف شد'));
       add(const LoadAccountingDocuments());
     } catch (e) {
-      emit(AccountingDocumentError(e.toString()));
+      emit(AccountingDocumentError(_cleanError(e)));
     }
   }
+
+  /// Repository rule violations come as StateError with a ready Persian
+  /// message — strip the engine prefix so the UI shows only the message.
+  static String _cleanError(Object e) =>
+      e.toString().replaceFirst(RegExp(r'^(Bad state|StateError):\s*'), '');
 }

@@ -4,6 +4,9 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
+import 'dart:convert';
+
+import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/accounting_transaction_entity.dart';
@@ -346,12 +349,24 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<AccountingDocumentEntity> createDocument(AccountingDocumentEntity document) async {
+  Future<AccountingDocumentEntity> createDocument(
+    AccountingDocumentEntity document, {
+    List<DocumentDetailTag> details = const [],
+  }) async {
     final docId = document.id.isEmpty ? _uuid.v4() : document.id;
     final docNumber = document.number > 0
         ? document.number
         : await getNextDocumentNumber(document.fiscalYearId);
     final now = DateTime.now();
+
+    // Integrity lock: only drafts may register unbalanced; official statuses
+    // (approved/posted) must be balanced before they touch the ledger.
+    if (document.status != DocumentStatus.draft && !document.isBalanced) {
+      throw StateError('سند ناموازنه قابل ثبت نیست. مجموع بدهکار و بستانکار برابر نیست.');
+    }
+    await _ensurePeriodOpen(document.date);
+
+    final afterJson = _documentSnapshotJson(docId, docNumber, document);
 
     await _db.transaction(() async {
       await _db.into(_db.accountingDocumentsTable).insert(
@@ -389,14 +404,47 @@ class AccountingRepositoryImpl implements AccountingRepository {
               ),
             );
       }
+
+      await _insertAuditLog(
+        action: AuditLogAction.create,
+        entityId: docId,
+        beforeJson: null,
+        afterJson: afterJson,
+        description: 'ثبت سند شماره $docNumber — ${document.title}',
+        at: now,
+      );
+
+      // Floating detail tags (one value per ledger, max 10 ledgers).
+      if (details.isNotEmpty) {
+        await _applyDetailTags(docId, details, now);
+      }
     });
 
     return (await getDocumentById(docId))!;
   }
 
   @override
-  Future<AccountingDocumentEntity> updateDocument(AccountingDocumentEntity document) async {
+  Future<AccountingDocumentEntity> updateDocument(
+    AccountingDocumentEntity document, {
+    List<DocumentDetailTag>? details,
+  }) async {
     final now = DateTime.now();
+    final existing = await getDocumentById(document.id);
+    if (existing == null) throw StateError('سند حسابداری پیدا نشد.');
+    if (existing.status == DocumentStatus.posted) {
+      throw StateError('سند قطعی‌شده قابل ویرایش نیست.');
+    }
+    if (document.status != DocumentStatus.draft && !document.isBalanced) {
+      throw StateError('سند ناموازنه قابل تأیید نیست. مجموع بدهکار و بستانکار برابر نیست.');
+    }
+    await _ensurePeriodOpen(document.date);
+    final beforeJson = _documentSnapshotJson(
+      existing.id, existing.number, existing,
+    );
+    final afterJson = _documentSnapshotJson(
+      document.id, existing.number, document,
+    );
+
     await _db.transaction(() async {
       await (_db.update(_db.accountingDocumentsTable)
             ..where((tbl) => tbl.id.equals(document.id)))
@@ -434,6 +482,24 @@ class AccountingRepositoryImpl implements AccountingRepository {
               ),
             );
       }
+
+      await _insertAuditLog(
+        action: AuditLogAction.update,
+        entityId: document.id,
+        beforeJson: beforeJson,
+        afterJson: afterJson,
+        description: 'ویرایش سند شماره ${existing.number} — ${document.title}',
+        at: now,
+      );
+
+      if (details != null) {
+        await (_db.delete(_db.accountingDocumentDetailLinksTable)
+              ..where((tbl) => tbl.documentId.equals(document.id)))
+            .go();
+        if (details.isNotEmpty) {
+          await _applyDetailTags(document.id, details, now);
+        }
+      }
     });
 
     return (await getDocumentById(document.id))!;
@@ -442,29 +508,59 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Future<void> approveDocument(String documentId) async {
     final doc = await getDocumentById(documentId);
-    if (doc == null) throw Exception('سند حسابداری پیدا نشد.');
+    if (doc == null) throw StateError('سند حسابداری پیدا نشد.');
     if (!doc.isBalanced) {
-      throw Exception('سند متوازن نیست. مجموع بدهکار و بستانکار باید برابر باشد.');
+      throw StateError('سند متوازن نیست. مجموع بدهکار و بستانکار باید برابر باشد.');
     }
+    await _ensurePeriodOpen(doc.date);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now();
+    final beforeJson = _documentSnapshotJson(doc.id, doc.number, doc);
     await (_db.update(_db.accountingDocumentsTable)
           ..where((tbl) => tbl.id.equals(documentId)))
         .write(
       AccountingDocumentsTableCompanion(
         status: const Value('approved'),
-        approvedAt: Value(now),
-        updatedAt: Value(now),
+        approvedAt: Value(now.millisecondsSinceEpoch),
+        updatedAt: Value(now.millisecondsSinceEpoch),
       ),
+    );
+    final after = doc.copyWith(status: DocumentStatus.approved);
+    await _insertAuditLog(
+      action: AuditLogAction.approve,
+      entityId: documentId,
+      beforeJson: beforeJson,
+      afterJson: _documentSnapshotJson(after.id, after.number, after),
+      description: 'تأیید سند شماره ${doc.number} — ${doc.title}',
+      at: now,
     );
   }
 
   @override
   Future<void> deleteDocument(String documentId) async {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final doc = await getDocumentById(documentId);
+    if (doc == null) return;
+    if (doc.status == DocumentStatus.posted) {
+      throw StateError('سند قطعی‌شده قابل حذف نیست.');
+    }
+    await _ensurePeriodOpen(doc.date);
+
+    final now = DateTime.now();
+    final beforeJson = _documentSnapshotJson(doc.id, doc.number, doc);
     await (_db.update(_db.accountingDocumentsTable)
           ..where((tbl) => tbl.id.equals(documentId)))
-        .write(AccountingDocumentsTableCompanion(deletedAt: Value(now)));
+        .write(AccountingDocumentsTableCompanion(deletedAt: Value(now.millisecondsSinceEpoch)));
+    await (_db.delete(_db.accountingDocumentDetailLinksTable)
+          ..where((tbl) => tbl.documentId.equals(documentId)))
+        .go();
+    await _insertAuditLog(
+      action: AuditLogAction.delete,
+      entityId: documentId,
+      beforeJson: beforeJson,
+      afterJson: null,
+      description: 'حذف سند شماره ${doc.number} — ${doc.title}',
+      at: now,
+    );
   }
 
   // ─── Reports ───
@@ -923,5 +1019,481 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
     await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(id)))
         .write(FiscalYearsTableCompanion(isClosed: const Value(true), updatedAt: Value(now)));
+  }
+
+  // ─── Phase 1: integrity, audit, floating details, fiscal close/open ───
+
+  /// Throws when [date] falls inside a CLOSED fiscal year. Documents in open
+  /// or unassigned periods pass.
+  Future<void> _ensurePeriodOpen(DateTime date) async {
+    final years = await getFiscalYears();
+    for (final fy in years) {
+      if (fy.isClosed &&
+          !date.isBefore(fy.startDate) &&
+          !date.isAfter(fy.endDate.add(const Duration(days: 1)))) {
+        throw StateError('دوره مالی ${fy.title} بسته شده است و ثبت در آن مجاز نیست.');
+      }
+    }
+  }
+
+  String _documentSnapshotJson(
+    String id,
+    int number,
+    AccountingDocumentEntity document,
+  ) {
+    return jsonEncode({
+      'id': id,
+      'number': number,
+      'title': document.title,
+      'date': document.date.toIso8601String(),
+      'status': document.status.code,
+      'totalDebitMinor': document.totalDebit.minorUnits,
+      'totalCreditMinor': document.totalCredit.minorUnits,
+      'lines': document.transactions
+          .map((t) => {
+                'subjectId': t.subjectId,
+                'debit': t.debit.minorUnits,
+                'credit': t.credit.minorUnits,
+                'description': t.description,
+              })
+          .toList(),
+    });
+  }
+
+  Future<void> _insertAuditLog({
+    required AuditLogAction action,
+    required String entityId,
+    String? beforeJson,
+    String? afterJson,
+    String? description,
+    required DateTime at,
+  }) async {
+    await _db.into(_db.accountingAuditLogsTable).insert(
+          AccountingAuditLogsTableCompanion.insert(
+            id: _uuid.v4(),
+            entityType: 'document',
+            entityId: entityId,
+            action: action.code,
+            beforeJson: Value(beforeJson),
+            afterJson: Value(afterJson),
+            description: Value(description),
+            performedAt: at.millisecondsSinceEpoch,
+            createdAt: at.millisecondsSinceEpoch,
+          ),
+        );
+  }
+
+  Future<void> _applyDetailTags(
+    String documentId,
+    List<DocumentDetailTag> tags,
+    DateTime now,
+  ) async {
+    for (final tag in tags) {
+      await _db.into(_db.accountingDocumentDetailLinksTable).insert(
+            AccountingDocumentDetailLinksTableCompanion.insert(
+              id: _uuid.v4(),
+              documentId: documentId,
+              ledgerId: tag.ledgerId,
+              valueId: tag.valueId,
+              createdAt: now.millisecondsSinceEpoch,
+            ),
+          );
+    }
+  }
+
+  @override
+  Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit = 200}) {
+    final query = _db.select(_db.accountingAuditLogsTable)
+      ..orderBy([
+          (tbl) => OrderingTerm.desc(tbl.performedAt),
+        ])
+      ..limit(limit);
+    return query.watch().map((rows) {
+      return rows.map((r) {
+        return AccountingAuditLogEntity(
+          id: r.id,
+          entityType: r.entityType,
+          entityId: r.entityId,
+          action: AuditLogAction.fromCode(r.action),
+          beforeJson: r.beforeJson,
+          afterJson: r.afterJson,
+          description: r.description,
+          performedAt: DateTime.fromMillisecondsSinceEpoch(r.performedAt),
+        );
+      }).toList();
+    });
+  }
+
+  @override
+  Future<String> createDetailLedger({
+    required String title,
+    required String code,
+  }) async {
+    // Floating detail dimension limit: max 10 ledgers.
+    final existing = await (_db.select(_db.accountingDetailLedgersTable)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .get();
+    if (existing.length >= 10) {
+      throw StateError('حداکثر ۱۰ تفصیلی شناور قابل تعریف است.');
+    }
+    final id = _uuid.v4();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.into(_db.accountingDetailLedgersTable).insert(
+          AccountingDetailLedgersTableCompanion.insert(
+            id: id,
+            title: title,
+            code: code,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return id;
+  }
+
+  @override
+  Future<void> updateDetailLedger({
+    required String id,
+    required String title,
+    bool? isActive,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await (_db.update(_db.accountingDetailLedgersTable)..where((tbl) => tbl.id.equals(id))).write(
+      AccountingDetailLedgersTableCompanion(
+        title: Value(title),
+        isActive: isActive != null ? Value(isActive) : const Value.absent(),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteDetailLedger(String id) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await (_db.update(_db.accountingDetailLedgersTable)..where((tbl) => tbl.id.equals(id))).write(
+      AccountingDetailLedgersTableCompanion(deletedAt: Value(now)),
+    );
+    await (_db.update(_db.accountingDetailValuesTable)..where((tbl) => tbl.ledgerId.equals(id))).write(
+      AccountingDetailValuesTableCompanion(deletedAt: Value(now)),
+    );
+  }
+
+  @override
+  Future<List<DetailLedgerWithValues>> getDetailLedgers() async {
+    final ledgers = await (_db.select(_db.accountingDetailLedgersTable)
+          ..where((tbl) => tbl.deletedAt.isNull())
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.sortOrder)]))
+        .get();
+    final result = <DetailLedgerWithValues>[];
+    for (final l in ledgers) {
+      final values = await (_db.select(_db.accountingDetailValuesTable)
+            ..where((tbl) => tbl.ledgerId.equals(l.id) & tbl.deletedAt.isNull()))
+          .get();
+      result.add(DetailLedgerWithValues(
+        ledger: DetailLedgerEntity(
+          id: l.id,
+          title: l.title,
+          code: l.code,
+          isActive: l.isActive,
+          sortOrder: l.sortOrder,
+        ),
+        values: values
+            .map((v) => DetailValueEntity(
+                  id: v.id,
+                  ledgerId: v.ledgerId,
+                  title: v.title,
+                  code: v.code,
+                  isActive: v.isActive,
+                ))
+            .toList(),
+      ));
+    }
+    return result;
+  }
+
+  @override
+  Future<String> createDetailValue({
+    required String ledgerId,
+    required String title,
+    String? code,
+  }) async {
+    final id = _uuid.v4();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.into(_db.accountingDetailValuesTable).insert(
+          AccountingDetailValuesTableCompanion.insert(
+            id: id,
+            ledgerId: ledgerId,
+            title: title,
+            code: Value(code),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return id;
+  }
+
+  @override
+  Future<void> deleteDetailValue(String id) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await (_db.update(_db.accountingDetailValuesTable)..where((tbl) => tbl.id.equals(id))).write(
+      AccountingDetailValuesTableCompanion(deletedAt: Value(now)),
+    );
+  }
+
+  @override
+  Future<void> setDocumentDetails({
+    required String documentId,
+    required List<DocumentDetailTag> tags,
+  }) async {
+    final now = DateTime.now();
+    await _db.transaction(() async {
+      await (_db.delete(_db.accountingDocumentDetailLinksTable)
+            ..where((tbl) => tbl.documentId.equals(documentId)))
+          .go();
+      await _applyDetailTags(documentId, tags, now);
+    });
+  }
+
+  @override
+  Future<List<DocumentDetailTag>> getDocumentDetails(String documentId) async {
+    final rows = await (_db.select(_db.accountingDocumentDetailLinksTable)
+          ..where((tbl) => tbl.documentId.equals(documentId)))
+        .get();
+    return rows
+        .map((r) => DocumentDetailTag(ledgerId: r.ledgerId, valueId: r.valueId))
+        .toList();
+  }
+
+  @override
+  Future<DetailReport> getDetailReport({
+    required String ledgerId,
+    required String valueId,
+    String? subjectId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final ledgers = await getDetailLedgers();
+    final ledger = ledgers.where((l) => l.ledger.id == ledgerId).first.ledger;
+    DetailValueEntity? value;
+    for (final l in ledgers) {
+      for (final v in l.values) {
+        if (v.id == valueId) value = v;
+      }
+    }
+    if (value == null) throw StateError('مقدار تفصیلی پیدا نشد.');
+
+    // Approved documents tagged with this value, chronological.
+    final links = await (_db.select(_db.accountingDocumentDetailLinksTable).join([
+          innerJoin(
+            _db.accountingDocumentsTable,
+            _db.accountingDocumentsTable.id
+                .equalsExp(_db.accountingDocumentDetailLinksTable.documentId),
+          ),
+        ])
+          ..where(_db.accountingDocumentDetailLinksTable.valueId.equals(valueId) &
+              _db.accountingDocumentDetailLinksTable.ledgerId.equals(ledgerId) &
+              _db.accountingDocumentsTable.status.equals('approved') &
+              _db.accountingDocumentsTable.deletedAt.isNull()))
+        .get();
+
+    final docIds = links.map((l) => l.readTable(_db.accountingDocumentsTable)).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final rows = <DetailReportRow>[];
+    int running = 0;
+    int totalDebit = 0;
+    int totalCredit = 0;
+
+    for (final doc in docIds) {
+      if (startDate != null && DateTime.fromMillisecondsSinceEpoch(doc.date).isBefore(startDate)) {
+        continue;
+      }
+      if (endDate != null && DateTime.fromMillisecondsSinceEpoch(doc.date).isAfter(endDate)) {
+        continue;
+      }
+      final txs = await (_db.select(_db.accountingTransactionsTable)
+            ..where((tbl) =>
+                tbl.documentId.equals(doc.id) & tbl.deletedAt.isNull()))
+          .get();
+      for (final tx in txs) {
+        if (subjectId != null && tx.subjectId != subjectId) continue;
+        final subject = await getSubjectById(tx.subjectId);
+        running += tx.debitMinorUnits - tx.creditMinorUnits;
+        totalDebit += tx.debitMinorUnits;
+        totalCredit += tx.creditMinorUnits;
+        rows.add(DetailReportRow(
+          date: DateTime.fromMillisecondsSinceEpoch(doc.date),
+          documentNumber: doc.number,
+          documentTitle: doc.title,
+          subjectName: subject?.name ?? tx.subjectId,
+          description: tx.description,
+          debitMinorUnits: tx.debitMinorUnits,
+          creditMinorUnits: tx.creditMinorUnits,
+          runningBalanceMinorUnits: running,
+        ));
+      }
+    }
+
+    return DetailReport(
+      ledger: ledger,
+      value: value,
+      rows: rows,
+      totalDebitMinorUnits: totalDebit,
+      totalCreditMinorUnits: totalCredit,
+    );
+  }
+
+  @override
+  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(String fiscalYearId) async {
+    final fy = (await getFiscalYears()).where((f) => f.id == fiscalYearId).firstOrNull;
+    if (fy == null) throw StateError('سال مالی پیدا نشد.');
+    if (fy.isClosed) throw StateError('این سال مالی قبلاً بسته شده است.');
+
+    final now = DateTime.now();
+
+    // Balanced closing voucher: temporary accounts → accumulated P/L.
+    final closingDoc = AccountingDocumentEntity(
+      id: _uuid.v4(),
+      number: await getNextDocumentNumber(fiscalYearId),
+      date: fy.endDate,
+      title: 'سند اختتامیه ${fy.title}',
+      status: DocumentStatus.approved,
+      isManual: false,
+      referenceType: 'closing',
+      referenceId: fiscalYearId,
+      fiscalYearId: fiscalYearId,
+      approvedAt: now,
+      createdAt: now,
+      updatedAt: now,
+      transactions: const [],
+    );
+
+    // Gather temporary-account balances (revenues 06x, expenses 04x/05x/07x).
+    final subjects = await getAllSubjects();
+    final temporary = subjects.where((s) => !s.isPermanent).toList();
+    final rows = <AccountingTransactionEntity>[];
+    int netMinor = 0;
+
+    for (final subject in temporary) {
+      final report = await getLedgerReport(
+        subjectId: subject.id,
+        startDate: fy.startDate,
+        endDate: fy.endDate,
+        fiscalYearId: fiscalYearId,
+      );
+      final net = report.closingBalance.minorUnits;
+      if (net == 0) continue;
+      netMinor += net;
+      // Closing a debit balance (expense): credit the account. Closing a
+      // credit balance (revenue): debit the account.
+      rows.add(AccountingTransactionEntity(
+        id: _uuid.v4(),
+        documentId: closingDoc.id,
+        subjectId: subject.id,
+        debit: Money.fromMinor(net > 0 ? net : 0),
+        credit: Money.fromMinor(net < 0 ? -net : 0),
+        description: 'بستن حساب ${subject.name}',
+        rowOrder: rows.length + 1,
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
+    // Accumulated profit/loss lands on equity (030).
+    final plSubject =
+        await getSubjectByCode('030001') ?? await getSubjectByCode('030');
+    if (plSubject != null && netMinor != 0) {
+      rows.add(AccountingTransactionEntity(
+        id: _uuid.v4(),
+        documentId: closingDoc.id,
+        subjectId: plSubject.id,
+        debit: Money.fromMinor(netMinor > 0 ? netMinor : 0),
+        credit: Money.fromMinor(netMinor < 0 ? -netMinor : 0),
+        description: 'سود (زیان) ویژه دوره',
+        rowOrder: rows.length + 1,
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
+    final balancedClosing = closingDoc.copyWith(transactions: rows);
+    final savedClosing = await createDocument(balancedClosing);
+    await approveDocument(savedClosing.id);
+
+    // Create the next fiscal year and its opening voucher.
+    final nextStart = fy.endDate.add(const Duration(days: 1));
+    final nextEnd = DateTime(nextStart.year + 1, nextStart.month, nextStart.day)
+        .subtract(const Duration(days: 1));
+    final nextId = _uuid.v4();
+    final nextYear = FiscalYearEntity(
+      id: nextId,
+      title: 'سال مالی ${fy.yearNumber + 1}',
+      yearNumber: fy.yearNumber + 1,
+      startDate: nextStart,
+      endDate: nextEnd,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await createFiscalYear(nextYear);
+
+    final openingRows = <AccountingTransactionEntity>[];
+    for (final subject in subjects) {
+      if (!subject.isPermanent) continue;
+      final report = await getLedgerReport(
+        subjectId: subject.id,
+        startDate: fy.startDate,
+        endDate: fy.endDate,
+        fiscalYearId: fiscalYearId,
+      );
+      final net = report.closingBalance.minorUnits;
+      if (net == 0) continue;
+      openingRows.add(AccountingTransactionEntity(
+        id: _uuid.v4(),
+        documentId: 'opening-$nextId',
+        subjectId: subject.id,
+        debit: Money.fromMinor(net > 0 ? net : 0),
+        credit: Money.fromMinor(net < 0 ? -net : 0),
+        description: 'مانده افتتاحیه ${subject.name}',
+        rowOrder: openingRows.length + 1,
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
+    final openingDoc = AccountingDocumentEntity(
+      id: 'opening-$nextId',
+      number: await getNextDocumentNumber(nextId),
+      date: nextStart,
+      title: 'سند افتتاحیه ${nextYear.title}',
+      status: DocumentStatus.approved,
+      isManual: false,
+      referenceType: 'opening',
+      referenceId: nextId,
+      fiscalYearId: nextId,
+      approvedAt: now,
+      createdAt: now,
+      updatedAt: now,
+      transactions: openingRows,
+    );
+    await createDocument(openingDoc);
+    await approveDocument(openingDoc.id);
+
+    // Mark the old year closed with its closing document, activate the new one.
+    await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(fiscalYearId))).write(
+      FiscalYearsTableCompanion(
+        isClosed: const Value(true),
+        isActive: const Value(false),
+        closingDocumentId: Value(savedClosing.id),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+      ),
+    );
+    await setActiveFiscalYear(nextId);
+    await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(nextId))).write(
+      FiscalYearsTableCompanion(
+        openingDocumentId: Value(openingDoc.id),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+      ),
+    );
+
+    return savedClosing;
   }
 }

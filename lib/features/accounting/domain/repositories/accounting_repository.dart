@@ -1,3 +1,4 @@
+import '../entities/accounting_audit_entity.dart';
 import '../entities/accounting_document_entity.dart';
 import '../entities/accounting_subject_entity.dart';
 import '../entities/accounting_transaction_entity.dart';
@@ -66,4 +67,50 @@ abstract class AccountingRepository {
   Future<FiscalYearEntity> createFiscalYear(FiscalYearEntity fiscalYear);
   Future<void> setActiveFiscalYear(String id);
   Future<void> closeFiscalYear(String id);
+
+  // ── Phase 1: integrity, audit, floating details, fiscal close/open ──
+
+  /// Audit trail for accounting documents, newest first.
+  Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit});
+
+  /// تفصیلی شناور — dimension ledgers with their values.
+  Future<String> createDetailLedger({
+    required String title,
+    required String code,
+  });
+  Future<void> updateDetailLedger({
+    required String id,
+    required String title,
+    bool? isActive,
+  });
+  Future<void> deleteDetailLedger(String id);
+  Future<List<DetailLedgerWithValues>> getDetailLedgers();
+  Future<String> createDetailValue({
+    required String ledgerId,
+    required String title,
+    String? code,
+  });
+  Future<void> deleteDetailValue(String id);
+
+  /// Replaces the detail tags of a document (one value per ledger).
+  Future<void> setDocumentDetails({
+    required String documentId,
+    required List<DocumentDetailTag> tags,
+  });
+  Future<List<DocumentDetailTag>> getDocumentDetails(String documentId);
+
+  /// تفصیلی شناور report: entries of every approved document tagged with the
+  /// given value, with running balance.
+  Future<DetailReport> getDetailReport({
+    required String ledgerId,
+    required String valueId,
+    String? subjectId,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  /// Closes the fiscal year: builds the balanced closing voucher (temporary
+  /// accounts → accumulated profit/loss), locks the period, creates the next
+  /// fiscal year and its balanced opening voucher. Returns the closing doc.
+  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(String fiscalYearId);
 }

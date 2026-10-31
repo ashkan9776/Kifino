@@ -38,7 +38,10 @@ import '../../features/accounting/data/repositories/accounting_repository_impl.d
 import '../../features/accounting/domain/repositories/accounting_repository.dart';
 import '../../features/accounting/domain/services/auto_voucher_service.dart';
 import '../../features/accounting/presentation/bloc/accounting_document_bloc.dart';
+import '../../features/accounting/presentation/bloc/audit_log_cubit.dart';
 import '../../features/accounting/presentation/bloc/chart_of_accounts_cubit.dart';
+import '../../features/accounting/presentation/bloc/detail_ledger_cubit.dart';
+import '../../features/accounting/presentation/bloc/fiscal_year_cubit.dart';
 import '../../features/accounting/presentation/bloc/financial_statements_bloc.dart';
 import '../../features/accounting/presentation/bloc/ledger_bloc.dart';
 import '../../features/accounting/presentation/bloc/trial_balance_bloc.dart';
@@ -191,6 +194,18 @@ class ServiceLocator {
 
     sl.registerFactory<FinancialStatementsBloc>(
       () => FinancialStatementsBloc(sl<AccountingRepository>()),
+    );
+
+    sl.registerFactory<AuditLogCubit>(
+      () => AuditLogCubit(sl<AccountingRepository>()),
+    );
+
+    sl.registerFactory<DetailLedgerCubit>(
+      () => DetailLedgerCubit(sl<AccountingRepository>()),
+    );
+
+    sl.registerFactory<FiscalYearCubit>(
+      () => FiscalYearCubit(sl<AccountingRepository>()),
     );
 
     // 10. Default reference data (categories) & services

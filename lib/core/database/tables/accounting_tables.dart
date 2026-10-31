@@ -95,3 +95,77 @@ class FiscalYearsTable extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+
+@DataClassName('AccountingAuditLogData')
+class AccountingAuditLogsTable extends Table {
+  @override
+  String get tableName => 'accounting_audit_logs';
+
+  TextColumn get id => text()();
+  TextColumn get entityType => text()(); // 'document'
+  TextColumn get entityId => text()();
+  TextColumn get action => text()(); // 'create', 'update', 'approve', 'delete'
+  TextColumn get beforeJson => text().nullable()();
+  TextColumn get afterJson => text().nullable()();
+  TextColumn get description => text().nullable()();
+  IntColumn get performedAt => integer()();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// تفصیلی شناور — a named analysis dimension (customers, projects, cost
+/// centers) that tags documents without duplicating accounts. Max 10 ledgers.
+@DataClassName('AccountingDetailLedgerData')
+class AccountingDetailLedgersTable extends Table {
+  @override
+  String get tableName => 'accounting_detail_ledgers';
+
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get code => text()(); // 'customer', 'project', 'cost_center', ...
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+  IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('AccountingDetailValueData')
+class AccountingDetailValuesTable extends Table {
+  @override
+  String get tableName => 'accounting_detail_values';
+
+  TextColumn get id => text()();
+  TextColumn get ledgerId => text()();
+  TextColumn get title => text()();
+  TextColumn get code => text().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+  IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Links a document to one detail value per ledger (max one per ledger).
+@DataClassName('AccountingDocumentDetailLinkData')
+class AccountingDocumentDetailLinksTable extends Table {
+  @override
+  String get tableName => 'accounting_document_detail_links';
+
+  TextColumn get id => text()();
+  TextColumn get documentId => text()();
+  TextColumn get ledgerId => text()();
+  TextColumn get valueId => text()();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
