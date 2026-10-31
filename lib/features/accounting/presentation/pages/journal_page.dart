@@ -6,8 +6,10 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
+import '../services/accounting_export_actions.dart';
 
 class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
@@ -16,7 +18,8 @@ class JournalPage extends StatefulWidget {
   State<JournalPage> createState() => _JournalPageState();
 }
 
-class _JournalPageState extends State<JournalPage> {
+class _JournalPageState extends State<JournalPage>
+    with AccountingExportActions {
   List<AccountingDocumentEntity> _documents = [];
   bool _isLoading = true;
   DateTime? _startDate;
@@ -59,6 +62,12 @@ class _JournalPageState extends State<JournalPage> {
         title: const Text('دفتر روزنامه رسمی'),
         centerTitle: true,
         actions: [
+          buildExportAction(
+            () => getIt<AccountingExportService>().exportJournal(
+              startDate: _startDate,
+              endDate: _endDate,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: () => _pickDateRange(context),

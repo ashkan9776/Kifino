@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/trial_balance_entry.dart';
 import '../bloc/trial_balance_bloc.dart';
+import '../services/accounting_export_actions.dart';
 
 class TrialBalancePage extends StatefulWidget {
   const TrialBalancePage({super.key});
@@ -15,7 +18,8 @@ class TrialBalancePage extends StatefulWidget {
   State<TrialBalancePage> createState() => _TrialBalancePageState();
 }
 
-class _TrialBalancePageState extends State<TrialBalancePage> {
+class _TrialBalancePageState extends State<TrialBalancePage>
+    with AccountingExportActions {
   int _columnCount = 4;
   AccountingSubjectLevel _selectedLevel = AccountingSubjectLevel.kol;
   DateTime? _startDate;
@@ -46,6 +50,13 @@ class _TrialBalancePageState extends State<TrialBalancePage> {
         title: const Text('تراز آزمایشی استاندارد'),
         centerTitle: true,
         actions: [
+          buildExportAction(
+            () => getIt<AccountingExportService>().exportTrialBalance(
+              level: _selectedLevel,
+              startDate: _startDate,
+              endDate: _endDate,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: () => _pickDateRange(context),

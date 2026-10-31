@@ -6,10 +6,13 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/text_normalizer.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/financial_statement_report.dart';
 import '../bloc/financial_statements_bloc.dart';
+import '../services/accounting_export_actions.dart';
 
 class FinancialStatementsPage extends StatefulWidget {
   const FinancialStatementsPage({super.key});
@@ -18,7 +21,8 @@ class FinancialStatementsPage extends StatefulWidget {
   State<FinancialStatementsPage> createState() => _FinancialStatementsPageState();
 }
 
-class _FinancialStatementsPageState extends State<FinancialStatementsPage> {
+class _FinancialStatementsPageState extends State<FinancialStatementsPage>
+    with AccountingExportActions {
   int _selectedTab = 0; // 0: Balance Sheet, 1: Income Statement
   DateTime _asOfDate = DateTime.now();
 
@@ -48,6 +52,13 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage> {
         title: const Text('صورت‌های مالی استاندارد'),
         centerTitle: true,
         actions: [
+          buildExportAction(() => _selectedTab == 0
+              ? getIt<AccountingExportService>()
+                  .exportBalanceSheet(asOfDate: _asOfDate)
+              : getIt<AccountingExportService>().exportIncomeStatement(
+                  startDate: DateTime(_asOfDate.year, 1, 1),
+                  endDate: _asOfDate,
+                )),
           IconButton(
             icon: const Icon(Icons.calendar_month),
             onPressed: () => _pickDate(context),

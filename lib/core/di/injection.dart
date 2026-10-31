@@ -36,6 +36,7 @@ import '../../features/transactions/domain/repositories/category_repository.dart
 import '../../features/transactions/domain/repositories/transaction_repository.dart';
 import '../../features/accounting/data/repositories/accounting_repository_impl.dart';
 import '../../features/accounting/domain/repositories/accounting_repository.dart';
+import '../../features/accounting/data/services/accounting_export_service.dart';
 import '../../features/accounting/domain/services/auto_voucher_service.dart';
 import '../../features/accounting/domain/services/voucher_settings_service.dart';
 import '../../features/accounting/presentation/bloc/accounting_document_bloc.dart';
@@ -174,10 +175,13 @@ class ServiceLocator {
     );
 
     sl.registerLazySingleton<AutoVoucherService>(
-            () => AutoVoucherService(
+      () => AutoVoucherService(
         sl<AccountingRepository>(),
         settingsService: VoucherSettingsService(sl<SharedPreferences>()),
       ),
+    );
+    sl.registerLazySingleton<AccountingExportService>(
+      () => AccountingExportService(sl<AccountingRepository>()),
     );
 
     sl.registerFactory<AccountingDocumentBloc>(

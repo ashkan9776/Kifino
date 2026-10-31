@@ -6,9 +6,11 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/ledger_entry.dart';
 import '../../domain/repositories/accounting_repository.dart';
+import '../services/accounting_export_actions.dart';
 
 class LedgerPage extends StatefulWidget {
   final String? initialSubjectId;
@@ -18,7 +20,7 @@ class LedgerPage extends StatefulWidget {
   State<LedgerPage> createState() => _LedgerPageState();
 }
 
-class _LedgerPageState extends State<LedgerPage> {
+class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
   List<AccountingSubjectEntity> _subjects = [];
   AccountingSubjectEntity? _selectedSubject;
   LedgerReport? _report;
@@ -78,6 +80,17 @@ class _LedgerPageState extends State<LedgerPage> {
         title: const Text('دفتر کل و دفتر معین'),
         centerTitle: true,
         actions: [
+          buildExportAction(() async {
+            final subject = _selectedSubject;
+            if (subject == null) {
+              throw StateError('ابتدا سرفصل حساب را انتخاب کنید');
+            }
+            return getIt<AccountingExportService>().exportLedger(
+              subjectId: subject.id,
+              startDate: _startDate,
+              endDate: _endDate,
+            );
+          }),
           IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: () => _pickDateRange(context),

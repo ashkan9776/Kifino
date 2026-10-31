@@ -4,11 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/utils/money.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../business/domain/entities/invoice_entity.dart';
+import '../../../business/domain/repositories/business_repository.dart';
 import '../../domain/entities/accounting_document_entity.dart';
+import '../../domain/entities/financial_statement_report.dart';
+import '../../domain/repositories/accounting_repository.dart';
 import '../bloc/accounting_document_bloc.dart';
 import '../bloc/trial_balance_bloc.dart';
 
@@ -73,6 +80,14 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
 
             // Quick Trial Balance Equilibrium Card
             _buildEquilibriumCard(colors),
+            const SizedBox(height: 20),
+
+            // Current Period P&L Card (Phase-4)
+            _buildPeriodPnlCard(colors),
+            const SizedBox(height: 20),
+
+            // Overdue Invoices Section (Phase-4)
+            _buildOverdueInvoicesSection(context, colors),
             const SizedBox(height: 20),
 
             // Recent Documents Section
@@ -456,6 +471,257 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
 
         return const SizedBox.shrink();
       },
+    );
+  }
+
+  /// «سود و زیان دوره» — figures for the current month (first of the current
+  /// Gregorian month until now). Hidden entirely on error / empty data.
+  Widget _buildPeriodPnlCard(KifinoColorsExtension colors) {
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    return FutureBuilder<IncomeStatementReport>(
+      future: sl<AccountingRepository>().getIncomeStatementReport(
+            startDate: monthStart,
+            endDate: now,
+          ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox.shrink();
+        }
+        final report = snapshot.data;
+        if (report == null) return const SizedBox.shrink(); // error → hide
+
+        final revenue = Money.fromMinor(
+          report.netRevenue.minorUnits + report.totalOtherIncome.minorUnits,
+        );
+        final expense = Money.fromMinor(
+          report.totalSalesDeductions.minorUnits +
+              report.totalCogs.minorUnits +
+              report.totalOperatingExpenses.minorUnits +
+              report.totalOtherExpenses.minorUnits,
+        );
+        final net = report.netProfit;
+        final netColor = net.isNegative ? colors.expense : colors.income;
+
+        return AppCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.trending_up,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'سود و زیان دوره',
+                        style: AppTypography.titleSmall
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: netColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'ماه جاری',
+                        style: TextStyle(
+                          color: netColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('درآمد:', style: AppTypography.bodySmall),
+                        const SizedBox(height: 4),
+                        AppMoneyText(money: revenue),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('هزینه:', style: AppTypography.bodySmall),
+                        const SizedBox(height: 4),
+                        AppMoneyText(money: expense),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('سود (زیان) خالص:',
+                            style: AppTypography.bodySmall),
+                        const SizedBox(height: 4),
+                        AppMoneyText(
+                          money: net,
+                          style: AppTypography.moneyTile
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// «فاکتورهای سررسیدشده» — up to 5 overdue business invoices. Rendered
+  /// only when there is at least one overdue invoice.
+  Widget _buildOverdueInvoicesSection(
+      BuildContext context, KifinoColorsExtension colors) {
+    return FutureBuilder<Result<List<InvoiceEntity>>>(
+      future: sl<BusinessRepository>().getInvoices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox.shrink();
+        }
+        final invoices = snapshot.data?.dataOrNull ?? const <InvoiceEntity>[];
+        final overdue = invoices.where((inv) => inv.isOverdue).toList()
+          ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+        if (overdue.isEmpty) return const SizedBox.shrink();
+
+        final shown = overdue.take(5).toList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.deepOrange,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text('فاکتورهای سررسیدشده',
+                        style: AppTypography.titleMedium),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: colors.expense.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        TextNormalizer.toPersianDigits(overdue.length.toString()),
+                        style: TextStyle(
+                          color: colors.expense,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => context.push('/business'),
+                  child: const Text('مشاهده همه'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...shown.map((inv) => _buildOverdueInvoiceTile(context, inv, colors)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildOverdueInvoiceTile(
+      BuildContext context, InvoiceEntity invoice, KifinoColorsExtension colors) {
+    final daysOverdue = DateTime.now().difference(invoice.dueDate).inDays;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppCard(
+        onTap: () => context.push('/business'),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.expense.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.receipt_long, color: colors.expense, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${invoice.type.titleFa} #${TextNormalizer.toPersianDigits(invoice.invoiceNumber)}',
+                      style: AppTypography.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      invoice.contactName ?? 'بدون طرف حساب',
+                      style: AppTypography.bodySmall
+                          .copyWith(color: colors.textSecondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AppMoneyText(
+                      money: invoice.remainingBalance,
+                      style: AppTypography.moneyTile),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${TextNormalizer.toPersianDigits(daysOverdue.toString())} روز تأخیر',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: colors.expense,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
