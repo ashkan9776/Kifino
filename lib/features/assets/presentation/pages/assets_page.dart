@@ -33,6 +33,7 @@ class _AssetsPageState extends State<AssetsPage> {
     final unitController = TextEditingController(text: 'گرم');
     final costController = TextEditingController();
     final valueController = TextEditingController();
+    final customTypeController = TextEditingController();
     AssetCategory category = _selectedCategory ?? AssetCategory.gold;
 
     showModalBottomSheet(
@@ -83,6 +84,19 @@ class _AssetsPageState extends State<AssetsPage> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.md),
+                      if (category == AssetCategory.other) ...[
+                        TextField(
+                          controller: customTypeController,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: l10n.isPersian
+                                ? 'نوع دارایی (مثلاً فرش دستباف، طلای آب‌شده)'
+                                : 'Asset type (e.g. handwoven carpet)',
+                            prefixIcon: const Icon(Icons.edit_note_rounded),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
                       TextField(
                         controller: nameController,
                         decoration: InputDecoration(
@@ -443,7 +457,7 @@ class _AssetsPageState extends State<AssetsPage> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  TextNormalizer.auto('${asset.quantity} ${asset.unit} · ${asset.category.titleFa}'),
+                                  TextNormalizer.auto('${asset.quantity} ${asset.unit} · ${asset.displayType}'),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
                                   ),

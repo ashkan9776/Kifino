@@ -7643,6 +7643,17 @@ class $AssetsTableTable extends AssetsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _customTypeNameMeta = const VerificationMeta(
+    'customTypeName',
+  );
+  @override
+  late final GeneratedColumn<String> customTypeName = GeneratedColumn<String>(
+    'custom_type_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _quantityMeta = const VerificationMeta(
     'quantity',
   );
@@ -7778,6 +7789,7 @@ class $AssetsTableTable extends AssetsTable
     id,
     name,
     category,
+    customTypeName,
     quantity,
     unit,
     costBasisMinor,
@@ -7823,6 +7835,15 @@ class $AssetsTableTable extends AssetsTable
       );
     } else if (isInserting) {
       context.missing(_categoryMeta);
+    }
+    if (data.containsKey('custom_type_name')) {
+      context.handle(
+        _customTypeNameMeta,
+        customTypeName.isAcceptableOrUnknown(
+          data['custom_type_name']!,
+          _customTypeNameMeta,
+        ),
+      );
     }
     if (data.containsKey('quantity')) {
       context.handle(
@@ -7942,6 +7963,10 @@ class $AssetsTableTable extends AssetsTable
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       )!,
+      customTypeName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_type_name'],
+      ),
       quantity: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}quantity'],
@@ -8003,6 +8028,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
   final String id;
   final String name;
   final String category;
+  final String? customTypeName;
   final double quantity;
   final String unit;
   final int costBasisMinor;
@@ -8019,6 +8045,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     required this.id,
     required this.name,
     required this.category,
+    this.customTypeName,
     required this.quantity,
     required this.unit,
     required this.costBasisMinor,
@@ -8038,6 +8065,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['category'] = Variable<String>(category);
+    if (!nullToAbsent || customTypeName != null) {
+      map['custom_type_name'] = Variable<String>(customTypeName);
+    }
     map['quantity'] = Variable<double>(quantity);
     map['unit'] = Variable<String>(unit);
     map['cost_basis_minor'] = Variable<int>(costBasisMinor);
@@ -8062,6 +8092,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       id: Value(id),
       name: Value(name),
       category: Value(category),
+      customTypeName: customTypeName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customTypeName),
       quantity: Value(quantity),
       unit: Value(unit),
       costBasisMinor: Value(costBasisMinor),
@@ -8090,6 +8123,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       category: serializer.fromJson<String>(json['category']),
+      customTypeName: serializer.fromJson<String?>(json['customTypeName']),
       quantity: serializer.fromJson<double>(json['quantity']),
       unit: serializer.fromJson<String>(json['unit']),
       costBasisMinor: serializer.fromJson<int>(json['costBasisMinor']),
@@ -8111,6 +8145,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'category': serializer.toJson<String>(category),
+      'customTypeName': serializer.toJson<String?>(customTypeName),
       'quantity': serializer.toJson<double>(quantity),
       'unit': serializer.toJson<String>(unit),
       'costBasisMinor': serializer.toJson<int>(costBasisMinor),
@@ -8130,6 +8165,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     String? id,
     String? name,
     String? category,
+    Value<String?> customTypeName = const Value.absent(),
     double? quantity,
     String? unit,
     int? costBasisMinor,
@@ -8146,6 +8182,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     id: id ?? this.id,
     name: name ?? this.name,
     category: category ?? this.category,
+    customTypeName: customTypeName.present
+        ? customTypeName.value
+        : this.customTypeName,
     quantity: quantity ?? this.quantity,
     unit: unit ?? this.unit,
     costBasisMinor: costBasisMinor ?? this.costBasisMinor,
@@ -8164,6 +8203,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       category: data.category.present ? data.category.value : this.category,
+      customTypeName: data.customTypeName.present
+          ? data.customTypeName.value
+          : this.customTypeName,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unit: data.unit.present ? data.unit.value : this.unit,
       costBasisMinor: data.costBasisMinor.present
@@ -8193,6 +8235,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('category: $category, ')
+          ..write('customTypeName: $customTypeName, ')
           ..write('quantity: $quantity, ')
           ..write('unit: $unit, ')
           ..write('costBasisMinor: $costBasisMinor, ')
@@ -8214,6 +8257,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     id,
     name,
     category,
+    customTypeName,
     quantity,
     unit,
     costBasisMinor,
@@ -8234,6 +8278,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
           other.id == this.id &&
           other.name == this.name &&
           other.category == this.category &&
+          other.customTypeName == this.customTypeName &&
           other.quantity == this.quantity &&
           other.unit == this.unit &&
           other.costBasisMinor == this.costBasisMinor &&
@@ -8252,6 +8297,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> category;
+  final Value<String?> customTypeName;
   final Value<double> quantity;
   final Value<String> unit;
   final Value<int> costBasisMinor;
@@ -8269,6 +8315,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.category = const Value.absent(),
+    this.customTypeName = const Value.absent(),
     this.quantity = const Value.absent(),
     this.unit = const Value.absent(),
     this.costBasisMinor = const Value.absent(),
@@ -8287,6 +8334,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     required String id,
     required String name,
     required String category,
+    this.customTypeName = const Value.absent(),
     required double quantity,
     required String unit,
     required int costBasisMinor,
@@ -8315,6 +8363,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? category,
+    Expression<String>? customTypeName,
     Expression<double>? quantity,
     Expression<String>? unit,
     Expression<int>? costBasisMinor,
@@ -8333,6 +8382,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (category != null) 'category': category,
+      if (customTypeName != null) 'custom_type_name': customTypeName,
       if (quantity != null) 'quantity': quantity,
       if (unit != null) 'unit': unit,
       if (costBasisMinor != null) 'cost_basis_minor': costBasisMinor,
@@ -8353,6 +8403,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? category,
+    Value<String?>? customTypeName,
     Value<double>? quantity,
     Value<String>? unit,
     Value<int>? costBasisMinor,
@@ -8371,6 +8422,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
       id: id ?? this.id,
       name: name ?? this.name,
       category: category ?? this.category,
+      customTypeName: customTypeName ?? this.customTypeName,
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       costBasisMinor: costBasisMinor ?? this.costBasisMinor,
@@ -8398,6 +8450,9 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     }
     if (category.present) {
       map['category'] = Variable<String>(category.value);
+    }
+    if (customTypeName.present) {
+      map['custom_type_name'] = Variable<String>(customTypeName.value);
     }
     if (quantity.present) {
       map['quantity'] = Variable<double>(quantity.value);
@@ -8447,6 +8502,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('category: $category, ')
+          ..write('customTypeName: $customTypeName, ')
           ..write('quantity: $quantity, ')
           ..write('unit: $unit, ')
           ..write('costBasisMinor: $costBasisMinor, ')
@@ -24524,6 +24580,7 @@ typedef $$AssetsTableTableCreateCompanionBuilder =
       required String id,
       required String name,
       required String category,
+      Value<String?> customTypeName,
       required double quantity,
       required String unit,
       required int costBasisMinor,
@@ -24543,6 +24600,7 @@ typedef $$AssetsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String> category,
+      Value<String?> customTypeName,
       Value<double> quantity,
       Value<String> unit,
       Value<int> costBasisMinor,
@@ -24579,6 +24637,11 @@ class $$AssetsTableTableFilterComposer
 
   ColumnFilters<String> get category => $composableBuilder(
     column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customTypeName => $composableBuilder(
+    column: $table.customTypeName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24667,6 +24730,11 @@ class $$AssetsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customTypeName => $composableBuilder(
+    column: $table.customTypeName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get quantity => $composableBuilder(
     column: $table.quantity,
     builder: (column) => ColumnOrderings(column),
@@ -24745,6 +24813,11 @@ class $$AssetsTableTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get customTypeName => $composableBuilder(
+    column: $table.customTypeName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
@@ -24825,6 +24898,7 @@ class $$AssetsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String?> customTypeName = const Value.absent(),
                 Value<double> quantity = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<int> costBasisMinor = const Value.absent(),
@@ -24842,6 +24916,7 @@ class $$AssetsTableTableTableManager
                 id: id,
                 name: name,
                 category: category,
+                customTypeName: customTypeName,
                 quantity: quantity,
                 unit: unit,
                 costBasisMinor: costBasisMinor,
@@ -24861,6 +24936,7 @@ class $$AssetsTableTableTableManager
                 required String id,
                 required String name,
                 required String category,
+                Value<String?> customTypeName = const Value.absent(),
                 required double quantity,
                 required String unit,
                 required int costBasisMinor,
@@ -24878,6 +24954,7 @@ class $$AssetsTableTableTableManager
                 id: id,
                 name: name,
                 category: category,
+                customTypeName: customTypeName,
                 quantity: quantity,
                 unit: unit,
                 costBasisMinor: costBasisMinor,

@@ -73,6 +73,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await m.createTable(installmentPaymentsTable);
           }
+          if (from < 8) {
+            await m.addColumn(assetsTable, assetsTable.customTypeName);
+          }
           if (from < 6) {
             // Warehouse light (Phase 3): secondary unit + conversion factor.
             await m.addColumn(productsTable, productsTable.secondaryUnit);

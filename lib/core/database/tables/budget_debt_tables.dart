@@ -125,6 +125,7 @@ class AssetsTable extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get category => text()(); // gold, currency, crypto, stock, property, vehicle, other
+  TextColumn get customTypeName => text().nullable()(); // user-defined type when category = other
   RealColumn get quantity => real()();
   TextColumn get unit => text()();
   IntColumn get costBasisMinor => integer()();

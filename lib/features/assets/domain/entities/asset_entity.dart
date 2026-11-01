@@ -26,6 +26,7 @@ class AssetEntity extends Equatable {
   final String id;
   final String name;
   final AssetCategory category;
+  final String? customTypeName; // user-defined type for «سایر دارایی»
   final double quantity;
   final String unit; // gram, coin, usd, piece, etc.
   final Money costBasis; // Cost of acquisition
@@ -36,10 +37,13 @@ class AssetEntity extends Equatable {
   final DateTime updatedAt;
   final DateTime? deletedAt;
 
+  String get displayType => category == AssetCategory.other && (customTypeName?.isNotEmpty ?? false) ? customTypeName! : category.titleFa;
+
   const AssetEntity({
     required this.id,
     required this.name,
     required this.category,
+    this.customTypeName,
     required this.quantity,
     required this.unit,
     required this.costBasis,
