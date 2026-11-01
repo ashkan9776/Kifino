@@ -25,6 +25,7 @@ class MorePage extends StatelessWidget {
 
     final managementItems = [
       (Icons.account_balance_wallet_outlined, isPersian ? 'حساب‌ها و کارت‌ها' : 'Accounts & Cards', '/accounts'),
+      (Icons.category_outlined, isPersian ? 'دسته‌بندی‌های سفارشی' : 'Custom categories', '/categories'),
       (Icons.flag_outlined, isPersian ? 'اهداف مالی و پس‌انداز' : 'Financial goals', '/goals'),
       (Icons.handshake_outlined, l10n.debts, '/debts'),
       (Icons.calendar_month_outlined, l10n.installments, '/installments'),

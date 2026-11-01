@@ -20,6 +20,7 @@ import '../../features/settings/presentation/pages/more_page.dart';
 import '../../features/sync/presentation/pages/sync_page.dart';
 import '../../features/transactions/domain/entities/transaction_entity.dart';
 import '../../features/transactions/presentation/pages/activity_page.dart';
+import '../../features/transactions/presentation/pages/categories_page.dart';
 import '../../features/transactions/presentation/pages/fast_add_transaction_page.dart';
 import '../../features/accounting/presentation/pages/accounting_dashboard_page.dart';
 import '../../features/accounting/presentation/pages/voucher_settings_page.dart';
@@ -127,6 +128,11 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/accounts',
         builder: (context, state) => const AccountsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/categories',
+        builder: (context, state) => const CategoriesPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

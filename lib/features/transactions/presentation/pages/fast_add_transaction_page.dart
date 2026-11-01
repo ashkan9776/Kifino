@@ -9,7 +9,6 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/utils/icon_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -21,6 +20,7 @@ import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../bloc/transaction_bloc.dart';
+import '../widgets/category_icon_color_picker.dart';
 
 class FastAddTransactionPage extends StatefulWidget {
   /// Quick-add type preset pushed as `extra`: 'income' | 'expense' | 'transfer'.
@@ -79,7 +79,6 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
   Future<void> _loadDependencies() async {
     final accsResult = await sl<AccountRepository>().getAccounts();
     final catsResult = await sl<CategoryRepository>().getCategories();
-
     if (mounted) {
       setState(() {
         _accounts = accsResult.dataOrNull ?? [];
@@ -133,6 +132,25 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
         _isLoadingDeps = false;
       });
     }
+  }
+
+  /// Refreshes categories after returning from the custom-categories manager,
+  /// keeping the current selection when it is still valid for the active type.
+  Future<void> _reloadCategories() async {
+    final catsResult = await sl<CategoryRepository>().getCategories();
+    if (!mounted) return;
+    setState(() {
+      _categories = catsResult.dataOrNull ?? _categories;
+      final activeType = _selectedTypeIndex == 0
+          ? CategoryType.expense
+          : CategoryType.income;
+      final stillValid = _categories.any(
+        (c) => c.id == _selectedCategoryId && c.type == activeType,
+      );
+      if (!stillValid) {
+        _selectedCategoryId = _defaultCategoryIdFor(_selectedTypeIndex);
+      }
+    });
   }
 
   @override
@@ -375,9 +393,10 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
-                        // Category Selector (if not transfer)
-                        if (_selectedTypeIndex != 2 &&
-                            filteredCategories.isNotEmpty) ...[
+                        // Category Selector (if not transfer). The section
+                        // stays visible even with zero categories so the
+                        // «+ مدیریت» chip can open the categories manager.
+                        if (_selectedTypeIndex != 2) ...[
                           Text(
                             l10n.selectCategory,
                             style: AppTypography.labelLarge,
@@ -386,24 +405,34 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                           Wrap(
                             spacing: AppSpacing.sm,
                             runSpacing: AppSpacing.xs,
-                            children: filteredCategories.map((cat) {
-                              final isSelected = _selectedCategoryId == cat.id;
-                              return ChoiceChip(
-                                avatar: Icon(
-                                  IconUtils.getIconData(cat.iconCodePoint),
-                                  size: 18,
-                                ),
-                                label: Text(cat.name),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(
-                                      () => _selectedCategoryId = cat.id,
-                                    );
-                                  }
+                            children: [
+                              ...filteredCategories.map((cat) {
+                                final isSelected = _selectedCategoryId == cat.id;
+                                return ChoiceChip(
+                                  avatar: Icon(
+                                    CategoryIconAssets.resolve(cat.iconCodePoint),
+                                    size: 18,
+                                  ),
+                                  label: Text(cat.name),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      setState(
+                                        () => _selectedCategoryId = cat.id,
+                                      );
+                                    }
+                                  },
+                                );
+                              }),
+                              ActionChip(
+                                avatar: const Icon(Icons.add_rounded, size: 16),
+                                label: Text(l10n.isPersian ? '+ مدیریت' : 'Manage'),
+                                onPressed: () async {
+                                  await context.push('/categories');
+                                  if (mounted) await _reloadCategories();
                                 },
-                              );
-                            }).toList(),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: AppSpacing.lg),
                         ],

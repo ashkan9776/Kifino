@@ -34,6 +34,7 @@ import '../../features/transactions/data/repositories/category_repository_impl.d
 import '../../features/transactions/data/repositories/transaction_repository_impl.dart';
 import '../../features/transactions/domain/repositories/category_repository.dart';
 import '../../features/transactions/domain/repositories/transaction_repository.dart';
+import '../../features/transactions/presentation/bloc/category_cubit.dart';
 import '../../features/accounting/data/repositories/accounting_repository_impl.dart';
 import '../../features/accounting/domain/repositories/accounting_repository.dart';
 import '../../features/accounting/data/services/accounting_export_service.dart';
@@ -206,6 +207,11 @@ class ServiceLocator {
 
     sl.registerFactory<SettingsCubit>(
       () => SettingsCubit(sl<SettingsService>()),
+    );
+
+    // Custom categories manager (watch per selected type + CRUD).
+    sl.registerFactory<CategoryCubit>(
+      () => CategoryCubit(sl<CategoryRepository>()),
     );
 
     // 9. Accounting OS Core & Standard Double-Entry System

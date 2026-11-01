@@ -99,6 +99,71 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   @override
+  Future<Result<CategoryEntity>> updateCategory(CategoryEntity category) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.categoriesTable)..where((tbl) => tbl.id.equals(category.id))).write(
+        CategoriesTableCompanion(
+          name: Value(category.name),
+          iconCodePoint: Value(category.iconCodePoint),
+          colorHex: Value(category.colorHex),
+          updatedAt: Value(now),
+          syncStatus: const Value(1),
+        ),
+      );
+      final updated = await (_db.select(_db.categoriesTable)..where((tbl) => tbl.id.equals(category.id))).getSingle();
+      return Success(_toEntity(updated));
+    } catch (e) {
+      return DatabaseFailure('ویرایش دسته انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteCategory(String id) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _db.transaction(() async {
+        // Transactions survive: they just become uncategorized. No financial
+        // data is ever deleted along with a category.
+        await (_db.update(_db.transactionsTable)
+              ..where((tbl) => tbl.categoryId.equals(id)))
+            .write(const TransactionsTableCompanion(categoryId: Value(null)));
+
+        await (_db.update(_db.categoriesTable)..where((tbl) => tbl.id.equals(id))).write(
+          CategoriesTableCompanion(
+            deletedAt: Value(now),
+            updatedAt: Value(now),
+            syncStatus: const Value(3),
+          ),
+        );
+
+        await _db.into(_db.syncQueueTable).insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'categories',
+                entityId: id,
+                operation: 'DELETE',
+                payloadJson: '{"id":"$id"}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('حذف دسته انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<int> countTransactionsUsing(String categoryId) async {
+    final rows = await (_db.select(_db.transactionsTable)
+          ..where((tbl) =>
+              tbl.categoryId.equals(categoryId) & tbl.deletedAt.isNull()))
+        .get();
+    return rows.length;
+  }
+
+  @override
   Future<Result<void>> seedDefaultCategoriesIfEmpty() async {
     try {
       final count = await _db.categoriesTable.count().getSingle();
