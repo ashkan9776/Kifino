@@ -15,7 +15,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
-import '../../../accounts/presentation/bloc/accounts_bloc.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../domain/entities/installment_entity.dart';
 import '../bloc/installment_bloc.dart';
 import '../widgets/edit_installment_sheet.dart';
@@ -148,7 +149,7 @@ class InstallmentsPage extends StatelessWidget {
                           InkWell(
                             onTap: () async {
                               final now = DateTime.now();
-                              final picked = await showDatePicker(
+                              final picked = await showAppDatePicker(
                                 context: context,
                                 initialDate: dueDate,
                                 firstDate: now.subtract(

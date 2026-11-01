@@ -15,7 +15,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
-import '../../../settings/presentation/cubit/settings_cubit.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/goal_entity.dart';
 import '../bloc/goal_bloc.dart';
 
@@ -87,7 +88,7 @@ class GoalsPage extends StatelessWidget {
                           TextButton.icon(
                             onPressed: () async {
                               final now = DateTime.now();
-                              final picked = await showDatePicker(
+                              final picked = await showAppDatePicker(
                                 context: context,
                                 initialDate: now,
                                 firstDate: now,

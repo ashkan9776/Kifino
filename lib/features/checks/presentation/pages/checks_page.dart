@@ -15,7 +15,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
-import '../../../accounts/presentation/bloc/accounts_bloc.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../domain/entities/check_entity.dart';
 import '../bloc/check_bloc.dart';
 import '../widgets/check_status_history_sheet.dart';
@@ -248,7 +249,7 @@ class _ChecksPageState extends State<ChecksPage> {
                           InkWell(
                             onTap: () async {
                               final now = DateTime.now();
-                              final picked = await showDatePicker(
+                              final picked = await showAppDatePicker(
                                 context: context,
                                 initialDate: dueDate,
                                 firstDate: now.subtract(const Duration(days: 365)),

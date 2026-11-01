@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
@@ -354,8 +355,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           return;
                         }
                         final now = DateTime.now();
-                        final startOfMonth = DateTime(now.year, now.month, 1);
-                        final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+                        final startOfMonth = startOfJalaliMonth(now);
+                        final endOfMonth = endOfJalaliMonth(now);
 
                         context.read<BudgetBloc>().add(BudgetCreateSubmitted(BudgetEntity(
                               id: const Uuid().v4(),

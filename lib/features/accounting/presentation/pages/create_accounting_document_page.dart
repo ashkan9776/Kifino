@@ -11,7 +11,8 @@ import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_money_text.dart';
-import '../../domain/entities/accounting_audit_entity.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/accounting_transaction_entity.dart';
@@ -598,7 +599,7 @@ class _CreateAccountingDocumentPageState
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),

@@ -11,7 +11,8 @@ import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_money_text.dart';
-import '../../domain/entities/installment_entity.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/installment_entity.dart';
 import '../bloc/installment_bloc.dart';
 
 /// Phase 3 rework — edit sheet for an existing installment plan.
@@ -226,7 +227,7 @@ class _EditInstallmentSheetState extends State<EditInstallmentSheet> {
               InkWell(
                 onTap: () async {
                   final now = DateTime.now();
-                  final picked = await showDatePicker(
+                  final picked = await showAppDatePicker(
                     context: context,
                     initialDate: _dueDate,
                     firstDate: now.subtract(const Duration(days: 365)),

@@ -14,7 +14,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
-import '../../domain/entities/debt_entity.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/debt_entity.dart';
 import '../bloc/debt_bloc.dart';
 
 class DebtsPage extends StatefulWidget {
@@ -100,7 +101,7 @@ class _DebtsPageState extends State<DebtsPage> {
                     InkWell(
                       onTap: () async {
                         final now = DateTime.now();
-                        final picked = await showDatePicker(
+                        final picked = await showAppDatePicker(
                           context: context,
                           initialDate: dueDate,
                           firstDate: now.subtract(const Duration(days: 365)),

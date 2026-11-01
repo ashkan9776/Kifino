@@ -144,7 +144,7 @@ class JalaliDate {
 }
 
 class AppDateFormatter {
-  static String format(DateTime date, {String locale = 'en', bool isJalali = false}) {
+  static String format(DateTime date, {String locale = 'fa', bool isJalali = false}) {
     if (isJalali || locale.startsWith('fa')) {
       final j = JalaliDate.fromDateTime(date);
       return j.formatFull(usePersianDigits: locale.startsWith('fa'));
@@ -153,7 +153,7 @@ class AppDateFormatter {
     }
   }
 
-  static String formatShort(DateTime date, {String locale = 'en', bool isJalali = false}) {
+  static String formatShort(DateTime date, {String locale = 'fa', bool isJalali = false}) {
     if (isJalali || locale.startsWith('fa')) {
       final j = JalaliDate.fromDateTime(date);
       return j.format(usePersianDigits: locale.startsWith('fa'));
@@ -162,12 +162,12 @@ class AppDateFormatter {
     }
   }
 
-  static String formatTime(DateTime date, {String locale = 'en'}) {
+  static String formatTime(DateTime date, {String locale = 'fa'}) {
     final formatted = DateFormat('HH:mm').format(date);
     return locale.startsWith('fa') ? TextNormalizer.toPersianDigits(formatted) : formatted;
   }
 
-  static String formatRelative(DateTime date, {String locale = 'en'}) {
+  static String formatRelative(DateTime date, {String locale = 'fa'}) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
@@ -193,4 +193,21 @@ class AppDateFormatter {
       return DateFormat('MMM d, yyyy').format(date);
     }
   }
+}
+
+
+/// Start of the Jalali month containing [dateTime] — «ماه جاری» boundaries
+/// must follow the Shamsi calendar, not the Gregorian one.
+DateTime startOfJalaliMonth(DateTime dateTime) {
+  final j = JalaliDate.fromDateTime(dateTime);
+  return JalaliDate(j.year, j.month, 1).toDateTime();
+}
+
+/// End of the Jalali month containing [dateTime] (last second of the month).
+DateTime endOfJalaliMonth(DateTime dateTime) {
+  final j = JalaliDate.fromDateTime(dateTime);
+  final firstOfNext = j.month == 12
+      ? JalaliDate(j.year + 1, 1, 1).toDateTime()
+      : JalaliDate(j.year, j.month + 1, 1).toDateTime();
+  return firstOfNext.subtract(const Duration(seconds: 1));
 }

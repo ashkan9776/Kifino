@@ -478,7 +478,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   /// Gregorian month until now). Hidden entirely on error / empty data.
   Widget _buildPeriodPnlCard(KifinoColorsExtension colors) {
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
+    final monthStart = startOfJalaliMonth(now);
 
     return FutureBuilder<IncomeStatementReport>(
       future: sl<AccountingRepository>().getIncomeStatementReport(

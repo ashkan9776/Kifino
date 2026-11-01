@@ -9,7 +9,8 @@ import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
-import '../../data/services/accounting_export_service.dart';
+
+import '../../../../core/widgets/app_date_picker.dart';import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/financial_statement_report.dart';
 import '../bloc/financial_statements_bloc.dart';
 import '../services/accounting_export_actions.dart';
@@ -471,7 +472,7 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _asOfDate,
       firstDate: DateTime(2020),
