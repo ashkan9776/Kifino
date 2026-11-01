@@ -18110,6 +18110,596 @@ class FiscalYearsTableCompanion extends UpdateCompanion<FiscalYearData> {
   }
 }
 
+class $InstallmentPaymentsTableTable extends InstallmentPaymentsTable
+    with TableInfo<$InstallmentPaymentsTableTable, InstallmentPaymentData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InstallmentPaymentsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _installmentIdMeta = const VerificationMeta(
+    'installmentId',
+  );
+  @override
+  late final GeneratedColumn<String> installmentId = GeneratedColumn<String>(
+    'installment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _installmentIndexMeta = const VerificationMeta(
+    'installmentIndex',
+  );
+  @override
+  late final GeneratedColumn<int> installmentIndex = GeneratedColumn<int>(
+    'installment_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ledgerTransactionIdMeta =
+      const VerificationMeta('ledgerTransactionId');
+  @override
+  late final GeneratedColumn<String> ledgerTransactionId =
+      GeneratedColumn<String>(
+        'ledger_transaction_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paidAtMeta = const VerificationMeta('paidAt');
+  @override
+  late final GeneratedColumn<int> paidAt = GeneratedColumn<int>(
+    'paid_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    installmentId,
+    amountMinor,
+    installmentIndex,
+    ledgerTransactionId,
+    notes,
+    paidAt,
+    createdAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'installment_payments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InstallmentPaymentData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('installment_id')) {
+      context.handle(
+        _installmentIdMeta,
+        installmentId.isAcceptableOrUnknown(
+          data['installment_id']!,
+          _installmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_installmentIdMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    if (data.containsKey('installment_index')) {
+      context.handle(
+        _installmentIndexMeta,
+        installmentIndex.isAcceptableOrUnknown(
+          data['installment_index']!,
+          _installmentIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_installmentIndexMeta);
+    }
+    if (data.containsKey('ledger_transaction_id')) {
+      context.handle(
+        _ledgerTransactionIdMeta,
+        ledgerTransactionId.isAcceptableOrUnknown(
+          data['ledger_transaction_id']!,
+          _ledgerTransactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('paid_at')) {
+      context.handle(
+        _paidAtMeta,
+        paidAt.isAcceptableOrUnknown(data['paid_at']!, _paidAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_paidAtMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InstallmentPaymentData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InstallmentPaymentData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      installmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}installment_id'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+      installmentIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}installment_index'],
+      )!,
+      ledgerTransactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ledger_transaction_id'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      paidAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}paid_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $InstallmentPaymentsTableTable createAlias(String alias) {
+    return $InstallmentPaymentsTableTable(attachedDatabase, alias);
+  }
+}
+
+class InstallmentPaymentData extends DataClass
+    implements Insertable<InstallmentPaymentData> {
+  final String id;
+  final String installmentId;
+  final int amountMinor;
+  final int installmentIndex;
+  final String? ledgerTransactionId;
+  final String? notes;
+  final int paidAt;
+  final int createdAt;
+  final int? deletedAt;
+  const InstallmentPaymentData({
+    required this.id,
+    required this.installmentId,
+    required this.amountMinor,
+    required this.installmentIndex,
+    this.ledgerTransactionId,
+    this.notes,
+    required this.paidAt,
+    required this.createdAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['installment_id'] = Variable<String>(installmentId);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    map['installment_index'] = Variable<int>(installmentIndex);
+    if (!nullToAbsent || ledgerTransactionId != null) {
+      map['ledger_transaction_id'] = Variable<String>(ledgerTransactionId);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['paid_at'] = Variable<int>(paidAt);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  InstallmentPaymentsTableCompanion toCompanion(bool nullToAbsent) {
+    return InstallmentPaymentsTableCompanion(
+      id: Value(id),
+      installmentId: Value(installmentId),
+      amountMinor: Value(amountMinor),
+      installmentIndex: Value(installmentIndex),
+      ledgerTransactionId: ledgerTransactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ledgerTransactionId),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      paidAt: Value(paidAt),
+      createdAt: Value(createdAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory InstallmentPaymentData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InstallmentPaymentData(
+      id: serializer.fromJson<String>(json['id']),
+      installmentId: serializer.fromJson<String>(json['installmentId']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+      installmentIndex: serializer.fromJson<int>(json['installmentIndex']),
+      ledgerTransactionId: serializer.fromJson<String?>(
+        json['ledgerTransactionId'],
+      ),
+      notes: serializer.fromJson<String?>(json['notes']),
+      paidAt: serializer.fromJson<int>(json['paidAt']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'installmentId': serializer.toJson<String>(installmentId),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+      'installmentIndex': serializer.toJson<int>(installmentIndex),
+      'ledgerTransactionId': serializer.toJson<String?>(ledgerTransactionId),
+      'notes': serializer.toJson<String?>(notes),
+      'paidAt': serializer.toJson<int>(paidAt),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  InstallmentPaymentData copyWith({
+    String? id,
+    String? installmentId,
+    int? amountMinor,
+    int? installmentIndex,
+    Value<String?> ledgerTransactionId = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    int? paidAt,
+    int? createdAt,
+    Value<int?> deletedAt = const Value.absent(),
+  }) => InstallmentPaymentData(
+    id: id ?? this.id,
+    installmentId: installmentId ?? this.installmentId,
+    amountMinor: amountMinor ?? this.amountMinor,
+    installmentIndex: installmentIndex ?? this.installmentIndex,
+    ledgerTransactionId: ledgerTransactionId.present
+        ? ledgerTransactionId.value
+        : this.ledgerTransactionId,
+    notes: notes.present ? notes.value : this.notes,
+    paidAt: paidAt ?? this.paidAt,
+    createdAt: createdAt ?? this.createdAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  InstallmentPaymentData copyWithCompanion(
+    InstallmentPaymentsTableCompanion data,
+  ) {
+    return InstallmentPaymentData(
+      id: data.id.present ? data.id.value : this.id,
+      installmentId: data.installmentId.present
+          ? data.installmentId.value
+          : this.installmentId,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      installmentIndex: data.installmentIndex.present
+          ? data.installmentIndex.value
+          : this.installmentIndex,
+      ledgerTransactionId: data.ledgerTransactionId.present
+          ? data.ledgerTransactionId.value
+          : this.ledgerTransactionId,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      paidAt: data.paidAt.present ? data.paidAt.value : this.paidAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InstallmentPaymentData(')
+          ..write('id: $id, ')
+          ..write('installmentId: $installmentId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('installmentIndex: $installmentIndex, ')
+          ..write('ledgerTransactionId: $ledgerTransactionId, ')
+          ..write('notes: $notes, ')
+          ..write('paidAt: $paidAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    installmentId,
+    amountMinor,
+    installmentIndex,
+    ledgerTransactionId,
+    notes,
+    paidAt,
+    createdAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InstallmentPaymentData &&
+          other.id == this.id &&
+          other.installmentId == this.installmentId &&
+          other.amountMinor == this.amountMinor &&
+          other.installmentIndex == this.installmentIndex &&
+          other.ledgerTransactionId == this.ledgerTransactionId &&
+          other.notes == this.notes &&
+          other.paidAt == this.paidAt &&
+          other.createdAt == this.createdAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class InstallmentPaymentsTableCompanion
+    extends UpdateCompanion<InstallmentPaymentData> {
+  final Value<String> id;
+  final Value<String> installmentId;
+  final Value<int> amountMinor;
+  final Value<int> installmentIndex;
+  final Value<String?> ledgerTransactionId;
+  final Value<String?> notes;
+  final Value<int> paidAt;
+  final Value<int> createdAt;
+  final Value<int?> deletedAt;
+  final Value<int> rowid;
+  const InstallmentPaymentsTableCompanion({
+    this.id = const Value.absent(),
+    this.installmentId = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.installmentIndex = const Value.absent(),
+    this.ledgerTransactionId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.paidAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  InstallmentPaymentsTableCompanion.insert({
+    required String id,
+    required String installmentId,
+    required int amountMinor,
+    required int installmentIndex,
+    this.ledgerTransactionId = const Value.absent(),
+    this.notes = const Value.absent(),
+    required int paidAt,
+    required int createdAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       installmentId = Value(installmentId),
+       amountMinor = Value(amountMinor),
+       installmentIndex = Value(installmentIndex),
+       paidAt = Value(paidAt),
+       createdAt = Value(createdAt);
+  static Insertable<InstallmentPaymentData> custom({
+    Expression<String>? id,
+    Expression<String>? installmentId,
+    Expression<int>? amountMinor,
+    Expression<int>? installmentIndex,
+    Expression<String>? ledgerTransactionId,
+    Expression<String>? notes,
+    Expression<int>? paidAt,
+    Expression<int>? createdAt,
+    Expression<int>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (installmentId != null) 'installment_id': installmentId,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (installmentIndex != null) 'installment_index': installmentIndex,
+      if (ledgerTransactionId != null)
+        'ledger_transaction_id': ledgerTransactionId,
+      if (notes != null) 'notes': notes,
+      if (paidAt != null) 'paid_at': paidAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  InstallmentPaymentsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? installmentId,
+    Value<int>? amountMinor,
+    Value<int>? installmentIndex,
+    Value<String?>? ledgerTransactionId,
+    Value<String?>? notes,
+    Value<int>? paidAt,
+    Value<int>? createdAt,
+    Value<int?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return InstallmentPaymentsTableCompanion(
+      id: id ?? this.id,
+      installmentId: installmentId ?? this.installmentId,
+      amountMinor: amountMinor ?? this.amountMinor,
+      installmentIndex: installmentIndex ?? this.installmentIndex,
+      ledgerTransactionId: ledgerTransactionId ?? this.ledgerTransactionId,
+      notes: notes ?? this.notes,
+      paidAt: paidAt ?? this.paidAt,
+      createdAt: createdAt ?? this.createdAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (installmentId.present) {
+      map['installment_id'] = Variable<String>(installmentId.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (installmentIndex.present) {
+      map['installment_index'] = Variable<int>(installmentIndex.value);
+    }
+    if (ledgerTransactionId.present) {
+      map['ledger_transaction_id'] = Variable<String>(
+        ledgerTransactionId.value,
+      );
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (paidAt.present) {
+      map['paid_at'] = Variable<int>(paidAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InstallmentPaymentsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('installmentId: $installmentId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('installmentIndex: $installmentIndex, ')
+          ..write('ledgerTransactionId: $ledgerTransactionId, ')
+          ..write('notes: $notes, ')
+          ..write('paidAt: $paidAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AccountingAuditLogsTableTable extends AccountingAuditLogsTable
     with TableInfo<$AccountingAuditLogsTableTable, AccountingAuditLogData> {
   @override
@@ -20150,6 +20740,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FiscalYearsTableTable fiscalYearsTable = $FiscalYearsTableTable(
     this,
   );
+  late final $InstallmentPaymentsTableTable installmentPaymentsTable =
+      $InstallmentPaymentsTableTable(this);
   late final $AccountingAuditLogsTableTable accountingAuditLogsTable =
       $AccountingAuditLogsTableTable(this);
   late final $AccountingDetailLedgersTableTable accountingDetailLedgersTable =
@@ -20188,6 +20780,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     accountingDocumentsTable,
     accountingTransactionsTable,
     fiscalYearsTable,
+    installmentPaymentsTable,
     accountingAuditLogsTable,
     accountingDetailLedgersTable,
     accountingDetailValuesTable,
@@ -29091,6 +29684,321 @@ typedef $$FiscalYearsTableTableProcessedTableManager =
       FiscalYearData,
       PrefetchHooks Function()
     >;
+typedef $$InstallmentPaymentsTableTableCreateCompanionBuilder =
+    InstallmentPaymentsTableCompanion Function({
+      required String id,
+      required String installmentId,
+      required int amountMinor,
+      required int installmentIndex,
+      Value<String?> ledgerTransactionId,
+      Value<String?> notes,
+      required int paidAt,
+      required int createdAt,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$InstallmentPaymentsTableTableUpdateCompanionBuilder =
+    InstallmentPaymentsTableCompanion Function({
+      Value<String> id,
+      Value<String> installmentId,
+      Value<int> amountMinor,
+      Value<int> installmentIndex,
+      Value<String?> ledgerTransactionId,
+      Value<String?> notes,
+      Value<int> paidAt,
+      Value<int> createdAt,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$InstallmentPaymentsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $InstallmentPaymentsTableTable> {
+  $$InstallmentPaymentsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get installmentId => $composableBuilder(
+    column: $table.installmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get installmentIndex => $composableBuilder(
+    column: $table.installmentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ledgerTransactionId => $composableBuilder(
+    column: $table.ledgerTransactionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paidAt => $composableBuilder(
+    column: $table.paidAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InstallmentPaymentsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $InstallmentPaymentsTableTable> {
+  $$InstallmentPaymentsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get installmentId => $composableBuilder(
+    column: $table.installmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get installmentIndex => $composableBuilder(
+    column: $table.installmentIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ledgerTransactionId => $composableBuilder(
+    column: $table.ledgerTransactionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get paidAt => $composableBuilder(
+    column: $table.paidAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InstallmentPaymentsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InstallmentPaymentsTableTable> {
+  $$InstallmentPaymentsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get installmentId => $composableBuilder(
+    column: $table.installmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get installmentIndex => $composableBuilder(
+    column: $table.installmentIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ledgerTransactionId => $composableBuilder(
+    column: $table.ledgerTransactionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get paidAt =>
+      $composableBuilder(column: $table.paidAt, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$InstallmentPaymentsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InstallmentPaymentsTableTable,
+          InstallmentPaymentData,
+          $$InstallmentPaymentsTableTableFilterComposer,
+          $$InstallmentPaymentsTableTableOrderingComposer,
+          $$InstallmentPaymentsTableTableAnnotationComposer,
+          $$InstallmentPaymentsTableTableCreateCompanionBuilder,
+          $$InstallmentPaymentsTableTableUpdateCompanionBuilder,
+          (
+            InstallmentPaymentData,
+            BaseReferences<
+              _$AppDatabase,
+              $InstallmentPaymentsTableTable,
+              InstallmentPaymentData
+            >,
+          ),
+          InstallmentPaymentData,
+          PrefetchHooks Function()
+        > {
+  $$InstallmentPaymentsTableTableTableManager(
+    _$AppDatabase db,
+    $InstallmentPaymentsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InstallmentPaymentsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$InstallmentPaymentsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$InstallmentPaymentsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> installmentId = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<int> installmentIndex = const Value.absent(),
+                Value<String?> ledgerTransactionId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> paidAt = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InstallmentPaymentsTableCompanion(
+                id: id,
+                installmentId: installmentId,
+                amountMinor: amountMinor,
+                installmentIndex: installmentIndex,
+                ledgerTransactionId: ledgerTransactionId,
+                notes: notes,
+                paidAt: paidAt,
+                createdAt: createdAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String installmentId,
+                required int amountMinor,
+                required int installmentIndex,
+                Value<String?> ledgerTransactionId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required int paidAt,
+                required int createdAt,
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InstallmentPaymentsTableCompanion.insert(
+                id: id,
+                installmentId: installmentId,
+                amountMinor: amountMinor,
+                installmentIndex: installmentIndex,
+                ledgerTransactionId: ledgerTransactionId,
+                notes: notes,
+                paidAt: paidAt,
+                createdAt: createdAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $InstallmentPaymentsTableTable,
+                    InstallmentPaymentData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $InstallmentPaymentsTableTable,
+                    InstallmentPaymentData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InstallmentPaymentsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InstallmentPaymentsTableTable,
+      InstallmentPaymentData,
+      $$InstallmentPaymentsTableTableFilterComposer,
+      $$InstallmentPaymentsTableTableOrderingComposer,
+      $$InstallmentPaymentsTableTableAnnotationComposer,
+      $$InstallmentPaymentsTableTableCreateCompanionBuilder,
+      $$InstallmentPaymentsTableTableUpdateCompanionBuilder,
+      (
+        InstallmentPaymentData,
+        BaseReferences<
+          _$AppDatabase,
+          $InstallmentPaymentsTableTable,
+          InstallmentPaymentData
+        >,
+      ),
+      InstallmentPaymentData,
+      PrefetchHooks Function()
+    >;
 typedef $$AccountingAuditLogsTableTableCreateCompanionBuilder =
     AccountingAuditLogsTableCompanion Function({
       required String id,
@@ -30275,6 +31183,11 @@ class $AppDatabaseManager {
       );
   $$FiscalYearsTableTableTableManager get fiscalYearsTable =>
       $$FiscalYearsTableTableTableManager(_db, _db.fiscalYearsTable);
+  $$InstallmentPaymentsTableTableTableManager get installmentPaymentsTable =>
+      $$InstallmentPaymentsTableTableTableManager(
+        _db,
+        _db.installmentPaymentsTable,
+      );
   $$AccountingAuditLogsTableTableTableManager get accountingAuditLogsTable =>
       $$AccountingAuditLogsTableTableTableManager(
         _db,

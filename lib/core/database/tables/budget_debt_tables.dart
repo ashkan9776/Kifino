@@ -141,3 +141,25 @@ class AssetsTable extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+
+/// Payment history for one installment plan (Phase 3 rework): every «پرداخت
+/// قسط» records a row here so users can review and correct payments.
+@DataClassName('InstallmentPaymentData')
+class InstallmentPaymentsTable extends Table {
+  @override
+  String get tableName => 'installment_payments';
+
+  TextColumn get id => text()();
+  TextColumn get installmentId => text()();
+  IntColumn get amountMinor => integer()();
+  IntColumn get installmentIndex => integer()(); // which قسط (1-based)
+  TextColumn? get ledgerTransactionId => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  IntColumn get paidAt => integer()();
+  IntColumn get createdAt => integer()();
+  IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

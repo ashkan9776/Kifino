@@ -8,6 +8,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/utils/money.dart';
 import '../../domain/entities/installment_entity.dart';
+import '../../domain/entities/installment_payment_entity.dart';
 import '../../domain/repositories/installment_repository.dart';
 
 class InstallmentRepositoryImpl implements InstallmentRepository {
@@ -171,6 +172,20 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
               ),
             );
 
+        // Payment history row (Phase 3 rework) — reviewable & correctable.
+        await _db.into(_db.installmentPaymentsTable).insert(
+              InstallmentPaymentsTableCompanion.insert(
+                id: _uuid.v4(),
+                installmentId: id,
+                amountMinor: inst.installmentAmountMinor,
+                installmentIndex: nextPaidCount,
+                ledgerTransactionId: Value(txId),
+                notes: const Value('پرداخت عادی'),
+                paidAt: now,
+                createdAt: now,
+              ),
+            );
+
         await _db.into(_db.syncQueueTable).insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'installments',
@@ -202,6 +217,252 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('حذف قسط انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<void>> payRemaining(String id) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await _db.transaction(() async {
+        final inst = await (_db.select(_db.installmentsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (inst == null) throw StateError('قسط پیدا نشد.');
+        if (inst.status == InstallmentStatus.completed.code) {
+          throw StateError('این قسط قبلاً کامل پرداخت شده است.');
+        }
+
+        final remainingCount = inst.numberOfInstallments - inst.paidInstallmentsCount;
+        if (remainingCount <= 0) throw StateError('قسط پرداخت‌نشده‌ای باقی نمانده.');
+        final remainingMinor = inst.installmentAmountMinor * remainingCount;
+
+        // Update plan state: fully paid.
+        await (_db.update(_db.installmentsTable)..where((t) => t.id.equals(id))).write(
+          InstallmentsTableCompanion(
+            paidInstallmentsCount: Value(inst.numberOfInstallments),
+            status: const Value('completed'),
+            updatedAt: Value(now),
+          ),
+        );
+
+        // Deduct the remaining total once.
+        final account = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
+        if (account != null) {
+          await (_db.update(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).write(
+            AccountsTableCompanion(
+              currentBalanceMinor: Value(account.currentBalanceMinor - remainingMinor),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+
+        // One summary expense transaction for the early payoff.
+        final txId = _uuid.v4();
+        await _db.into(_db.transactionsTable).insert(
+              TransactionsTableCompanion.insert(
+                id: txId,
+                accountId: inst.accountId,
+                type: 'expense',
+                amountMinor: remainingMinor,
+                currency: inst.currency,
+                transactionDate: now,
+                description: TextNormalizer.auto(
+                  'تسویه کامل ${inst.title} — $remainingCount قسط باقی‌مانده',
+                ),
+                createdAt: now,
+                updatedAt: now,
+                syncStatus: const Value(1),
+              ),
+            );
+        await _db.into(_db.syncQueueTable).insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'transactions',
+                entityId: txId,
+                operation: 'INSERT',
+                payloadJson:
+                    '{"id":"$txId","account_id":"${inst.accountId}","amount_minor":$remainingMinor,"type":"expense"}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+
+        // History rows for every settled قسط.
+        for (var i = inst.paidInstallmentsCount + 1; i <= inst.numberOfInstallments; i++) {
+          await _db.into(_db.installmentPaymentsTable).insert(
+                InstallmentPaymentsTableCompanion.insert(
+                  id: _uuid.v4(),
+                  installmentId: id,
+                  amountMinor: inst.installmentAmountMinor,
+                  installmentIndex: i,
+                  ledgerTransactionId: Value(txId),
+                  notes: const Value('تسویه کامل'),
+                  paidAt: now,
+                  createdAt: now,
+                ),
+              );
+        }
+
+        await _db.into(_db.syncQueueTable).insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'installments',
+                entityId: id,
+                operation: 'UPDATE',
+                payloadJson: '{"id":"$id","paidRemaining":$remainingMinor,"count":$remainingCount}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      return const Success(null);
+    } catch (e) {
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
+      return DatabaseFailure('تسویه کامل انجام نشد. دوباره تلاش کنید.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<void>> updateInstallment(InstallmentEntity installment) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.installmentsTable)
+            ..where((tbl) => tbl.id.equals(installment.id)))
+          .write(
+        InstallmentsTableCompanion(
+          title: Value(installment.title),
+          totalAmountMinor: Value(installment.totalAmount.minorUnits),
+          installmentAmountMinor: Value(installment.installmentAmount.minorUnits),
+          numberOfInstallments: Value(installment.numberOfInstallments),
+          recurrenceIntervalDays: Value(installment.recurrenceIntervalDays),
+          nextDueDate: Value(installment.nextDueDate.millisecondsSinceEpoch),
+          notes: Value(installment.notes),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _db.into(_db.syncQueueTable).insert(
+            SyncQueueTableCompanion.insert(
+              syncEntityName: 'installments',
+              entityId: installment.id,
+              operation: 'UPDATE',
+              payloadJson:
+                  '{"id":"${installment.id}","title":"${installment.title}","total":${installment.totalAmount.minorUnits}}',
+              idempotencyKey: _uuid.v4(),
+              queuedAt: now,
+            ),
+          );
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('ویرایش قسط انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<List<InstallmentPaymentEntity>> getPaymentHistory(String installmentId) async {
+    final query = _db.select(_db.installmentPaymentsTable)
+      ..where((tbl) =>
+          tbl.installmentId.equals(installmentId) & tbl.deletedAt.isNull())
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.paidAt)]);
+    final rows = await query.get();
+    return rows
+        .map((r) => InstallmentPaymentEntity(
+              id: r.id,
+              installmentId: r.installmentId,
+              amountMinor: r.amountMinor,
+              installmentIndex: r.installmentIndex,
+              ledgerTransactionId: r.ledgerTransactionId,
+              notes: r.notes,
+              paidAt: DateTime.fromMillisecondsSinceEpoch(r.paidAt),
+            ))
+        .toList();
+  }
+
+  @override
+  Future<Result<void>> deletePayment(String paymentId) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await _db.transaction(() async {
+        final payment = await (_db.select(_db.installmentPaymentsTable)
+              ..where((tbl) => tbl.id.equals(paymentId)))
+            .getSingleOrNull();
+        if (payment == null || payment.deletedAt != null) return;
+
+        final inst = await (_db.select(_db.installmentsTable)
+              ..where((tbl) => tbl.id.equals(payment.installmentId)))
+            .getSingleOrNull();
+        if (inst == null) return;
+
+        // 1. Money returns to the linked account.
+        final account = await (_db.select(_db.accountsTable)
+              ..where((tbl) => tbl.id.equals(inst.accountId)))
+            .getSingleOrNull();
+        if (account != null) {
+          await (_db.update(_db.accountsTable)
+                ..where((tbl) => tbl.id.equals(inst.accountId)))
+              .write(
+            AccountsTableCompanion(
+              currentBalanceMinor:
+                  Value(account.currentBalanceMinor + payment.amountMinor),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+
+        // 2. The linked ledger expense is soft-deleted (reverts analytics).
+        final txId = payment.ledgerTransactionId;
+        if (txId != null) {
+          await (_db.update(_db.transactionsTable)
+                ..where((tbl) => tbl.id.equals(txId)))
+              .write(
+            TransactionsTableCompanion(
+              deletedAt: Value(now),
+              updatedAt: Value(now),
+              syncStatus: const Value(3),
+            ),
+          );
+        }
+
+        // 3. Drop the history row and recompute plan state.
+        await (_db.update(_db.installmentPaymentsTable)
+              ..where((tbl) => tbl.id.equals(paymentId)))
+            .write(InstallmentPaymentsTableCompanion(deletedAt: Value(now)));
+
+        final newPaidCount = (inst.paidInstallmentsCount - 1).clamp(0, inst.numberOfInstallments);
+        final isCompleted = newPaidCount >= inst.numberOfInstallments;
+        final nextDueEpoch =
+            inst.startDate + newPaidCount * inst.recurrenceIntervalDays * 86400000;
+
+        await (_db.update(_db.installmentsTable)
+              ..where((tbl) => tbl.id.equals(inst.id)))
+            .write(
+          InstallmentsTableCompanion(
+            paidInstallmentsCount: Value(newPaidCount),
+            nextDueDate: Value(nextDueEpoch),
+            status: Value(isCompleted
+                ? InstallmentStatus.completed.code
+                : InstallmentStatus.ongoing.code),
+            updatedAt: Value(now),
+          ),
+        );
+
+        await _db.into(_db.syncQueueTable).insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'installments',
+                entityId: inst.id,
+                operation: 'UPDATE',
+                payloadJson:
+                    '{"id":"${inst.id}","deletedPayment":$paymentId,"paidCount":$newPaidCount}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('حذف پرداخت انجام نشد.').asFailure();
     }
   }
 }

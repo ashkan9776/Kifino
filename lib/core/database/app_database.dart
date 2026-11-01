@@ -39,6 +39,7 @@ part 'app_database.g.dart';
   AccountingDocumentsTable,
   AccountingTransactionsTable,
   FiscalYearsTable,
+  InstallmentPaymentsTable,
   AccountingAuditLogsTable,
   AccountingDetailLedgersTable,
   AccountingDetailValuesTable,
@@ -68,6 +69,9 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(accountingDocumentsTable);
             await m.createTable(accountingTransactionsTable);
             await m.createTable(fiscalYearsTable);
+          }
+          if (from < 7) {
+            await m.createTable(installmentPaymentsTable);
           }
           if (from < 6) {
             // Warehouse light (Phase 3): secondary unit + conversion factor.
