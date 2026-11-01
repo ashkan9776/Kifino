@@ -7,38 +7,66 @@ abstract interface class RemoteSyncClient {
   Future<Result<List<Map<String, dynamic>>>> pullChanges({DateTime? since});
 }
 
-class ProductionRemoteSyncClient implements RemoteSyncClient {
+/// Simulated client for testing and debug scenarios only.
+class FakeRemoteSyncClient implements RemoteSyncClient {
   final bool simulateSuccess;
 
-  const ProductionRemoteSyncClient({this.simulateSuccess = true});
+  const FakeRemoteSyncClient({this.simulateSuccess = true});
 
   @override
   Future<Result<void>> pushOperation(SyncOperationEntity operation) async {
     try {
-      // Simulate remote network latency
+      // Simulate remote network latency in debug
       await Future.delayed(const Duration(milliseconds: 150));
 
       if (!simulateSuccess) {
         return const FailureResult(
-          NetworkFailure('عدم پاسخگویی سرور ابری (خطای 503 Service Unavailable)'),
+          NetworkFailure('عدم پاسخگویی سرور شبیه‌سازی‌شده (خطای 503)'),
         );
       }
-
-      // In real deployment with backend endpoint:
-      // final response = await dio.post('/api/v1/sync/push', data: {...}, options: Options(headers: {'X-Idempotency-Key': operation.idempotencyKey}));
       return const Success(null);
     } catch (e) {
-      return FailureResult(NetworkFailure('خطا در ارتباط با سرور ابری: $e'));
+      return FailureResult(NetworkFailure('خطا در شبیه‌ساز سرور: $e'));
     }
   }
 
   @override
-  Future<Result<List<Map<String, dynamic>>>> pullChanges({DateTime? since}) async {
+  Future<Result<List<Map<String, dynamic>>>> pullChanges({
+    DateTime? since,
+  }) async {
     try {
       await Future.delayed(const Duration(milliseconds: 100));
       return const Success([]);
     } catch (e) {
-      return FailureResult(NetworkFailure('خطا در دریافت تغییرات ابری: $e'));
+      return FailureResult(
+        NetworkFailure('خطا در دریافت تغییرات شبیه‌ساز: $e'),
+      );
     }
+  }
+}
+
+/// Backward compatibility alias for tests.
+typedef ProductionRemoteSyncClient = FakeRemoteSyncClient;
+
+/// Production client when no remote backend URL is configured.
+/// Rejects operations explicitly with "Coming Soon / Not configured" error so
+/// the queue is never falsely marked as synced to a phantom cloud server.
+class UnavailableRemoteSyncClient implements RemoteSyncClient {
+  const UnavailableRemoteSyncClient();
+
+  @override
+  Future<Result<void>> pushOperation(SyncOperationEntity operation) async {
+    return const FailureResult(
+      NetworkFailure('سرور همگام‌سازی ابری هنوز متصل نشده است (به‌زودی).'),
+    );
+  }
+
+  @override
+  Future<Result<List<Map<String, dynamic>>>> pullChanges({
+    DateTime? since,
+  }) async {
+    return const FailureResult(
+      NetworkFailure('سرور همگام‌سازی ابری هنوز متصل نشده است (به‌زودی).'),
+    );
   }
 }

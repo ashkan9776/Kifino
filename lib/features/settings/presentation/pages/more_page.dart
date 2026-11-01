@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -24,28 +25,58 @@ class MorePage extends StatelessWidget {
     final isPersian = l10n.isPersian;
 
     final managementItems = [
-      (Icons.account_balance_wallet_outlined, isPersian ? 'حساب‌ها و کارت‌ها' : 'Accounts & Cards', '/accounts'),
-      (Icons.category_outlined, isPersian ? 'دسته‌بندی‌های سفارشی' : 'Custom categories', '/categories'),
-      (Icons.flag_outlined, isPersian ? 'اهداف مالی و پس‌انداز' : 'Financial goals', '/goals'),
+      (
+        Icons.account_balance_wallet_outlined,
+        isPersian ? 'حساب‌ها و کارت‌ها' : 'Accounts & Cards',
+        '/accounts',
+      ),
+      (
+        Icons.category_outlined,
+        isPersian ? 'دسته‌بندی‌های سفارشی' : 'Custom categories',
+        '/categories',
+      ),
+      (
+        Icons.flag_outlined,
+        isPersian ? 'اهداف مالی و پس‌انداز' : 'Financial goals',
+        '/goals',
+      ),
       (Icons.handshake_outlined, l10n.debts, '/debts'),
       (Icons.calendar_month_outlined, l10n.installments, '/installments'),
       (Icons.fact_check_outlined, l10n.checks, '/checks'),
       (Icons.savings_outlined, l10n.assets, '/assets'),
-      (Icons.storefront_outlined, isPersian ? 'مدیریت کسب‌وکار و فاکتورها' : 'Business & Invoices', '/business'),
+      (
+        Icons.storefront_outlined,
+        isPersian ? 'مدیریت کسب‌وکار و فاکتورها' : 'Business & Invoices',
+        '/business',
+      ),
       (Icons.auto_awesome_rounded, l10n.aiAssistant, '/ai'),
     ];
 
     final systemItems = [
-      (Icons.notifications_outlined, isPersian ? 'اعلان‌ها و یادآورها' : 'Notifications', '/notifications'),
-      (Icons.cloud_sync_outlined, isPersian ? 'همگام‌سازی ابری و آفلاین' : 'Cloud & offline sync', '/sync'),
-      (Icons.security_outlined, isPersian ? 'امنیت و رمز عبور' : 'Security & PIN', '/security'),
-      (Icons.backup_outlined, isPersian ? 'پشتیبان‌گیری و بازیابی' : 'Backup & restore', '/backup'),
+      (
+        Icons.notifications_outlined,
+        isPersian ? 'اعلان‌ها و یادآورها' : 'Notifications',
+        '/notifications',
+      ),
+      (
+        Icons.cloud_sync_outlined,
+        isPersian ? 'همگام‌سازی ابری (به‌زودی)' : 'Cloud sync (Coming soon)',
+        '/sync',
+      ),
+      (
+        Icons.security_outlined,
+        isPersian ? 'امنیت و رمز عبور' : 'Security & PIN',
+        '/security',
+      ),
+      (
+        Icons.backup_outlined,
+        isPersian ? 'پشتیبان‌گیری و بازیابی' : 'Backup & restore',
+        '/backup',
+      ),
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navMore),
-      ),
+      appBar: AppBar(title: Text(l10n.navMore)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
@@ -55,92 +86,110 @@ class MorePage extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
 
           // Enterprise Accounting OS Hero Card
-          Builder(builder: (context) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          final accent = Theme.of(context).colorScheme.primary;
-          return AppCard(
-            onTap: () => context.push('/accounting'),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                borderRadius: AppSpacing.borderRadiusMd,
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.indigo.withValues(alpha: 0.12),
-                    Colors.indigo.withValues(alpha: 0.04),
-                  ],
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
+          Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final accent = Theme.of(context).colorScheme.primary;
+              return AppCard(
+                onTap: () => context.push('/accounting'),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    borderRadius: AppSpacing.borderRadiusMd,
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.indigo.withValues(alpha: 0.12),
+                        Colors.indigo.withValues(alpha: 0.04),
+                      ],
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
                     ),
-                    child: Icon(Icons.account_balance, color: accent, size: 26),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.account_balance,
+                          color: accent,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Flexible(
-                              child: Text(
-                                isPersian ? 'سیستم حسابداری مالی (دوبل)' : 'Financial Accounting OS',
-                                style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: accent,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                'PRO',
-                                style: TextStyle(
-                                  color: isDark ? AppColors.darkBackground : Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    isPersian
+                                        ? 'سیستم حسابداری مالی (دوبل)'
+                                        : 'Financial Accounting OS',
+                                    style: AppTypography.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: accent,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? AppColors.darkBackground
+                                          : Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              isPersian
+                                  ? 'اسناد دوبل، کدینگ، دفاتر قانونی، تراز آزمایشی و ترازنامه'
+                                  : 'General ledger, journal vouchers, trial balance & statements',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.75),
+                                fontSize: 11,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          isPersian
-                              ? 'اسناد دوبل، کدینگ، دفاتر قانونی، تراز آزمایشی و ترازنامه'
-                              : 'General ledger, journal vouchers, trial balance & statements',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.chevron_left_rounded, color: accent),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.chevron_left_rounded, color: accent),
-                ],
-              ),
-            ),
-          );
-          }),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: AppSpacing.lg),
 
-          _SectionHeader(label: isPersian ? 'مدیریت مالی' : 'Financial management'),
+          _SectionHeader(
+            label: isPersian ? 'مدیریت مالی' : 'Financial management',
+          ),
           const SizedBox(height: AppSpacing.sm),
           ...managementItems.map((item) => _MoreRow(item: item)),
           const SizedBox(height: AppSpacing.lg),
@@ -148,11 +197,15 @@ class MorePage extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           ...systemItems.map((item) => _MoreRow(item: item)),
           const SizedBox(height: AppSpacing.lg),
-          _MoreRow(item: (
-            Icons.palette_outlined,
-            isPersian ? 'نمایش سیستم طراحی (توسعه‌دهنده)' : 'Design system showcase (dev)',
-            '/design-system',
-          )),
+          _MoreRow(
+            item: (
+              Icons.palette_outlined,
+              isPersian
+                  ? 'نمایش سیستم طراحی (توسعه‌دهنده)'
+                  : 'Design system showcase (dev)',
+              '/design-system',
+            ),
+          ),
         ],
       ),
     );
@@ -180,7 +233,10 @@ class _CompanyCard extends StatelessWidget {
           }
         }
         return AppCard(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           onTap: () => showCompanySwitcherSheet(context),
           child: Row(
             children: [
@@ -188,7 +244,8 @@ class _CompanyCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -205,7 +262,8 @@ class _CompanyCard extends StatelessWidget {
                     Text(
                       isPersian ? 'شرکت / دفتر فعال' : 'Active company',
                       style: AppTypography.labelMedium.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                        color: Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.55),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -219,7 +277,8 @@ class _CompanyCard extends StatelessWidget {
               Icon(
                 Icons.chevron_left_rounded,
                 size: 20,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.4),
               ),
             ],
           ),
@@ -259,14 +318,14 @@ class _SettingsSection extends StatelessWidget {
       locale.languageCode == 'fa' ? 'فارسی' : 'English';
 
   static String _currencyLabelFa(Currency currency) => switch (currency) {
-        Currency.toman => 'تومان',
-        Currency.irr => 'ریال',
-        Currency.usd => 'دلار آمریکا',
-        Currency.eur => 'یورو',
-        Currency.aed => 'درهم امارات',
-        Currency.tryCurrency => 'لیر ترکیه',
-        Currency.gbp => 'پوند انگلیس',
-      };
+    Currency.toman => 'تومان',
+    Currency.irr => 'ریال',
+    Currency.usd => 'دلار آمریکا',
+    Currency.eur => 'یورو',
+    Currency.aed => 'درهم امارات',
+    Currency.tryCurrency => 'لیر ترکیه',
+    Currency.gbp => 'پوند انگلیس',
+  };
 
   Future<void> _pickTheme(BuildContext context, SettingsState state) async {
     await showModalBottomSheet<void>(
@@ -285,9 +344,18 @@ class _SettingsSection extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               SegmentedButton<ThemeMode>(
                 segments: [
-                  ButtonSegment(value: ThemeMode.system, label: Text(_themeSystemFa)),
-                  ButtonSegment(value: ThemeMode.light, label: Text(_themeLightFa)),
-                  ButtonSegment(value: ThemeMode.dark, label: Text(_themeDarkFa)),
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    label: Text(_themeSystemFa),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    label: Text(_themeLightFa),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    label: Text(_themeDarkFa),
+                  ),
                 ],
                 selected: {state.themeMode},
                 onSelectionChanged: (selection) {
@@ -318,23 +386,36 @@ class _SettingsSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AppSheetHeader(title: isPersian ? 'زبان برنامه' : 'App language'),
+                AppSheetHeader(
+                  title: isPersian ? 'زبان برنامه' : 'App language',
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 RadioGroup<String>(
-                  groupValue: context.read<SettingsCubit>().state.locale.languageCode,
+                  groupValue: context
+                      .read<SettingsCubit>()
+                      .state
+                      .locale
+                      .languageCode,
                   onChanged: (code) {
                     context.read<SettingsCubit>().setLocale(Locale(code!));
                     Navigator.pop(sheetContext);
                   },
                   child: Column(
                     children: [
-                      for (final (code, label) in [('fa', 'فارسی — RTL'), ('en', 'English — LTR')])
+                      for (final (code, label) in [
+                        ('fa', 'فارسی — RTL'),
+                        ('en', 'English — LTR'),
+                      ])
                         ListTile(
-                          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppSpacing.borderRadiusMd,
+                          ),
                           title: Text(label),
                           trailing: Radio<String>(value: code),
                           onTap: () {
-                            context.read<SettingsCubit>().setLocale(Locale(code));
+                            context.read<SettingsCubit>().setLocale(
+                              Locale(code),
+                            );
                             Navigator.pop(sheetContext);
                           },
                         ),
@@ -377,17 +458,27 @@ class _SettingsSection extends StatelessWidget {
                     shrinkWrap: true,
                     children: [
                       RadioGroup<String>(
-                        groupValue: context.read<SettingsCubit>().state.currency.code,
+                        groupValue: context
+                            .read<SettingsCubit>()
+                            .state
+                            .currency
+                            .code,
                         onChanged: (code) {
-                          final match = Currency.values.where((c) => c.code == code).firstOrNull;
-                          if (match != null) context.read<SettingsCubit>().setCurrency(match);
+                          final match = Currency.values
+                              .where((c) => c.code == code)
+                              .firstOrNull;
+                          if (match != null) {
+                            context.read<SettingsCubit>().setCurrency(match);
+                          }
                           Navigator.pop(sheetContext);
                         },
                         child: Column(
                           children: [
                             for (final currency in Currency.values)
                               ListTile(
-                                shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: AppSpacing.borderRadiusMd,
+                                ),
                                 leading: Text(
                                   currency.symbol,
                                   style: AppTypography.titleMedium,
@@ -396,7 +487,9 @@ class _SettingsSection extends StatelessWidget {
                                 subtitle: Text(currency.displayName),
                                 trailing: Radio<String>(value: currency.code),
                                 onTap: () {
-                                  context.read<SettingsCubit>().setCurrency(currency);
+                                  context.read<SettingsCubit>().setCurrency(
+                                    currency,
+                                  );
                                   Navigator.pop(sheetContext);
                                 },
                               ),
@@ -428,18 +521,28 @@ class _SettingsSection extends StatelessWidget {
                 value: themeLabel(state.themeMode, isPersian),
                 onTap: () => _pickTheme(context, state),
               ),
-              Divider(height: 1, indent: AppSpacing.xl, color: Theme.of(context).dividerColor),
+              Divider(
+                height: 1,
+                indent: AppSpacing.xl,
+                color: Theme.of(context).dividerColor,
+              ),
               _SettingRow(
                 icon: Icons.language_rounded,
                 title: isPersian ? 'زبان' : 'Language',
                 value: langLabel(state.locale, isPersian),
                 onTap: () => _pickLanguage(context),
               ),
-              Divider(height: 1, indent: AppSpacing.xl, color: Theme.of(context).dividerColor),
+              Divider(
+                height: 1,
+                indent: AppSpacing.xl,
+                color: Theme.of(context).dividerColor,
+              ),
               _SettingRow(
                 icon: Icons.currency_exchange_rounded,
                 title: isPersian ? 'ارز پایه' : 'Base currency',
-                value: isPersian ? _currencyLabelFa(state.currency) : state.currency.code,
+                value: isPersian
+                    ? _currencyLabelFa(state.currency)
+                    : state.currency.code,
                 onTap: () => _pickCurrency(context),
               ),
             ],
@@ -476,7 +579,8 @@ class _SettingRow extends StatelessWidget {
           Text(
             value,
             style: AppTypography.labelLarge.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(width: 4),
@@ -532,7 +636,10 @@ class _MoreRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         onTap: () => context.push(item.$3),
         child: Row(
           children: [
@@ -540,22 +647,23 @@ class _MoreRow extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(item.$1, size: 20, color: Theme.of(context).colorScheme.primary),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                item.$2,
-                style: AppTypography.titleMedium,
+              child: Icon(
+                item.$1,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: Text(item.$2, style: AppTypography.titleMedium)),
             Icon(
               Icons.chevron_left_rounded,
               size: 20,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.4),
             ),
           ],
         ),

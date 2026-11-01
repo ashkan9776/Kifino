@@ -28,64 +28,73 @@ void main() {
   });
 
   group('SyncRepositoryImpl Tests', () {
-    test('enqueues operation, counts pending, records failure, and marks success', () async {
-      final op = SyncOperationEntity(
-        syncEntityName: 'transactions',
-        entityId: 'tx-100',
-        operation: SyncOperationType.insert,
-        payloadJson: '{"id": "tx-100", "amount": 1000}',
-        idempotencyKey: 'idemp-100',
-        queuedAt: DateTime.now(),
-      );
+    test(
+      'enqueues operation, counts pending, records failure, and marks success',
+      () async {
+        final op = SyncOperationEntity(
+          syncEntityName: 'transactions',
+          entityId: 'tx-100',
+          operation: SyncOperationType.insert,
+          payloadJson: '{"id": "tx-100", "amount": 1000}',
+          idempotencyKey: 'idemp-100',
+          queuedAt: DateTime.now(),
+        );
 
-      final enqueueRes = await repository.enqueueOperation(op);
-      expect(enqueueRes.isSuccess, isTrue);
+        final enqueueRes = await repository.enqueueOperation(op);
+        expect(enqueueRes.isSuccess, isTrue);
 
-      final pendingRes = await repository.getPendingOperations();
-      expect(pendingRes.isSuccess, isTrue);
-      final items = pendingRes.dataOrNull ?? [];
-      expect(items.length, equals(1));
-      expect(items.first.entityId, equals('tx-100'));
+        final pendingRes = await repository.getPendingOperations();
+        expect(pendingRes.isSuccess, isTrue);
+        final items = pendingRes.dataOrNull ?? [];
+        expect(items.length, equals(1));
+        expect(items.first.entityId, equals('tx-100'));
 
-      // Record failure
-      final queueId = items.first.queueId!;
-      await repository.recordOperationFailure(queueId, '500 Server Error');
-      final afterFail = (await repository.getPendingOperations()).dataOrNull!;
-      expect(afterFail.first.retryCount, equals(1));
-      expect(afterFail.first.lastError, equals('500 Server Error'));
+        // Record failure
+        final queueId = items.first.queueId!;
+        await repository.recordOperationFailure(queueId, '500 Server Error');
+        final afterFail = (await repository.getPendingOperations()).dataOrNull!;
+        expect(afterFail.first.retryCount, equals(1));
+        expect(afterFail.first.lastError, equals('500 Server Error'));
 
-      // Mark success
-      await repository.markOperationSuccess(queueId);
-      final afterSuccess = (await repository.getPendingOperations()).dataOrNull!;
-      expect(afterSuccess, isEmpty);
-    });
+        // Mark success
+        await repository.markOperationSuccess(queueId);
+        final afterSuccess =
+            (await repository.getPendingOperations()).dataOrNull!;
+        expect(afterSuccess, isEmpty);
+      },
+    );
 
-    test('retryAllFailed resets retry counts for operations with >=3 failures', () async {
-      final op = SyncOperationEntity(
-        syncEntityName: 'accounts',
-        entityId: 'acc-200',
-        operation: SyncOperationType.insert,
-        payloadJson: '{}',
-        idempotencyKey: 'idemp-200',
-        retryCount: 3,
-        lastError: 'Permanent network drop',
-        queuedAt: DateTime.now(),
-      );
+    test(
+      'retryAllFailed resets retry counts for operations with >=3 failures',
+      () async {
+        final op = SyncOperationEntity(
+          syncEntityName: 'accounts',
+          entityId: 'acc-200',
+          operation: SyncOperationType.insert,
+          payloadJson: '{}',
+          idempotencyKey: 'idemp-200',
+          retryCount: 3,
+          lastError: 'Permanent network drop',
+          queuedAt: DateTime.now(),
+        );
 
-      await repository.enqueueOperation(op);
+        await repository.enqueueOperation(op);
 
-      // Pending should be empty (since retryCount >= 3)
-      final pendingBefore = (await repository.getPendingOperations()).dataOrNull!;
-      expect(pendingBefore, isEmpty);
+        // Pending should be empty (since retryCount >= 3)
+        final pendingBefore =
+            (await repository.getPendingOperations()).dataOrNull!;
+        expect(pendingBefore, isEmpty);
 
-      // Retry all
-      await repository.retryAllFailed();
+        // Retry all
+        await repository.retryAllFailed();
 
-      final pendingAfter = (await repository.getPendingOperations()).dataOrNull!;
-      expect(pendingAfter.length, equals(1));
-      expect(pendingAfter.first.retryCount, equals(0));
-      expect(pendingAfter.first.lastError, isNull);
-    });
+        final pendingAfter =
+            (await repository.getPendingOperations()).dataOrNull!;
+        expect(pendingAfter.length, equals(1));
+        expect(pendingAfter.first.retryCount, equals(0));
+        expect(pendingAfter.first.lastError, isNull);
+      },
+    );
   });
 
   group('SyncEngine Tests', () {
@@ -117,19 +126,60 @@ void main() {
       final remaining = (await repository.getPendingOperations()).dataOrNull!;
       expect(remaining, isEmpty);
     });
+    test('P0-2: UnavailableRemoteSyncClient does not falsely claim synced without real backend', () async {
+      const client = UnavailableRemoteSyncClient();
+      final op = SyncOperationEntity(
+        syncEntityName: 'accounts',
+        entityId: 'acc-1',
+        operation: SyncOperationType.insert,
+        payloadJson: '{}',
+        idempotencyKey: 'idemp-acc-1',
+        queuedAt: DateTime.now(),
+      );
+
+      final pushResult = await client.pushOperation(op);
+      expect(pushResult.isFailure, isTrue);
+      expect(pushResult.failureOrNull?.message, contains('سرور'));
+
+      final pullResult = await client.pullChanges();
+      expect(pullResult.isFailure, isTrue);
+    });
+
+    test('P0-2: SyncEngine with UnavailableRemoteSyncClient does not mark items synced', () async {
+      final unavailEngine = SyncEngine(
+        syncRepository: repository,
+        remoteClient: const UnavailableRemoteSyncClient(),
+      );
+
+      await repository.enqueueOperation(
+        SyncOperationEntity(
+          syncEntityName: 'accounts',
+          entityId: 'acc-1',
+          operation: SyncOperationType.insert,
+          payloadJson: '{}',
+          idempotencyKey: 'idemp-acc-1',
+          queuedAt: DateTime.now(),
+        ),
+      );
+
+      final cycleRes = await unavailEngine.runSyncCycle();
+      expect(cycleRes.syncedCount, equals(0));
+
+      final pending = (await repository.getPendingOperations()).dataOrNull!;
+      expect(pending.isNotEmpty, isTrue);
+    });
   });
 
   group('SyncBloc Tests', () {
     blocTest<SyncBloc, SyncState>(
       'runs sync cycle when SyncTriggered is added',
-      build: () => SyncBloc(
-        syncRepository: repository,
-        syncEngine: engine,
-      ),
+      build: () => SyncBloc(syncRepository: repository, syncEngine: engine),
       act: (bloc) => bloc.add(const SyncTriggered(isManual: true)),
       expect: () => [
         predicate<SyncState>((s) => s.isSyncing == true),
-        predicate<SyncState>((s) => s.isSyncing == false && s.lastSyncTime != null),
+        predicate<SyncState>(
+          (s) => s.isSyncing == false && s.lastSyncTime != null,
+        ),
       ],
     );
   });

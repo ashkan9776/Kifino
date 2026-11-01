@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,7 +75,9 @@ class ServiceLocator {
     final sharedPreferences = await SharedPreferences.getInstance();
     sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
 
-    sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(sharedPreferences));
+    sl.registerLazySingleton<CompanyRegistry>(
+      () => CompanyRegistry(sharedPreferences),
+    );
 
     sl.registerLazySingleton<CompanyController>(
       () => CompanyController(sl<CompanyRegistry>()),
@@ -104,7 +107,9 @@ class ServiceLocator {
     // 3. Local Database — company-specific file
     final database = AppDatabase(
       null,
-      CompanyRegistry.dbFileNameFor(companyId ?? CompanyRegistry.defaultCompanyId),
+      CompanyRegistry.dbFileNameFor(
+        companyId ?? CompanyRegistry.defaultCompanyId,
+      ),
     );
     sl.registerLazySingleton<AppDatabase>(() => database);
 
@@ -155,7 +160,9 @@ class ServiceLocator {
     );
 
     sl.registerLazySingleton<RemoteSyncClient>(
-      () => const ProductionRemoteSyncClient(),
+      () => kDebugMode
+          ? const FakeRemoteSyncClient()
+          : const UnavailableRemoteSyncClient(),
     );
 
     sl.registerLazySingleton<SyncEngine>(

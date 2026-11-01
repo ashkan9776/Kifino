@@ -81,13 +81,15 @@ class _SyncPageState extends State<SyncPage> {
         top: false,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('همگام‌سازی ابری و آفلاین'),
+            title: const Text('همگام‌سازی ابری (به‌زودی)'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),
                 tooltip: 'همگام‌سازی مجدد',
                 onPressed: () {
-                  context.read<SyncBloc>().add(const SyncTriggered(isManual: true));
+                  context.read<SyncBloc>().add(
+                    const SyncTriggered(isManual: true),
+                  );
                   _refreshPreview();
                 },
               ),
@@ -115,7 +117,9 @@ class _SyncPageState extends State<SyncPage> {
                             _StatusDot(
                               color: state.isSyncing
                                   ? AppColors.transferLight
-                                  : (online ? AppColors.income : AppColors.debtOrangeLight),
+                                  : (online
+                                        ? AppColors.income
+                                        : AppColors.debtOrangeLight),
                             ),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
@@ -129,7 +133,9 @@ class _SyncPageState extends State<SyncPage> {
                                     style: AppTypography.titleMedium.copyWith(
                                       color: state.isSyncing
                                           ? AppColors.transferLight
-                                          : (online ? AppColors.income : AppColors.debtOrangeLight),
+                                          : (online
+                                                ? AppColors.income
+                                                : AppColors.debtOrangeLight),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -137,9 +143,11 @@ class _SyncPageState extends State<SyncPage> {
                                     state.isSyncing
                                         ? 'صف عملیات در حال ارسال است'
                                         : (online
-                                            ? 'تغییرات جدید به‌صورت خودکار همگام می‌شوند'
-                                            : 'تغییرات محفوظ است و با برقراری اینترنت خودکار ارسال می‌شود'),
-                                    style: AppTypography.bodyMedium.copyWith(color: subtext),
+                                              ? 'تغییرات جدید به‌صورت خودکار همگام می‌شوند'
+                                              : 'تغییرات محفوظ است و با برقراری اینترنت خودکار ارسال می‌شود'),
+                                    style: AppTypography.bodyMedium.copyWith(
+                                      color: subtext,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -165,7 +173,9 @@ class _SyncPageState extends State<SyncPage> {
                                 label: 'ناموفق',
                                 value: state.failedCount,
                                 icon: Icons.error_outline_rounded,
-                                color: state.failedCount > 0 ? AppColors.expense : AppColors.income,
+                                color: state.failedCount > 0
+                                    ? AppColors.expense
+                                    : AppColors.income,
                               ),
                             ),
                           ],
@@ -177,14 +187,20 @@ class _SyncPageState extends State<SyncPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.history_rounded, size: 16, color: subtext),
+                              Icon(
+                                Icons.history_rounded,
+                                size: 16,
+                                color: subtext,
+                              ),
                               const SizedBox(width: AppSpacing.xs),
                               Text(
                                 TextNormalizer.auto(
                                   'آخرین همگام‌سازی: ${AppDateFormatter.formatShort(state.lastSyncTime!, locale: 'fa')} ساعت ${_formatClock(state.lastSyncTime!)}'
                                   '${state.lastSyncCount > 0 ? ' (${state.lastSyncCount} مورد)' : ''}',
                                 ),
-                                style: AppTypography.labelMedium.copyWith(color: subtext),
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: subtext,
+                                ),
                               ),
                             ],
                           ),
@@ -193,18 +209,24 @@ class _SyncPageState extends State<SyncPage> {
                           Text(
                             'خطای آخرین اجرا: ${state.errorMessage}',
                             textAlign: TextAlign.center,
-                            style: AppTypography.labelMedium.copyWith(color: AppColors.expense),
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.expense,
+                            ),
                           ),
                         ],
                         const SizedBox(height: AppSpacing.lg),
                         AppButton(
-                          label: state.isSyncing ? 'در حال ارسال…' : 'همگام‌سازی اکنون',
+                          label: state.isSyncing
+                              ? 'در حال ارسال…'
+                              : 'همگام‌سازی اکنون',
                           icon: const Icon(Icons.cloud_sync_outlined, size: 20),
                           isLoading: state.isSyncing,
                           onPressed: state.isSyncing
                               ? null
                               : () {
-                                  context.read<SyncBloc>().add(const SyncTriggered(isManual: true));
+                                  context.read<SyncBloc>().add(
+                                    const SyncTriggered(isManual: true),
+                                  );
                                 },
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -213,7 +235,9 @@ class _SyncPageState extends State<SyncPage> {
                             'همگام‌سازی خودکار: هنگام اتصال اینترنت و هر ${AppConstants.defaultSyncIntervalMinutes} دقیقه',
                           ),
                           textAlign: TextAlign.center,
-                          style: AppTypography.labelMedium.copyWith(color: subtext),
+                          style: AppTypography.labelMedium.copyWith(
+                            color: subtext,
+                          ),
                         ),
                       ],
                     ),
@@ -232,7 +256,8 @@ class _SyncPageState extends State<SyncPage> {
                         }
                         final grouped = <String, int>{};
                         for (final op in snapshot.data!) {
-                          grouped[op.syncEntityName] = (grouped[op.syncEntityName] ?? 0) + 1;
+                          grouped[op.syncEntityName] =
+                              (grouped[op.syncEntityName] ?? 0) + 1;
                         }
                         if (grouped.isEmpty) {
                           return const SizedBox.shrink();
@@ -248,11 +273,15 @@ class _SyncPageState extends State<SyncPage> {
                                   avatar: Icon(
                                     Icons.sync_rounded,
                                     size: 16,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
                                   ),
-                                  label: Text(TextNormalizer.auto(
-                                    '${_entityLabelFa(entry.key)} × ${entry.value}',
-                                  )),
+                                  label: Text(
+                                    TextNormalizer.auto(
+                                      '${_entityLabelFa(entry.key)} × ${entry.value}',
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -279,7 +308,9 @@ class _SyncPageState extends State<SyncPage> {
                           onPressed: state.isSyncing
                               ? null
                               : () {
-                                  context.read<SyncBloc>().add(const SyncRetryFailedTriggered());
+                                  context.read<SyncBloc>().add(
+                                    const SyncRetryFailedTriggered(),
+                                  );
                                 },
                         ),
                       ],
@@ -291,7 +322,9 @@ class _SyncPageState extends State<SyncPage> {
                         child: AppCard(
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: AppColors.expense.withValues(alpha: 0.15),
+                              backgroundColor: AppColors.expense.withValues(
+                                alpha: 0.15,
+                              ),
                               child: const Icon(
                                 Icons.warning_amber_rounded,
                                 color: AppColors.expense,
@@ -310,7 +343,9 @@ class _SyncPageState extends State<SyncPage> {
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppTypography.labelMedium.copyWith(color: subtext),
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: subtext,
+                                ),
                               ),
                             ),
                             isThreeLine: true,
@@ -330,13 +365,19 @@ class _SyncPageState extends State<SyncPage> {
 
                   // 5. Offline-first explainer
                   AppCard(
-                    backgroundColor: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                    backgroundColor: isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant,
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.shield_outlined, color: AppColors.primary, size: 28),
+                          const Icon(
+                            Icons.shield_outlined,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
@@ -350,7 +391,7 @@ class _SyncPageState extends State<SyncPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'هر تراکنش، فاکتور یا تغییری که ثبت می‌کنی ابتدا روی پایگاه‌داده خودِ گوشی ذخیره می‌شود؛ یعنی بدون اینترنت هم همه‌چیز کار می‌کند. این تغییرات در صف ارسال قرار می‌گیرند و به‌محض اتصال، خودکار با سرور ابری همگام می‌شوند — حتی اگر اپ را ببندی و دوباره باز کنی.',
+                                  'کیفینو کاملاً آفلاین و محلی روی گوشی شما کار می‌کند. زیرساخت همگام‌سازی ابری و دسترسی چنددستگاهی در حال توسعه است و به‌زودی در نسخه‌های آینده با راه‌اندازی سرور اختصاصی فعال خواهد شد. تا آن زمان هیچ داده‌ای به بیرون از دستگاه ارسال نمی‌شود.',
                                   style: AppTypography.bodyMedium.copyWith(
                                     color: subtext,
                                     height: 1.6,
@@ -435,7 +476,11 @@ class _StatusDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: color,
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 1),
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
         ],
       ),
     );
