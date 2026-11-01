@@ -13,6 +13,11 @@ import '../utils/text_normalizer.dart';
 ///   locale is Persian, regardless of what the hardware keyboard types.
 /// - Reports raw minor units through [onAmountMinorChanged]; parsing is
 ///   always Persian/Arabic-digit safe.
+/// - Pass [amountNotifier] to change the amount from OUTSIDE the field
+///   (e.g. quick-amount chips): the field re-forms and displays the new
+///   value, and user typing pushes back into the same notifier. Both stay
+///   in sync without fighting (external updates are suppressed while the
+///   user is typing).
 class AppAmountField extends StatefulWidget {
   final Currency currency;
   final ValueChanged<int> onAmountMinorChanged;
@@ -21,6 +26,11 @@ class AppAmountField extends StatefulWidget {
   final Color? signColor;
   final String? prefixSign;
   final bool? usePersianDigits;
+
+  /// Optional external source of truth for the amount (minor units).
+  /// Chip-style quick amounts set `notifier.value += …` and the field
+  /// updates instantly.
+  final ValueNotifier<int>? amountNotifier;
 
   const AppAmountField({
     super.key,
@@ -31,6 +41,7 @@ class AppAmountField extends StatefulWidget {
     this.signColor,
     this.prefixSign,
     this.usePersianDigits,
+    this.amountNotifier,
   });
 
   @override
@@ -41,6 +52,10 @@ class _AppAmountFieldState extends State<AppAmountField> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   bool _focused = false;
+
+  /// Guards against feedback loops while THIS state is pushing a programmatic
+  /// change into the notifier.
+  bool _internalUpdate = false;
 
   bool get _persianDigits => widget.usePersianDigits ?? isFaLocale(context);
 
@@ -55,11 +70,36 @@ class _AppAmountFieldState extends State<AppAmountField> {
       }
     });
 
-    if (widget.initialAmountMinor > 0) {
-      _controller.text = _display(widget.initialAmountMinor);
+    final initial = widget.amountNotifier?.value ?? widget.initialAmountMinor;
+    if (initial > 0) {
+      _controller.text = _display(initial);
     }
 
     _controller.addListener(_handleTextChanged);
+    widget.amountNotifier?.addListener(_onExternalAmountChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppAmountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldNotifier = oldWidget.amountNotifier;
+    final newNotifier = widget.amountNotifier;
+    if (!identical(oldNotifier, newNotifier)) {
+      oldNotifier?.removeListener(_onExternalAmountChanged);
+      newNotifier?.addListener(_onExternalAmountChanged);
+      if (newNotifier != null) {
+        _syncTextFromNotifier(newNotifier.value);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.amountNotifier?.removeListener(_onExternalAmountChanged);
+    _controller.removeListener(_handleTextChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   String _display(int minorUnits) {
@@ -73,21 +113,36 @@ class _AppAmountFieldState extends State<AppAmountField> {
 
   void _handleTextChanged() {
     final parsedMinor = TextNormalizer.parseMoneyInput(_controller.text) ?? 0;
+
+    // Push into the notifier without re-triggering our own listener (the
+    // text is already what the user typed).
+    _internalUpdate = true;
+    widget.amountNotifier?.value = parsedMinor;
+    _internalUpdate = false;
+
     widget.onAmountMinorChanged(parsedMinor);
   }
 
-  @override
-  void dispose() {
-    _controller.removeListener(_handleTextChanged);
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
+  void _onExternalAmountChanged() {
+    if (_internalUpdate || !mounted) return;
+    final value = widget.amountNotifier!.value;
+    final formatted = _display(value);
+    if (_controller.text == formatted) return;
+    _controller.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    widget.onAmountMinorChanged(value);
   }
 
-  void _formatInput(String value) {
-    final parsedMinor = TextNormalizer.parseMoneyInput(value) ?? 0;
-    final formatted = _display(parsedMinor);
+  /// Convenience for external code that wants to SET the amount (quick
+  /// chips): replaces instead of accumulating.
+  void setAmount(int minorUnits) {
+    widget.amountNotifier?.value = minorUnits;
+  }
 
+  void _syncTextFromNotifier(int minorUnits) {
+    final formatted = _display(minorUnits);
     if (_controller.text != formatted) {
       _controller.value = TextEditingValue(
         text: formatted,
@@ -176,5 +231,17 @@ class _AppAmountFieldState extends State<AppAmountField> {
         ],
       ),
     );
+  }
+
+  void _formatInput(String value) {
+    final parsedMinor = TextNormalizer.parseMoneyInput(value) ?? 0;
+    final formatted = _display(parsedMinor);
+
+    if (_controller.text != formatted) {
+      _controller.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
   }
 }

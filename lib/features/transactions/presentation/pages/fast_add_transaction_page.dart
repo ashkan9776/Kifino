@@ -42,6 +42,7 @@ class FastAddTransactionPage extends StatefulWidget {
 class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
   int _selectedTypeIndex = 0; // 0: Expense, 1: Income, 2: Transfer
   int _amountMinor = 0;
+  late final ValueNotifier<int> _amountNotifier = ValueNotifier<int>(_amountMinor);
   String? _selectedAccountId;
   String? _selectedDestAccountId;
   String? _selectedCategoryId;
@@ -111,6 +112,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
 
         if (editTx != null) {
           _amountMinor = editTx.amount.minorUnits;
+          _amountNotifier.value = _amountMinor;
           _noteController.text = editTx.notes ?? '';
           _selectedTypeIndex = switch (editTx.type) {
             TransactionType.income => 1,
@@ -335,7 +337,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                         // Amount Field
                         AppAmountField(
                           currency: currentCurrency,
-                          initialAmountMinor: _amountMinor,
+                          amountNotifier: _amountNotifier,
                           signColor: typeColor,
                           prefixSign: _selectedTypeIndex == 0
                               ? '-'
@@ -363,7 +365,10 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                               ),
                               onPressed: () {
                                 HapticFeedback.lightImpact();
-                                setState(() => _amountMinor += chipAmount);
+                                setState(() {
+                                  _amountMinor += chipAmount;
+                                  _amountNotifier.value = _amountMinor;
+                                });
                               },
                             );
                           }).toList(),
