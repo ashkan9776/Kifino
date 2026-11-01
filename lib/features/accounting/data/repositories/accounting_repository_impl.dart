@@ -1125,6 +1125,32 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
+  Stream<List<AccountingAuditLogEntity>> watchEntityAuditLogs({
+    required String entityType,
+    required String entityId,
+  }) {
+    final query = _db.select(_db.accountingAuditLogsTable)
+      ..where((tbl) =>
+          tbl.entityType.equals(entityType) &
+          tbl.entityId.equals(entityId))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.performedAt)]);
+    return query.watch().map((rows) {
+      return rows.map((r) {
+        return AccountingAuditLogEntity(
+          id: r.id,
+          entityType: r.entityType,
+          entityId: r.entityId,
+          action: AuditLogAction.fromCode(r.action),
+          beforeJson: r.beforeJson,
+          afterJson: r.afterJson,
+          description: r.description,
+          performedAt: DateTime.fromMillisecondsSinceEpoch(r.performedAt),
+        );
+      }).toList();
+    });
+  }
+
+  @override
   Future<String> createDetailLedger({
     required String title,
     required String code,

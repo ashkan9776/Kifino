@@ -125,18 +125,23 @@ class CheckRepositoryImpl implements CheckRepository {
       await _db.transaction(() async {
         final check = await (_db.select(_db.checksTable)..where((t) => t.id.equals(id))).getSingleOrNull();
         if (check == null) throw Exception('Check not found');
+        if (check.status == status.code) return; // no-op
 
-        // Reconcile balance if cleared
-        if (status == CheckStatus.cleared && check.status != CheckStatus.cleared.code && check.accountId != null) {
+        // Symmetric balance reconciliation (Phase: accountant rework):
+        // entering cleared applies the money movement, LEAVING cleared
+        // (correction or bounce) reverts it — so a mis-tap is fully undoable.
+        final wasCleared = check.status == CheckStatus.cleared.code;
+        final nowCleared = status == CheckStatus.cleared;
+        if (check.accountId != null && wasCleared != nowCleared) {
           final account = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(check.accountId!))).getSingleOrNull();
           if (account != null) {
             final isIssued = check.type == CheckType.issued.code;
-            final diff = isIssued ? -check.amountMinor : check.amountMinor;
-            final newBalance = account.currentBalanceMinor + diff;
-
+            // Signed effect: issued cleared = money out (−), received cleared = money in (+).
+            final signedDiff = isIssued ? -check.amountMinor : check.amountMinor;
+            final applied = nowCleared ? signedDiff : -signedDiff;
             await (_db.update(_db.accountsTable)..where((t) => t.id.equals(account.id))).write(
               AccountsTableCompanion(
-                currentBalanceMinor: Value(newBalance),
+                currentBalanceMinor: Value(account.currentBalanceMinor + applied),
                 updatedAt: Value(now),
               ),
             );
@@ -158,6 +163,23 @@ class CheckRepositoryImpl implements CheckRepository {
                 payloadJson: '{"id":"$id","status":"${status.code}"}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
+              ),
+            );
+
+        // Audit trail for status corrections (before/after).
+        await _db.into(_db.accountingAuditLogsTable).insert(
+              AccountingAuditLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                entityType: 'check',
+                entityId: id,
+                action: 'update',
+                beforeJson: Value('{"status":"${check.status}"}'),
+                afterJson: Value('{"status":"${status.code}"}'),
+                description: Value(
+                  'تغییر وضعیت چک ${check.checkNumber} از ${check.status} به ${status.code}',
+                ),
+                performedAt: now,
+                createdAt: now,
               ),
             );
       });

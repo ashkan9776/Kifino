@@ -163,13 +163,18 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
   /// Double-entry voucher for check state transitions. Accounting must never
   /// block the check flow — failures are swallowed on purpose.
   Future<void> _createVoucherQuietly(CheckStatusUpdated event) async {
-    final eventCode = switch (event.status) {
-      CheckStatus.cleared => 'clear',
-      CheckStatus.transferred => 'deposit',
-      _ => null,
-    };
-    if (eventCode == null) return;
+    // Status corrections must not double-count: void the previous voucher
+    // first, then fire the voucher for the NEW status (if it has one).
     try {
+      await _autoVoucherService.voidVoucherFor(event.id);
+
+      final eventCode = switch (event.status) {
+        CheckStatus.cleared => 'clear',
+        CheckStatus.transferred => 'deposit',
+        _ => null,
+      };
+      if (eventCode == null) return;
+
       final checks = await _repository.getChecks();
       final check = checks.dataOrNull?.where((c) => c.id == event.id).firstOrNull;
       if (check != null) {

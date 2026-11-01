@@ -71,7 +71,13 @@ abstract class AccountingRepository {
   // ── Phase 1: integrity, audit, floating details, fiscal close/open ──
 
   /// Audit trail for accounting documents, newest first.
-  Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit});
+    Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit});
+
+  /// Audit entries for one entity (e.g. a check's status history), newest first.
+  Stream<List<AccountingAuditLogEntity>> watchEntityAuditLogs({
+    required String entityType,
+    required String entityId,
+  });
 
   /// تفصیلی شناور — dimension ledgers with their values.
   Future<String> createDetailLedger({
