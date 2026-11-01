@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kifino/core/database/app_database.dart';
@@ -77,25 +78,29 @@ void main() {
       final now = DateTime.now();
 
       // 1. Create Customer
-      await repo.createContact(ContactEntity(
-        id: 'cust-1',
-        name: 'مشتری ممتاز',
-        type: ContactType.customer,
-        outstandingBalance: Money.zero(Currency.irr),
-        createdAt: now,
-        updatedAt: now,
-      ));
+      await repo.createContact(
+        ContactEntity(
+          id: 'cust-1',
+          name: 'مشتری ممتاز',
+          type: ContactType.customer,
+          outstandingBalance: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
       // 2. Create Product
-      await repo.createProduct(ProductEntity(
-        id: 'prod-1',
-        name: 'مانیتور ۲۷ اینچ',
-        purchasePrice: Money.fromMinor(100000000, Currency.irr),
-        sellingPrice: Money.fromMinor(140000000, Currency.irr),
-        currentStock: 10.0,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      await repo.createProduct(
+        ProductEntity(
+          id: 'prod-1',
+          name: 'مانیتور ۲۷ اینچ',
+          purchasePrice: Money.fromMinor(100000000, Currency.irr),
+          sellingPrice: Money.fromMinor(140000000, Currency.irr),
+          currentStock: 10.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
       // 3. Issue Invoice for 2 monitors
       final item = InvoiceItemEntity.calculate(
@@ -135,7 +140,10 @@ void main() {
 
       // Verify customer outstanding balance increased by total invoice amount
       final contacts = await repo.getContacts();
-      expect(contacts.dataOrNull?.first.outstandingBalance.minorUnits, equals(invoice.total.minorUnits));
+      expect(
+        contacts.dataOrNull?.first.outstandingBalance.minorUnits,
+        equals(invoice.total.minorUnits),
+      );
 
       // 4. Pay partial invoice
       final partialPayment = Money.fromMinor(100000000, Currency.irr);
@@ -143,8 +151,14 @@ void main() {
       expect(payRes.isSuccess, isTrue);
 
       final updatedInv = await repo.getInvoiceById('inv-1');
-      expect(updatedInv.dataOrNull?.status, equals(InvoiceStatus.partiallyPaid));
-      expect(updatedInv.dataOrNull?.paidAmount.minorUnits, equals(partialPayment.minorUnits));
+      expect(
+        updatedInv.dataOrNull?.status,
+        equals(InvoiceStatus.partiallyPaid),
+      );
+      expect(
+        updatedInv.dataOrNull?.paidAmount.minorUnits,
+        equals(partialPayment.minorUnits),
+      );
 
       // Customer balance reduced accordingly
       final updatedContacts = await repo.getContacts();
@@ -158,23 +172,27 @@ void main() {
   group('Phase 3 — warehouse & کاردکس', () {
     test('purchase invoice ADDS stock and writes purchase movement', () async {
       final now = DateTime.now();
-      await repo.createContact(ContactEntity(
-        id: 'sup-1',
-        name: 'تأمین‌کننده',
-        type: ContactType.supplier,
-        outstandingBalance: Money.zero(Currency.irr),
-        createdAt: now,
-        updatedAt: now,
-      ));
-      await repo.createProduct(ProductEntity(
-        id: 'p-pur',
-        name: 'هارد اکسترنال',
-        purchasePrice: Money.fromMinor(5000000, Currency.irr),
-        sellingPrice: Money.fromMinor(6500000, Currency.irr),
-        currentStock: 2.0,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      await repo.createContact(
+        ContactEntity(
+          id: 'sup-1',
+          name: 'تأمین‌کننده',
+          type: ContactType.supplier,
+          outstandingBalance: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repo.createProduct(
+        ProductEntity(
+          id: 'p-pur',
+          name: 'هارد اکسترنال',
+          purchasePrice: Money.fromMinor(5000000, Currency.irr),
+          sellingPrice: Money.fromMinor(6500000, Currency.irr),
+          currentStock: 2.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
       final invoice = InvoiceEntity(
         id: 'inv-pur-1',
@@ -213,37 +231,327 @@ void main() {
       expect(products.dataOrNull!.first.currentStock, equals(5.0)); // 2 + 3
     });
 
-    test('getProductCard returns chronological movements with running balance', () async {
+    test(
+      'getProductCard returns chronological movements with running balance',
+      () async {
+        final now = DateTime.now();
+        await repo.createProduct(
+          ProductEntity(
+            id: 'p-card',
+            name: 'کالا کاردکس',
+            purchasePrice: Money.fromMinor(100000, Currency.irr),
+            sellingPrice: Money.fromMinor(150000, Currency.irr),
+            currentStock: 10.0,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        await repo.adjustStock(
+          productId: 'p-card',
+          changeQuantity: 5.0,
+          type: InventoryMovementType.purchase,
+          notes: 'ورود',
+        );
+        await repo.adjustStock(
+          productId: 'p-card',
+          changeQuantity: -2.0,
+          type: InventoryMovementType.loss,
+          notes: 'ضایعات',
+        );
+
+        final card = await repo.getProductCard('p-card');
+        expect(card.length, equals(2));
+        expect(card[0].inQuantity, equals(5.0));
+        expect(card[0].balance, equals(5.0));
+        expect(card[1].outQuantity, equals(2.0));
+        expect(card[1].balance, equals(3.0));
+      },
+    );
+
+    test(
+      'P0-3: purchase 10 -> delete purchase invoice -> stock reverts to 0',
+      () async {
+        final now = DateTime.now();
+        await repo.createContact(
+          ContactEntity(
+            id: 'sup-p03',
+            name: 'تأمین‌کننده P0-3',
+            type: ContactType.supplier,
+            outstandingBalance: Money.zero(Currency.irr),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+        await repo.createProduct(
+          ProductEntity(
+            id: 'p-p03-1',
+            name: 'کالای خرید',
+            purchasePrice: Money.fromMinor(1000, Currency.irr),
+            sellingPrice: Money.fromMinor(1500, Currency.irr),
+            currentStock: 0.0,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        final invoice = InvoiceEntity(
+          id: 'inv-pur-p03',
+          invoiceNumber: 'PUR-001',
+          contactId: 'sup-p03',
+          type: InvoiceType.purchase,
+          status: InvoiceStatus.paid,
+          issueDate: now,
+          dueDate: now,
+          subtotal: Money.fromMinor(10000, Currency.irr),
+          discount: Money.zero(Currency.irr),
+          tax: Money.zero(Currency.irr),
+          total: Money.fromMinor(10000, Currency.irr),
+          paidAmount: Money.fromMinor(10000, Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+          items: [
+            InvoiceItemEntity(
+              id: 'it-pur-1',
+              invoiceId: 'inv-pur-p03',
+              productId: 'p-p03-1',
+              description: 'کالای خرید',
+              quantity: 10,
+              unitPrice: Money.fromMinor(1000, Currency.irr),
+              discount: Money.zero(Currency.irr),
+              tax: Money.zero(Currency.irr),
+              total: Money.fromMinor(10000, Currency.irr),
+            ),
+          ],
+        );
+
+        final createRes = await repo.createInvoice(invoice);
+        expect(createRes.isSuccess, isTrue);
+
+        final prodsAfterCreate = await repo.getProducts();
+        expect(
+          prodsAfterCreate.dataOrNull!
+              .firstWhere((p) => p.id == 'p-p03-1')
+              .currentStock,
+          equals(10.0),
+        );
+
+        // Now delete the purchase invoice
+        final delRes = await repo.deleteInvoice('inv-pur-p03');
+        expect(delRes.isSuccess, isTrue);
+
+        // Stock must revert back to 0.0!
+        final prodsAfterDelete = await repo.getProducts();
+        expect(
+          prodsAfterDelete.dataOrNull!
+              .firstWhere((p) => p.id == 'p-p03-1')
+              .currentStock,
+          equals(0.0),
+        );
+      },
+    );
+
+    test('P0-3: sale + accounting voucher -> delete invoice -> voucher voided and stock reverted', () async {
       final now = DateTime.now();
-      await repo.createProduct(ProductEntity(
-        id: 'p-card',
-        name: 'کالا کاردکس',
-        purchasePrice: Money.fromMinor(100000, Currency.irr),
-        sellingPrice: Money.fromMinor(150000, Currency.irr),
-        currentStock: 10.0,
+      await repo.createContact(
+        ContactEntity(
+          id: 'cust-p03',
+          name: 'مشتری P0-3',
+          type: ContactType.customer,
+          outstandingBalance: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repo.createProduct(
+        ProductEntity(
+          id: 'p-p03-sale',
+          name: 'کالای فروش',
+          purchasePrice: Money.fromMinor(1000, Currency.irr),
+          sellingPrice: Money.fromMinor(2000, Currency.irr),
+          currentStock: 10.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final invoice = InvoiceEntity(
+        id: 'inv-sale-p03',
+        invoiceNumber: 'SALE-001',
+        contactId: 'cust-p03',
+        type: InvoiceType.sale,
+        status: InvoiceStatus.sent,
+        issueDate: now,
+        dueDate: now,
+        subtotal: Money.fromMinor(8000, Currency.irr),
+        discount: Money.zero(Currency.irr),
+        tax: Money.zero(Currency.irr),
+        total: Money.fromMinor(8000, Currency.irr),
+        paidAmount: Money.zero(Currency.irr),
         createdAt: now,
         updatedAt: now,
-      ));
-
-      await repo.adjustStock(
-        productId: 'p-card',
-        changeQuantity: 5.0,
-        type: InventoryMovementType.purchase,
-        notes: 'ورود',
+        items: [
+          InvoiceItemEntity(
+            id: 'it-sale-1',
+            invoiceId: 'inv-sale-p03',
+            productId: 'p-p03-sale',
+            description: 'کالای فروش',
+            quantity: 4,
+            unitPrice: Money.fromMinor(2000, Currency.irr),
+            discount: Money.zero(Currency.irr),
+            tax: Money.zero(Currency.irr),
+            total: Money.fromMinor(8000, Currency.irr),
+          ),
+        ],
       );
-      await repo.adjustStock(
-        productId: 'p-card',
-        changeQuantity: -2.0,
-        type: InventoryMovementType.loss,
-        notes: 'ضایعات',
+
+      final createRes = await repo.createInvoice(invoice);
+      expect(createRes.isSuccess, isTrue);
+
+      // Stock deducted to 6
+      expect(
+        (await repo.getProducts()).dataOrNull!
+            .firstWhere((p) => p.id == 'p-p03-sale')
+            .currentStock,
+        equals(6.0),
       );
 
-      final card = await repo.getProductCard('p-card');
-      expect(card.length, equals(2));
-      expect(card[0].inQuantity, equals(5.0));
-      expect(card[0].balance, equals(5.0));
-      expect(card[1].outQuantity, equals(2.0));
-      expect(card[1].balance, equals(3.0));
+      // Simulate accounting document created for this invoice
+      await db
+          .into(db.accountingDocumentsTable)
+          .insert(
+            AccountingDocumentsTableCompanion.insert(
+              id: 'doc-inv-p03',
+              number: 101,
+              date: now.millisecondsSinceEpoch,
+              title: 'سند فاکتور SALE-001',
+              status: 'approved',
+              referenceType: const Value('invoice'),
+              referenceId: const Value('inv-sale-p03'),
+              createdAt: now.millisecondsSinceEpoch,
+              updatedAt: now.millisecondsSinceEpoch,
+            ),
+          );
+
+      // Now delete invoice
+      final delRes = await repo.deleteInvoice('inv-sale-p03');
+      expect(delRes.isSuccess, isTrue);
+
+      // 1. Stock reverted back to 10
+      expect(
+        (await repo.getProducts()).dataOrNull!
+            .firstWhere((p) => p.id == 'p-p03-sale')
+            .currentStock,
+        equals(10.0),
+      );
+
+      // 2. Customer balance reverted to 0
+      expect(
+        (await repo.getContacts()).dataOrNull!
+            .firstWhere((c) => c.id == 'cust-p03')
+            .outstandingBalance
+            .minorUnits,
+        equals(0),
+      );
+
+      // 3. Accounting voucher must be deleted/voided (deletedAt != null)!
+      final voucher = await (db.select(
+        db.accountingDocumentsTable,
+      )..where((t) => t.id.equals('doc-inv-p03'))).getSingle();
+      expect(voucher.deletedAt, isNotNull);
+    });
+
+    test('P0-3: editing purchase invoice correctly updates stock', () async {
+      final now = DateTime.now();
+      await repo.createContact(
+        ContactEntity(
+          id: 'sup-edit',
+          name: 'تأمین‌کننده ویرایش',
+          type: ContactType.supplier,
+          outstandingBalance: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repo.createProduct(
+        ProductEntity(
+          id: 'p-edit-pur',
+          name: 'کالای ویرایش خرید',
+          purchasePrice: Money.fromMinor(1000, Currency.irr),
+          sellingPrice: Money.fromMinor(1500, Currency.irr),
+          currentStock: 0.0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final originalInvoice = InvoiceEntity(
+        id: 'inv-pur-edit',
+        invoiceNumber: 'PUR-EDIT',
+        contactId: 'sup-edit',
+        type: InvoiceType.purchase,
+        status: InvoiceStatus.paid,
+        issueDate: now,
+        dueDate: now,
+        subtotal: Money.fromMinor(10000, Currency.irr),
+        discount: Money.zero(Currency.irr),
+        tax: Money.zero(Currency.irr),
+        total: Money.fromMinor(10000, Currency.irr),
+        paidAmount: Money.fromMinor(10000, Currency.irr),
+        createdAt: now,
+        updatedAt: now,
+        items: [
+          InvoiceItemEntity(
+            id: 'it-pe-1',
+            invoiceId: 'inv-pur-edit',
+            productId: 'p-edit-pur',
+            description: 'کالا',
+            quantity: 10,
+            unitPrice: Money.fromMinor(1000, Currency.irr),
+            discount: Money.zero(Currency.irr),
+            tax: Money.zero(Currency.irr),
+            total: Money.fromMinor(10000, Currency.irr),
+          ),
+        ],
+      );
+
+      await repo.createInvoice(originalInvoice);
+      expect(
+        (await repo.getProducts()).dataOrNull!
+            .firstWhere((p) => p.id == 'p-edit-pur')
+            .currentStock,
+        equals(10.0),
+      );
+
+      // Update purchase quantity from 10 to 6
+      final updatedInvoice = originalInvoice.copyWith(
+        items: [
+          InvoiceItemEntity(
+            id: 'it-pe-2',
+            invoiceId: 'inv-pur-edit',
+            productId: 'p-edit-pur',
+            description: 'کالا',
+            quantity: 6,
+            unitPrice: Money.fromMinor(1000, Currency.irr),
+            discount: Money.zero(Currency.irr),
+            tax: Money.zero(Currency.irr),
+            total: Money.fromMinor(6000, Currency.irr),
+          ),
+        ],
+        subtotal: Money.fromMinor(6000, Currency.irr),
+        total: Money.fromMinor(6000, Currency.irr),
+      );
+
+      final updateRes = await repo.updateInvoice(updatedInvoice);
+      expect(updateRes.isSuccess, isTrue);
+
+      // Stock should now be 6.0 (not 10.0 or 16.0)!
+      expect(
+        (await repo.getProducts()).dataOrNull!
+            .firstWhere((p) => p.id == 'p-edit-pur')
+            .currentStock,
+        equals(6.0),
+      );
     });
   });
 }

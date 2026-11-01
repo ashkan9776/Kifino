@@ -35,10 +35,15 @@ class BusinessRepositoryImpl implements BusinessRepository {
       email: data.email,
       address: data.address,
       taxNumber: data.taxNumber,
-      outstandingBalance: Money.fromMinor(data.outstandingBalanceMinor, currency),
+      outstandingBalance: Money.fromMinor(
+        data.outstandingBalanceMinor,
+        currency,
+      ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
@@ -61,11 +66,16 @@ class BusinessRepositoryImpl implements BusinessRepository {
       supplierName: supplierName,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
-  InventoryLogEntity _toLogEntity(InventoryLogData data, {String? productName}) {
+  InventoryLogEntity _toLogEntity(
+    InventoryLogData data, {
+    String? productName,
+  }) {
     final currency = Currency.fromCode(AppConstants.defaultCurrencyCode);
     return InventoryLogEntity(
       id: data.id,
@@ -74,15 +84,23 @@ class BusinessRepositoryImpl implements BusinessRepository {
       changeQuantity: data.changeQuantity,
       movementType: InventoryMovementType.fromCode(data.movementType),
       referenceId: data.referenceId,
-      costPerUnit: data.costPerUnitMinor != null ? Money.fromMinor(data.costPerUnitMinor!, currency) : null,
+      costPerUnit: data.costPerUnitMinor != null
+          ? Money.fromMinor(data.costPerUnitMinor!, currency)
+          : null,
       notes: data.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
-  InvoiceEntity _toInvoiceEntity(InvoiceData data, {String? contactName, List<InvoiceItemEntity> items = const []}) {
+  InvoiceEntity _toInvoiceEntity(
+    InvoiceData data, {
+    String? contactName,
+    List<InvoiceItemEntity> items = const [],
+  }) {
     final currency = Currency.fromCode(data.currency);
     return InvoiceEntity(
       id: data.id,
@@ -103,7 +121,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
       items: items,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
@@ -130,7 +150,10 @@ class BusinessRepositoryImpl implements BusinessRepository {
       ..where((tbl) {
         Expression<bool> predicate = tbl.deletedAt.isNull();
         if (type != null) {
-          predicate = predicate & (tbl.type.equals(type.code) | tbl.type.equals(ContactType.both.code));
+          predicate =
+              predicate &
+              (tbl.type.equals(type.code) |
+                  tbl.type.equals(ContactType.both.code));
         }
         return predicate;
       })
@@ -146,7 +169,10 @@ class BusinessRepositoryImpl implements BusinessRepository {
         ..where((tbl) {
           Expression<bool> predicate = tbl.deletedAt.isNull();
           if (type != null) {
-            predicate = predicate & (tbl.type.equals(type.code) | tbl.type.equals(ContactType.both.code));
+            predicate =
+                predicate &
+                (tbl.type.equals(type.code) |
+                    tbl.type.equals(ContactType.both.code));
           }
           return predicate;
         })
@@ -165,7 +191,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
       final cId = contact.id.isEmpty ? _uuid.v4() : contact.id;
 
-      await _db.into(_db.businessContactsTable).insert(
+      await _db
+          .into(_db.businessContactsTable)
+          .insert(
             BusinessContactsTableCompanion.insert(
               id: cId,
               name: contact.name,
@@ -175,13 +203,17 @@ class BusinessRepositoryImpl implements BusinessRepository {
               email: Value(contact.email),
               address: Value(contact.address),
               taxNumber: Value(contact.taxNumber),
-              outstandingBalanceMinor: Value(contact.outstandingBalance.minorUnits),
+              outstandingBalanceMinor: Value(
+                contact.outstandingBalance.minorUnits,
+              ),
               createdAt: now,
               updatedAt: now,
             ),
           );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'business_contacts',
               entityId: cId,
@@ -202,7 +234,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
   Future<Result<void>> updateContact(ContactEntity contact) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.businessContactsTable)..where((t) => t.id.equals(contact.id))).write(
+      await (_db.update(
+        _db.businessContactsTable,
+      )..where((t) => t.id.equals(contact.id))).write(
         BusinessContactsTableCompanion(
           name: Value(contact.name),
           companyName: Value(contact.companyName),
@@ -216,7 +250,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'business_contacts',
               entityId: contact.id,
@@ -237,7 +273,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
   Future<Result<void>> deleteContact(String id) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.businessContactsTable)..where((t) => t.id.equals(id))).write(
+      await (_db.update(
+        _db.businessContactsTable,
+      )..where((t) => t.id.equals(id))).write(
         BusinessContactsTableCompanion(
           deletedAt: Value(now),
           updatedAt: Value(now),
@@ -254,14 +292,17 @@ class BusinessRepositoryImpl implements BusinessRepository {
   // ----------------------------------------------------
   @override
   Stream<List<ProductEntity>> watchProducts() {
-    final query = _db.select(_db.productsTable).join([
-      leftOuterJoin(
-        _db.businessContactsTable,
-        _db.businessContactsTable.id.equalsExp(_db.productsTable.supplierId),
-      ),
-    ])
-      ..where(_db.productsTable.deletedAt.isNull())
-      ..orderBy([OrderingTerm.asc(_db.productsTable.name)]);
+    final query =
+        _db.select(_db.productsTable).join([
+            leftOuterJoin(
+              _db.businessContactsTable,
+              _db.businessContactsTable.id.equalsExp(
+                _db.productsTable.supplierId,
+              ),
+            ),
+          ])
+          ..where(_db.productsTable.deletedAt.isNull())
+          ..orderBy([OrderingTerm.asc(_db.productsTable.name)]);
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -275,21 +316,26 @@ class BusinessRepositoryImpl implements BusinessRepository {
   @override
   Future<Result<List<ProductEntity>>> getProducts() async {
     try {
-      final query = _db.select(_db.productsTable).join([
-        leftOuterJoin(
-          _db.businessContactsTable,
-          _db.businessContactsTable.id.equalsExp(_db.productsTable.supplierId),
-        ),
-      ])
-        ..where(_db.productsTable.deletedAt.isNull())
-        ..orderBy([OrderingTerm.asc(_db.productsTable.name)]);
+      final query =
+          _db.select(_db.productsTable).join([
+              leftOuterJoin(
+                _db.businessContactsTable,
+                _db.businessContactsTable.id.equalsExp(
+                  _db.productsTable.supplierId,
+                ),
+              ),
+            ])
+            ..where(_db.productsTable.deletedAt.isNull())
+            ..orderBy([OrderingTerm.asc(_db.productsTable.name)]);
 
       final rows = await query.get();
-      return Success(rows.map((row) {
-        final p = row.readTable(_db.productsTable);
-        final c = row.readTableOrNull(_db.businessContactsTable);
-        return _toProductEntity(p, supplierName: c?.name);
-      }).toList());
+      return Success(
+        rows.map((row) {
+          final p = row.readTable(_db.productsTable);
+          final c = row.readTableOrNull(_db.businessContactsTable);
+          return _toProductEntity(p, supplierName: c?.name);
+        }).toList(),
+      );
     } catch (e) {
       return DatabaseFailure('خواندن محصولات انجام نشد.').asFailure();
     }
@@ -301,7 +347,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
       final pId = product.id.isEmpty ? _uuid.v4() : product.id;
 
-      await _db.into(_db.productsTable).insert(
+      await _db
+          .into(_db.productsTable)
+          .insert(
             ProductsTableCompanion.insert(
               id: pId,
               name: product.name,
@@ -322,7 +370,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
             ),
           );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'products',
               entityId: pId,
@@ -343,7 +393,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
   Future<Result<void>> updateProduct(ProductEntity product) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.productsTable)..where((t) => t.id.equals(product.id))).write(
+      await (_db.update(
+        _db.productsTable,
+      )..where((t) => t.id.equals(product.id))).write(
         ProductsTableCompanion(
           name: Value(product.name),
           sku: Value(product.sku),
@@ -362,7 +414,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'products',
               entityId: product.id,
@@ -391,12 +445,19 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final product = await (_db.select(_db.productsTable)..where((t) => t.id.equals(productId))).getSingleOrNull();
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((t) => t.id.equals(productId))).getSingleOrNull();
         if (product == null) throw Exception('Product not found');
 
-        final updatedStock = (product.currentStock + changeQuantity).clamp(0.0, 99999999.0);
+        final updatedStock = (product.currentStock + changeQuantity).clamp(
+          0.0,
+          99999999.0,
+        );
 
-        await (_db.update(_db.productsTable)..where((t) => t.id.equals(productId))).write(
+        await (_db.update(
+          _db.productsTable,
+        )..where((t) => t.id.equals(productId))).write(
           ProductsTableCompanion(
             currentStock: Value(updatedStock),
             updatedAt: Value(now),
@@ -404,7 +465,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         );
 
         final logId = _uuid.v4();
-        await _db.into(_db.inventoryLogsTable).insert(
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
               InventoryLogsTableCompanion.insert(
                 id: logId,
                 productId: productId,
@@ -418,12 +481,15 @@ class BusinessRepositoryImpl implements BusinessRepository {
               ),
             );
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'inventory_logs',
                 entityId: logId,
                 operation: 'INSERT',
-                payloadJson: '{"productId":"$productId","change":$changeQuantity,"type":"${type.code}"}',
+                payloadJson:
+                    '{"productId":"$productId","change":$changeQuantity,"type":"${type.code}"}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -443,8 +509,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
         _db.productsTable,
         _db.productsTable.id.equalsExp(_db.inventoryLogsTable.productId),
       ),
-    ])
-      ..where(_db.inventoryLogsTable.deletedAt.isNull());
+    ])..where(_db.inventoryLogsTable.deletedAt.isNull());
 
     if (productId != null) {
       query.where(_db.inventoryLogsTable.productId.equals(productId));
@@ -471,8 +536,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
         _db.businessContactsTable,
         _db.businessContactsTable.id.equalsExp(_db.invoicesTable.contactId),
       ),
-    ])
-      ..where(_db.invoicesTable.deletedAt.isNull());
+    ])..where(_db.invoicesTable.deletedAt.isNull());
 
     if (type != null) {
       query.where(_db.invoicesTable.type.equals(type.code));
@@ -487,9 +551,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
         final c = row.readTableOrNull(_db.businessContactsTable);
         final cur = Currency.fromCode(inv.currency);
 
-        final itemsData = await (_db.select(_db.invoiceItemsTable)
-              ..where((t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull()))
-            .get();
+        final itemsData =
+            await (_db.select(_db.invoiceItemsTable)..where(
+                  (t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull(),
+                ))
+                .get();
 
         final items = itemsData.map((it) => _toItemEntity(it, cur)).toList();
         list.add(_toInvoiceEntity(inv, contactName: c?.name, items: items));
@@ -506,8 +572,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
           _db.businessContactsTable,
           _db.businessContactsTable.id.equalsExp(_db.invoicesTable.contactId),
         ),
-      ])
-        ..where(_db.invoicesTable.deletedAt.isNull());
+      ])..where(_db.invoicesTable.deletedAt.isNull());
 
       if (type != null) {
         query.where(_db.invoicesTable.type.equals(type.code));
@@ -522,9 +587,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
         final c = row.readTableOrNull(_db.businessContactsTable);
         final cur = Currency.fromCode(inv.currency);
 
-        final itemsData = await (_db.select(_db.invoiceItemsTable)
-              ..where((t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull()))
-            .get();
+        final itemsData =
+            await (_db.select(_db.invoiceItemsTable)..where(
+                  (t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull(),
+                ))
+                .get();
 
         final items = itemsData.map((it) => _toItemEntity(it, cur)).toList();
         list.add(_toInvoiceEntity(inv, contactName: c?.name, items: items));
@@ -544,18 +611,19 @@ class BusinessRepositoryImpl implements BusinessRepository {
           _db.businessContactsTable,
           _db.businessContactsTable.id.equalsExp(_db.invoicesTable.contactId),
         ),
-      ])..where(_db.invoicesTable.id.equals(id)))
-          .getSingleOrNull();
+      ])..where(_db.invoicesTable.id.equals(id))).getSingleOrNull();
 
-      if (invRow == null) return NotFoundFailure('Invoice not found').asFailure();
+      if (invRow == null) {
+        return NotFoundFailure('Invoice not found').asFailure();
+      }
 
       final inv = invRow.readTable(_db.invoicesTable);
       final c = invRow.readTableOrNull(_db.businessContactsTable);
       final cur = Currency.fromCode(inv.currency);
 
-      final itemsData = await (_db.select(_db.invoiceItemsTable)
-            ..where((t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull()))
-          .get();
+      final itemsData = await (_db.select(
+        _db.invoiceItemsTable,
+      )..where((t) => t.invoiceId.equals(inv.id) & t.deletedAt.isNull())).get();
 
       final items = itemsData.map((it) => _toItemEntity(it, cur)).toList();
       return Success(_toInvoiceEntity(inv, contactName: c?.name, items: items));
@@ -572,7 +640,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
       await _db.transaction(() async {
         // 1. Insert invoice header
-        await _db.into(_db.invoicesTable).insert(
+        await _db
+            .into(_db.invoicesTable)
+            .insert(
               InvoicesTableCompanion.insert(
                 id: invId,
                 invoiceNumber: invoice.invoiceNumber,
@@ -597,7 +667,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         // 2. Insert invoice line items
         for (final item in invoice.items) {
           final itemId = item.id.isEmpty ? _uuid.v4() : item.id;
-          await _db.into(_db.invoiceItemsTable).insert(
+          await _db
+              .into(_db.invoiceItemsTable)
+              .insert(
                 InvoiceItemsTableCompanion.insert(
                   id: itemId,
                   invoiceId: invId,
@@ -615,17 +687,26 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
           // 3. Stock movement: sale deducts, purchase adds
           if (invoice.type == InvoiceType.purchase && item.productId != null) {
-            final product = await (_db.select(_db.productsTable)..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
+            final product = await (_db.select(
+              _db.productsTable,
+            )..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
             if (product != null) {
-              final newStock = (product.currentStock + item.quantity).clamp(0.0, 99999999.0);
-              await (_db.update(_db.productsTable)..where((t) => t.id.equals(product.id))).write(
+              final newStock = (product.currentStock + item.quantity).clamp(
+                0.0,
+                99999999.0,
+              );
+              await (_db.update(
+                _db.productsTable,
+              )..where((t) => t.id.equals(product.id))).write(
                 ProductsTableCompanion(
                   currentStock: Value(newStock),
                   updatedAt: Value(now),
                 ),
               );
 
-              await _db.into(_db.inventoryLogsTable).insert(
+              await _db
+                  .into(_db.inventoryLogsTable)
+                  .insert(
                     InventoryLogsTableCompanion.insert(
                       id: _uuid.v4(),
                       productId: product.id,
@@ -643,17 +724,26 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
           // 3b. Deduct product inventory if sale invoice
           if (invoice.type == InvoiceType.sale && item.productId != null) {
-            final product = await (_db.select(_db.productsTable)..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
+            final product = await (_db.select(
+              _db.productsTable,
+            )..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
             if (product != null) {
-              final newStock = (product.currentStock - item.quantity).clamp(0.0, 99999999.0);
-              await (_db.update(_db.productsTable)..where((t) => t.id.equals(product.id))).write(
+              final newStock = (product.currentStock - item.quantity).clamp(
+                0.0,
+                99999999.0,
+              );
+              await (_db.update(
+                _db.productsTable,
+              )..where((t) => t.id.equals(product.id))).write(
                 ProductsTableCompanion(
                   currentStock: Value(newStock),
                   updatedAt: Value(now),
                 ),
               );
 
-              await _db.into(_db.inventoryLogsTable).insert(
+              await _db
+                  .into(_db.inventoryLogsTable)
+                  .insert(
                     InventoryLogsTableCompanion.insert(
                       id: _uuid.v4(),
                       productId: product.id,
@@ -671,11 +761,18 @@ class BusinessRepositoryImpl implements BusinessRepository {
         }
 
         // 4. Update contact balance if sale invoice
-        if (invoice.type == InvoiceType.sale && invoice.remainingBalance.minorUnits > 0) {
-          final contact = await (_db.select(_db.businessContactsTable)..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
+        if (invoice.type == InvoiceType.sale &&
+            invoice.remainingBalance.minorUnits > 0) {
+          final contact = await (_db.select(
+            _db.businessContactsTable,
+          )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
           if (contact != null) {
-            final newBalance = contact.outstandingBalanceMinor + invoice.remainingBalance.minorUnits;
-            await (_db.update(_db.businessContactsTable)..where((t) => t.id.equals(contact.id))).write(
+            final newBalance =
+                contact.outstandingBalanceMinor +
+                invoice.remainingBalance.minorUnits;
+            await (_db.update(
+              _db.businessContactsTable,
+            )..where((t) => t.id.equals(contact.id))).write(
               BusinessContactsTableCompanion(
                 outstandingBalanceMinor: Value(newBalance),
                 updatedAt: Value(now),
@@ -685,12 +782,15 @@ class BusinessRepositoryImpl implements BusinessRepository {
         }
 
         // 5. Outbox Sync Record
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'invoices',
                 entityId: invId,
                 operation: 'INSERT',
-                payloadJson: '{"id":"$invId","number":"${invoice.invoiceNumber}","total":${invoice.total.minorUnits}}',
+                payloadJson:
+                    '{"id":"$invId","number":"${invoice.invoiceNumber}","total":${invoice.total.minorUnits}}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -703,127 +803,315 @@ class BusinessRepositoryImpl implements BusinessRepository {
     }
   }
 
+  // ── Invoice side-effects unification (P0-3) ──
+  Future<void> _voidLinkedVouchers(String invoiceId, int now) async {
+    final vouchers =
+        await (_db.select(_db.accountingDocumentsTable)..where(
+              (t) =>
+                  t.referenceType.equals('invoice') &
+                  t.referenceId.equals(invoiceId) &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
+    for (final v in vouchers) {
+      await (_db.update(
+        _db.accountingDocumentsTable,
+      )..where((t) => t.id.equals(v.id))).write(
+        AccountingDocumentsTableCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (_db.delete(
+        _db.accountingDocumentDetailLinksTable,
+      )..where((t) => t.documentId.equals(v.id))).go();
+      await _db
+          .into(_db.accountingAuditLogsTable)
+          .insert(
+            AccountingAuditLogsTableCompanion.insert(
+              id: _uuid.v4(),
+              entityType: 'document',
+              entityId: v.id,
+              action: 'delete',
+              beforeJson: Value('{"invoiceId":"$invoiceId"}'),
+              description: Value('ابطال خودکار سند فاکتور $invoiceId'),
+              performedAt: now,
+              createdAt: now,
+            ),
+          );
+    }
+  }
+
+  Future<void> _reverseInvoiceEffects({
+    required String invoiceId,
+    required String invoiceType,
+    required String contactId,
+    required int totalMinor,
+    required int paidMinor,
+    required List<InvoiceItemData> items,
+    required int now,
+    String reason = 'برگشت فاکتور',
+  }) async {
+    if (invoiceType == InvoiceType.sale.code) {
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final restored = (product.currentStock + item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(restored),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: item.quantity,
+                movementType: InventoryMovementType.returned.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(product.purchasePriceMinor),
+                notes: Value('$reason فروش'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      final unpaid = (totalMinor - paidMinor).clamp(0, 1 << 62);
+      if (unpaid > 0) {
+        final contact = await (_db.select(
+          _db.businessContactsTable,
+        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
+        if (contact != null) {
+          final reverted = (contact.outstandingBalanceMinor - unpaid).clamp(
+            0,
+            double.maxFinite.toInt(),
+          );
+          await (_db.update(
+            _db.businessContactsTable,
+          )..where((tbl) => tbl.id.equals(contact.id))).write(
+            BusinessContactsTableCompanion(
+              outstandingBalanceMinor: Value(reverted),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+      }
+    } else if (invoiceType == InvoiceType.purchase.code) {
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final restored = (product.currentStock - item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(restored),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: -item.quantity,
+                movementType: InventoryMovementType.returned.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(product.purchasePriceMinor),
+                notes: Value('$reason خرید'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+    }
+
+    await _voidLinkedVouchers(invoiceId, now);
+  }
+
+  Future<void> _applyInvoiceEffects({
+    required String invoiceId,
+    required InvoiceType type,
+    required String contactId,
+    required int remainingMinor,
+    required List<InvoiceItemEntity> items,
+    required int now,
+    String reason = 'فاکتور',
+  }) async {
+    if (type == InvoiceType.sale) {
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final newStock = (product.currentStock - item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(newStock),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: -item.quantity,
+                movementType: InventoryMovementType.sale.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(product.purchasePriceMinor),
+                notes: Value('$reason فروش'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      if (remainingMinor > 0) {
+        final contact = await (_db.select(
+          _db.businessContactsTable,
+        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
+        if (contact != null) {
+          await (_db.update(
+            _db.businessContactsTable,
+          )..where((tbl) => tbl.id.equals(contact.id))).write(
+            BusinessContactsTableCompanion(
+              outstandingBalanceMinor: Value(
+                contact.outstandingBalanceMinor + remainingMinor,
+              ),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+      }
+    } else if (type == InvoiceType.purchase) {
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final newStock = (product.currentStock + item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(newStock),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: item.quantity,
+                movementType: InventoryMovementType.purchase.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(item.unitPrice.minorUnits),
+                notes: Value('$reason خرید'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+    }
+  }
+
   @override
   /// Full invoice EDIT (اصلاح فاکتور): reverses ALL side effects of the old
-  /// version (stock returns, customer balance), replaces line items, then
-  /// applies the new version's effects. Payment state (paidMinor/status) is
+  /// version (stock returns, customer balance, purchase quantities), replaces line items,
+  /// then applies the new version's effects. Payment state (paidMinor/status) is
   /// preserved — payments are a separate flow.
   Future<Result<InvoiceEntity>> updateInvoice(InvoiceEntity invoice) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final old = await (_db.select(_db.invoicesTable)
-              ..where((tbl) => tbl.id.equals(invoice.id)))
-            .getSingleOrNull();
+        final old = await (_db.select(
+          _db.invoicesTable,
+        )..where((tbl) => tbl.id.equals(invoice.id))).getSingleOrNull();
         if (old == null || old.deletedAt != null) {
           throw StateError('فاکتور پیدا نشد.');
         }
 
-        // ── 1. Reverse the OLD sale side effects ──
-        if (old.type == InvoiceType.sale.code) {
-          final oldItems = await (_db.select(_db.invoiceItemsTable)
-                ..where((tbl) =>
-                    tbl.invoiceId.equals(invoice.id) & tbl.deletedAt.isNull()))
-              .get();
-          for (final item in oldItems) {
-            if (item.productId == null) continue;
-            final product = await (_db.select(_db.productsTable)
-                  ..where((tbl) => tbl.id.equals(item.productId!)))
-                .getSingleOrNull();
-            if (product == null) continue;
-            final restored =
-                (product.currentStock + item.quantity).clamp(0.0, 99999999.0);
-            await (_db.update(_db.productsTable)
-                  ..where((tbl) => tbl.id.equals(product.id)))
-                .write(ProductsTableCompanion(
-              currentStock: Value(restored),
-              updatedAt: Value(now),
-            ));
-            await _db.into(_db.inventoryLogsTable).insert(
-                  InventoryLogsTableCompanion.insert(
-                    id: _uuid.v4(),
-                    productId: product.id,
-                    changeQuantity: item.quantity,
-                    movementType: InventoryMovementType.returned.code,
-                    referenceId: Value(invoice.id),
-                    notes: const Value('اصلاح فاکتور فروش'),
-                    createdAt: now,
-                    updatedAt: now,
-                  ),
-                );
-          }
-          final oldContact = await (_db.select(_db.businessContactsTable)
-                ..where((tbl) => tbl.id.equals(old.contactId)))
-              .getSingleOrNull();
-          final oldUnpaid = old.totalMinor - old.paidMinor;
-          if (oldContact != null && oldUnpaid > 0) {
-            await (_db.update(_db.businessContactsTable)
-                  ..where((tbl) => tbl.id.equals(oldContact.id)))
-                .write(BusinessContactsTableCompanion(
-              outstandingBalanceMinor:
-                  Value((oldContact.outstandingBalanceMinor - oldUnpaid)
-                      .clamp(0, double.maxFinite.toInt())),
-              updatedAt: Value(now),
-            ));
-          }
+        // ── 1. Reverse the OLD side effects (if old was not cancelled) ──
+        if (old.status != InvoiceStatus.cancelled.code) {
+          final oldItems =
+              await (_db.select(_db.invoiceItemsTable)..where(
+                    (tbl) =>
+                        tbl.invoiceId.equals(invoice.id) &
+                        tbl.deletedAt.isNull(),
+                  ))
+                  .get();
+          await _reverseInvoiceEffects(
+            invoiceId: invoice.id,
+            invoiceType: old.type,
+            contactId: old.contactId,
+            totalMinor: old.totalMinor,
+            paidMinor: old.paidMinor,
+            items: oldItems,
+            now: now,
+            reason: 'اصلاح فاکتور',
+          );
         }
 
         // ── 2. Replace line items ──
-        await (_db.delete(_db.invoiceItemsTable)
-              ..where((tbl) => tbl.invoiceId.equals(invoice.id)))
-            .go();
+        await (_db.delete(
+          _db.invoiceItemsTable,
+        )..where((tbl) => tbl.invoiceId.equals(invoice.id))).go();
 
-        // ── 3. Apply the NEW sale side effects ──
-        if (invoice.type == InvoiceType.sale) {
-          for (final item in invoice.items) {
-            if (item.productId == null) continue;
-            final product = await (_db.select(_db.productsTable)
-                  ..where((tbl) => tbl.id.equals(item.productId!)))
-                .getSingleOrNull();
-            if (product == null) continue;
-            final newStock =
-                (product.currentStock - item.quantity).clamp(0.0, 99999999.0);
-            await (_db.update(_db.productsTable)
-                  ..where((tbl) => tbl.id.equals(product.id)))
-                .write(ProductsTableCompanion(
-              currentStock: Value(newStock),
-              updatedAt: Value(now),
-            ));
-            await _db.into(_db.inventoryLogsTable).insert(
-                  InventoryLogsTableCompanion.insert(
-                    id: _uuid.v4(),
-                    productId: product.id,
-                    changeQuantity: -item.quantity,
-                    movementType: InventoryMovementType.sale.code,
-                    referenceId: Value(invoice.id),
-                    notes: const Value('اصلاح فاکتور فروش'),
-                    createdAt: now,
-                    updatedAt: now,
-                  ),
-                );
-          }
-          final newUnpaid = invoice.remainingBalance.minorUnits;
-          if (newUnpaid > 0) {
-            final newContact = await (_db.select(_db.businessContactsTable)
-                  ..where((tbl) => tbl.id.equals(invoice.contactId)))
-                .getSingleOrNull();
-            if (newContact != null) {
-              await (_db.update(_db.businessContactsTable)
-                    ..where((tbl) => tbl.id.equals(newContact.id)))
-                  .write(BusinessContactsTableCompanion(
-                outstandingBalanceMinor:
-                    Value(newContact.outstandingBalanceMinor + newUnpaid),
-                updatedAt: Value(now),
-              ));
-            }
-          }
+        // ── 3. Apply the NEW side effects (if new is not cancelled) ──
+        if (invoice.status != InvoiceStatus.cancelled) {
+          await _applyInvoiceEffects(
+            invoiceId: invoice.id,
+            type: invoice.type,
+            contactId: invoice.contactId,
+            remainingMinor: invoice.remainingBalance.minorUnits,
+            items: invoice.items,
+            now: now,
+            reason: 'اصلاح فاکتور',
+          );
         }
 
         // ── 4. Update header ──
-        await (_db.update(_db.invoicesTable)
-              ..where((tbl) => tbl.id.equals(invoice.id)))
-            .write(
+        await (_db.update(
+          _db.invoicesTable,
+        )..where((tbl) => tbl.id.equals(invoice.id))).write(
           InvoicesTableCompanion(
             invoiceNumber: Value(invoice.invoiceNumber),
             contactId: Value(invoice.contactId),
@@ -843,7 +1131,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         // ── 5. Insert new line items ──
         for (final item in invoice.items) {
           final itemId = item.id.isEmpty ? _uuid.v4() : item.id;
-          await _db.into(_db.invoiceItemsTable).insert(
+          await _db
+              .into(_db.invoiceItemsTable)
+              .insert(
                 InvoiceItemsTableCompanion.insert(
                   id: itemId,
                   invoiceId: invoice.id,
@@ -861,7 +1151,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         }
 
         // ── 6. Outbox ──
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'invoices',
                 entityId: invoice.id,
@@ -877,7 +1169,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final updated = await getInvoiceById(invoice.id);
       final entity = updated.dataOrNull;
       if (entity == null) {
-        return DatabaseFailure('خواندن فاکتور اصلاح‌شده انجام نشد.').asFailure();
+        return DatabaseFailure('خواندن فاکتور اصلاح‌شده انجام نشد.')
+            .asFailure();
       }
       return Success(entity);
     } catch (e) {
@@ -889,72 +1182,79 @@ class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @override
-  Future<Result<void>> updateInvoiceStatus(String id, InvoiceStatus status) async {
+  Future<Result<void>> updateInvoiceStatus(
+    String id,
+    InvoiceStatus status,
+  ) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.invoicesTable)..where((t) => t.id.equals(id))).write(
-        InvoicesTableCompanion(
-          status: Value(status.code),
-          updatedAt: Value(now),
-        ),
-      );
-
-      await _db.into(_db.syncQueueTable).insert(
-            SyncQueueTableCompanion.insert(
-              syncEntityName: 'invoices',
-              entityId: id,
-              operation: 'UPDATE',
-              payloadJson: '{"id":"$id","status":"${status.code}"}',
-              idempotencyKey: _uuid.v4(),
-              queuedAt: now,
-            ),
-          );
-
-      return const Success(null);
-    } catch (e) {
-      return DatabaseFailure('ویرایش فاکتور انجام نشد.').asFailure();
-    }
-  }
-
-  @override
-  Future<Result<void>> recordInvoicePayment(String id, Money paymentAmount) async {
-    try {
-      final now = DateTime.now().millisecondsSinceEpoch;
-
       await _db.transaction(() async {
-        final invoice = await (_db.select(_db.invoicesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
-        if (invoice == null) throw Exception('Invoice not found');
+        final invoice = await (_db.select(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (invoice == null || invoice.deletedAt != null) {
+          throw StateError('فاکتور پیدا نشد.');
+        }
 
-        final newPaid = invoice.paidMinor + paymentAmount.minorUnits;
-        final isCompleted = newPaid >= invoice.totalMinor;
-        final newStatus = isCompleted ? InvoiceStatus.paid.code : InvoiceStatus.partiallyPaid.code;
+        final oldStatus = invoice.status;
+        if (oldStatus == status.code) return;
 
-        await (_db.update(_db.invoicesTable)..where((t) => t.id.equals(id))).write(
+        // When changing to cancelled: reverse stock and contact balance and void voucher!
+        if (status == InvoiceStatus.cancelled &&
+            oldStatus != InvoiceStatus.cancelled.code) {
+          final items = await (_db.select(
+            _db.invoiceItemsTable,
+          )..where((t) => t.invoiceId.equals(id) & t.deletedAt.isNull())).get();
+          await _reverseInvoiceEffects(
+            invoiceId: id,
+            invoiceType: invoice.type,
+            contactId: invoice.contactId,
+            totalMinor: invoice.totalMinor,
+            paidMinor: invoice.paidMinor,
+            items: items,
+            now: now,
+            reason: 'لغو فاکتور',
+          );
+        } else if (oldStatus == InvoiceStatus.cancelled.code &&
+            status != InvoiceStatus.cancelled) {
+          // Re-activating from cancelled: re-apply effects
+          final cur = Currency.fromCode(invoice.currency);
+          final itemsData = await (_db.select(
+            _db.invoiceItemsTable,
+          )..where((t) => t.invoiceId.equals(id) & t.deletedAt.isNull())).get();
+          final items = itemsData.map((it) => _toItemEntity(it, cur)).toList();
+          final remainingMinor = (invoice.totalMinor - invoice.paidMinor).clamp(
+            0,
+            1 << 62,
+          );
+          await _applyInvoiceEffects(
+            invoiceId: id,
+            type: InvoiceType.fromCode(invoice.type),
+            contactId: invoice.contactId,
+            remainingMinor: remainingMinor,
+            items: items,
+            now: now,
+            reason: 'فعال‌سازی مجدد فاکتور',
+          );
+        }
+
+        await (_db.update(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).write(
           InvoicesTableCompanion(
-            paidMinor: Value(newPaid),
-            status: Value(newStatus),
+            status: Value(status.code),
             updatedAt: Value(now),
           ),
         );
 
-        // Reduce contact outstanding balance
-        final contact = await (_db.select(_db.businessContactsTable)..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
-        if (contact != null) {
-          final newContactBalance = (contact.outstandingBalanceMinor - paymentAmount.minorUnits).clamp(0, double.maxFinite.toInt());
-          await (_db.update(_db.businessContactsTable)..where((t) => t.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor: Value(newContactBalance),
-              updatedAt: Value(now),
-            ),
-          );
-        }
-
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'invoices',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson: '{"id":"$id","payment":${paymentAmount.minorUnits},"newPaid":$newPaid}',
+                payloadJson: '{"id":"$id","status":"${status.code}"}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -963,7 +1263,77 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
       return const Success(null);
     } catch (e) {
-      return DatabaseFailure('ثبت پرداخت انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('ویرایش وضعیت فاکتور انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<void>> recordInvoicePayment(
+    String id,
+    Money paymentAmount,
+  ) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await _db.transaction(() async {
+        final invoice = await (_db.select(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (invoice == null) throw Exception('Invoice not found');
+
+        final newPaid = invoice.paidMinor + paymentAmount.minorUnits;
+        final isCompleted = newPaid >= invoice.totalMinor;
+        final newStatus = isCompleted
+            ? InvoiceStatus.paid.code
+            : InvoiceStatus.partiallyPaid.code;
+
+        await (_db.update(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).write(
+          InvoicesTableCompanion(
+            paidMinor: Value(newPaid),
+            status: Value(newStatus),
+            updatedAt: Value(now),
+          ),
+        );
+
+        // Reduce contact outstanding balance
+        final contact = await (_db.select(
+          _db.businessContactsTable,
+        )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
+        if (contact != null) {
+          final newContactBalance =
+              (contact.outstandingBalanceMinor - paymentAmount.minorUnits)
+                  .clamp(0, double.maxFinite.toInt());
+          await (_db.update(
+            _db.businessContactsTable,
+          )..where((t) => t.id.equals(contact.id))).write(
+            BusinessContactsTableCompanion(
+              outstandingBalanceMinor: Value(newContactBalance),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'invoices',
+                entityId: id,
+                operation: 'UPDATE',
+                payloadJson:
+                    '{"id":"$id","payment":${paymentAmount.minorUnits},"newPaid":$newPaid}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('ثبت پرداخت انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -973,73 +1343,58 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final invoice = await (_db.select(_db.invoicesTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final invoice = await (_db.select(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
         if (invoice == null || invoice.deletedAt != null) return;
 
-        await (_db.update(_db.invoicesTable)..where((t) => t.id.equals(id))).write(
-          InvoicesTableCompanion(
+        await (_db.update(
+          _db.invoicesTable,
+        )..where((t) => t.id.equals(id))).write(
+          InvoicesTableCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+        );
+
+        await (_db.update(
+          _db.invoiceItemsTable,
+        )..where((t) => t.invoiceId.equals(id))).write(
+          InvoiceItemsTableCompanion(
             deletedAt: Value(now),
             updatedAt: Value(now),
           ),
         );
 
-        // Reverse the sale side effects so stock and customer balance stay
-        // consistent with the ledger (createInvoice deducted/added them).
-        if (invoice.type == InvoiceType.sale.code) {
-          final items = await (_db.select(_db.invoiceItemsTable)
-                ..where((t) => t.invoiceId.equals(id) & t.deletedAt.isNull()))
-              .get();
+        // Reverse side effects (stock + customer balance) if invoice was not already cancelled
+        if (invoice.status != InvoiceStatus.cancelled.code) {
+          final items = await (_db.select(
+            _db.invoiceItemsTable,
+          )..where((t) => t.invoiceId.equals(id))).get();
+          await _reverseInvoiceEffects(
+            invoiceId: id,
+            invoiceType: invoice.type,
+            contactId: invoice.contactId,
+            totalMinor: invoice.totalMinor,
+            paidMinor: invoice.paidMinor,
+            items: items,
+            now: now,
+            reason: 'حذف فاکتور',
+          );
+        } else {
+          await _voidLinkedVouchers(id, now);
+        }
 
-          for (final item in items) {
-            if (item.productId == null) continue;
-            final product = await (_db.select(_db.productsTable)
-                  ..where((t) => t.id.equals(item.productId!)))
-                .getSingleOrNull();
-            if (product == null) continue;
-
-            // Return the sold quantity to stock (clamped like createInvoice).
-            final restoredStock =
-                (product.currentStock + item.quantity).clamp(0.0, 99999999.0);
-            await (_db.update(_db.productsTable)..where((t) => t.id.equals(product.id))).write(
-              ProductsTableCompanion(
-                currentStock: Value(restoredStock),
-                updatedAt: Value(now),
+        // Outbox DELETE sync record
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'invoices',
+                entityId: id,
+                operation: 'DELETE',
+                payloadJson: '{"id":"$id"}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
               ),
             );
-
-            await _db.into(_db.inventoryLogsTable).insert(
-                  InventoryLogsTableCompanion.insert(
-                    id: _uuid.v4(),
-                    productId: product.id,
-                    changeQuantity: item.quantity,
-                    movementType: InventoryMovementType.returned.code,
-                    referenceId: Value(id),
-                    costPerUnitMinor: Value(product.purchasePriceMinor),
-                    notes: Value('حذف فاکتور فروش $id'),
-                    createdAt: now,
-                    updatedAt: now,
-                  ),
-                );
-          }
-
-          // Revert the customer's outstanding balance for the unpaid part.
-          final unpaidMinor = (invoice.totalMinor - invoice.paidMinor).clamp(0, 1 << 62);
-          if (unpaidMinor > 0) {
-            final contact = await (_db.select(_db.businessContactsTable)
-                  ..where((t) => t.id.equals(invoice.contactId)))
-                .getSingleOrNull();
-            if (contact != null) {
-              final reverted = (contact.outstandingBalanceMinor - unpaidMinor)
-                  .clamp(0, double.maxFinite.toInt());
-              await (_db.update(_db.businessContactsTable)..where((t) => t.id.equals(contact.id))).write(
-                BusinessContactsTableCompanion(
-                  outstandingBalanceMinor: Value(reverted),
-                  updatedAt: Value(now),
-                ),
-              );
-            }
-          }
-        }
       });
 
       return const Success(null);
@@ -1055,10 +1410,12 @@ class BusinessRepositoryImpl implements BusinessRepository {
   /// کاردکس — chronological stock card for one product with running balance.
   Future<List<ProductCardEntry>> getProductCard(String productId) async {
     try {
-      final logs = await (_db.select(_db.inventoryLogsTable)
-            ..where((tbl) =>
-                tbl.productId.equals(productId) & tbl.deletedAt.isNull()))
-          .get();
+      final logs =
+          await (_db.select(_db.inventoryLogsTable)..where(
+                (tbl) =>
+                    tbl.productId.equals(productId) & tbl.deletedAt.isNull(),
+              ))
+              .get();
       final sorted = logs..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
       double running = 0;
@@ -1066,15 +1423,17 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final entries = <ProductCardEntry>[];
       for (final log in sorted) {
         running += log.changeQuantity;
-        entries.add(ProductCardEntry(
-          date: DateTime.fromMillisecondsSinceEpoch(log.createdAt),
-          movementType: InventoryMovementType.fromCode(log.movementType),
-          description: log.notes ?? '',
-          inQuantity: log.changeQuantity > 0 ? log.changeQuantity : 0,
-          outQuantity: log.changeQuantity < 0 ? -log.changeQuantity : 0,
-          balance: running,
-          referenceId: log.referenceId,
-        ));
+        entries.add(
+          ProductCardEntry(
+            date: DateTime.fromMillisecondsSinceEpoch(log.createdAt),
+            movementType: InventoryMovementType.fromCode(log.movementType),
+            description: log.notes ?? '',
+            inQuantity: log.changeQuantity > 0 ? log.changeQuantity : 0,
+            outQuantity: log.changeQuantity < 0 ? -log.changeQuantity : 0,
+            balance: running,
+            referenceId: log.referenceId,
+          ),
+        );
       }
       return entries;
     } catch (e) {
