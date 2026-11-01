@@ -195,6 +195,14 @@ class NotificationService {
     );
   }
 
+  /// Removes one notification row and cancels its OS reminder if pending.
+  Future<void> deleteNotification(String id) async {
+    await (db.delete(db.notificationsTable)..where((t) => t.id.equals(id))).go();
+    try {
+      await _localNotifications.cancel(id: numericIdFor(id));
+    } catch (_) {}
+  }
+
   Future<void> markAllAsRead() async {
     await db.update(db.notificationsTable).write(
       const NotificationsTableCompanion(isRead: Value(true)),
