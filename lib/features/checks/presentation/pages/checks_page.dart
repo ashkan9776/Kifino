@@ -20,6 +20,7 @@ import '../../../../core/widgets/app_date_picker.dart';import '../../../accounts
 import '../../domain/entities/check_entity.dart';
 import '../bloc/check_bloc.dart';
 import '../widgets/check_status_history_sheet.dart';
+import '../widgets/edit_check_sheet.dart';
 
 class ChecksPage extends StatefulWidget {
   const ChecksPage({super.key});
@@ -914,6 +915,15 @@ class _ChecksPageState extends State<ChecksPage> {
               runSpacing: 0,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                if (!check.isCleared)
+                  TextButton.icon(
+                    onPressed: () => EditCheckSheet.show(context, check),
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: Text(isFa ? 'ویرایش' : 'Edit'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
                 TextButton.icon(
                   onPressed: () => _showStatusMenu(context, check),
                   icon: const Icon(Icons.published_with_changes_rounded,

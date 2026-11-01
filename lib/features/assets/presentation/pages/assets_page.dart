@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../domain/entities/asset_entity.dart';
 import '../bloc/asset_bloc.dart';
+import '../widgets/edit_asset_sheet.dart';
 
 class AssetsPage extends StatefulWidget {
   const AssetsPage({super.key});
@@ -482,6 +483,36 @@ class _AssetsPageState extends State<AssetsPage> {
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: isPositive ? AppColors.income : AppColors.expense,
                                   fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => EditAssetSheet.show(context, asset),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.edit_outlined,
+                                        size: 12,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        l10n.isPersian ? 'ویرایش' : 'Edit',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],

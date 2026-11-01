@@ -704,6 +704,191 @@ class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @override
+  /// Full invoice EDIT (اصلاح فاکتور): reverses ALL side effects of the old
+  /// version (stock returns, customer balance), replaces line items, then
+  /// applies the new version's effects. Payment state (paidMinor/status) is
+  /// preserved — payments are a separate flow.
+  Future<Result<InvoiceEntity>> updateInvoice(InvoiceEntity invoice) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await _db.transaction(() async {
+        final old = await (_db.select(_db.invoicesTable)
+              ..where((tbl) => tbl.id.equals(invoice.id)))
+            .getSingleOrNull();
+        if (old == null || old.deletedAt != null) {
+          throw StateError('فاکتور پیدا نشد.');
+        }
+
+        // ── 1. Reverse the OLD sale side effects ──
+        if (old.type == InvoiceType.sale.code) {
+          final oldItems = await (_db.select(_db.invoiceItemsTable)
+                ..where((tbl) =>
+                    tbl.invoiceId.equals(invoice.id) & tbl.deletedAt.isNull()))
+              .get();
+          for (final item in oldItems) {
+            if (item.productId == null) continue;
+            final product = await (_db.select(_db.productsTable)
+                  ..where((tbl) => tbl.id.equals(item.productId!)))
+                .getSingleOrNull();
+            if (product == null) continue;
+            final restored =
+                (product.currentStock + item.quantity).clamp(0.0, 99999999.0);
+            await (_db.update(_db.productsTable)
+                  ..where((tbl) => tbl.id.equals(product.id)))
+                .write(ProductsTableCompanion(
+              currentStock: Value(restored),
+              updatedAt: Value(now),
+            ));
+            await _db.into(_db.inventoryLogsTable).insert(
+                  InventoryLogsTableCompanion.insert(
+                    id: _uuid.v4(),
+                    productId: product.id,
+                    changeQuantity: item.quantity,
+                    movementType: InventoryMovementType.returned.code,
+                    referenceId: Value(invoice.id),
+                    notes: const Value('اصلاح فاکتور فروش'),
+                    createdAt: now,
+                    updatedAt: now,
+                  ),
+                );
+          }
+          final oldContact = await (_db.select(_db.businessContactsTable)
+                ..where((tbl) => tbl.id.equals(old.contactId)))
+              .getSingleOrNull();
+          final oldUnpaid = old.totalMinor - old.paidMinor;
+          if (oldContact != null && oldUnpaid > 0) {
+            await (_db.update(_db.businessContactsTable)
+                  ..where((tbl) => tbl.id.equals(oldContact.id)))
+                .write(BusinessContactsTableCompanion(
+              outstandingBalanceMinor:
+                  Value((oldContact.outstandingBalanceMinor - oldUnpaid)
+                      .clamp(0, double.maxFinite.toInt())),
+              updatedAt: Value(now),
+            ));
+          }
+        }
+
+        // ── 2. Replace line items ──
+        await (_db.delete(_db.invoiceItemsTable)
+              ..where((tbl) => tbl.invoiceId.equals(invoice.id)))
+            .go();
+
+        // ── 3. Apply the NEW sale side effects ──
+        if (invoice.type == InvoiceType.sale) {
+          for (final item in invoice.items) {
+            if (item.productId == null) continue;
+            final product = await (_db.select(_db.productsTable)
+                  ..where((tbl) => tbl.id.equals(item.productId!)))
+                .getSingleOrNull();
+            if (product == null) continue;
+            final newStock =
+                (product.currentStock - item.quantity).clamp(0.0, 99999999.0);
+            await (_db.update(_db.productsTable)
+                  ..where((tbl) => tbl.id.equals(product.id)))
+                .write(ProductsTableCompanion(
+              currentStock: Value(newStock),
+              updatedAt: Value(now),
+            ));
+            await _db.into(_db.inventoryLogsTable).insert(
+                  InventoryLogsTableCompanion.insert(
+                    id: _uuid.v4(),
+                    productId: product.id,
+                    changeQuantity: -item.quantity,
+                    movementType: InventoryMovementType.sale.code,
+                    referenceId: Value(invoice.id),
+                    notes: const Value('اصلاح فاکتور فروش'),
+                    createdAt: now,
+                    updatedAt: now,
+                  ),
+                );
+          }
+          final newUnpaid = invoice.remainingBalance.minorUnits;
+          if (newUnpaid > 0) {
+            final newContact = await (_db.select(_db.businessContactsTable)
+                  ..where((tbl) => tbl.id.equals(invoice.contactId)))
+                .getSingleOrNull();
+            if (newContact != null) {
+              await (_db.update(_db.businessContactsTable)
+                    ..where((tbl) => tbl.id.equals(newContact.id)))
+                  .write(BusinessContactsTableCompanion(
+                outstandingBalanceMinor:
+                    Value(newContact.outstandingBalanceMinor + newUnpaid),
+                updatedAt: Value(now),
+              ));
+            }
+          }
+        }
+
+        // ── 4. Update header ──
+        await (_db.update(_db.invoicesTable)
+              ..where((tbl) => tbl.id.equals(invoice.id)))
+            .write(
+          InvoicesTableCompanion(
+            invoiceNumber: Value(invoice.invoiceNumber),
+            contactId: Value(invoice.contactId),
+            type: Value(invoice.type.code),
+            issueDate: Value(invoice.issueDate.millisecondsSinceEpoch),
+            dueDate: Value(invoice.dueDate.millisecondsSinceEpoch),
+            subtotalMinor: Value(invoice.subtotal.minorUnits),
+            discountMinor: Value(invoice.discount.minorUnits),
+            taxMinor: Value(invoice.tax.minorUnits),
+            totalMinor: Value(invoice.total.minorUnits),
+            notes: Value(invoice.notes),
+            terms: Value(invoice.terms),
+            updatedAt: Value(now),
+          ),
+        );
+
+        // ── 5. Insert new line items ──
+        for (final item in invoice.items) {
+          final itemId = item.id.isEmpty ? _uuid.v4() : item.id;
+          await _db.into(_db.invoiceItemsTable).insert(
+                InvoiceItemsTableCompanion.insert(
+                  id: itemId,
+                  invoiceId: invoice.id,
+                  productId: Value(item.productId),
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPriceMinor: item.unitPrice.minorUnits,
+                  discountMinor: Value(item.discount.minorUnits),
+                  taxMinor: Value(item.tax.minorUnits),
+                  totalMinor: item.total.minorUnits,
+                  createdAt: now,
+                  updatedAt: now,
+                ),
+              );
+        }
+
+        // ── 6. Outbox ──
+        await _db.into(_db.syncQueueTable).insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'invoices',
+                entityId: invoice.id,
+                operation: 'UPDATE',
+                payloadJson:
+                    '{"id":"${invoice.id}","total":${invoice.total.minorUnits},"edited":true}',
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      final updated = await getInvoiceById(invoice.id);
+      final entity = updated.dataOrNull;
+      if (entity == null) {
+        return DatabaseFailure('خواندن فاکتور اصلاح‌شده انجام نشد.').asFailure();
+      }
+      return Success(entity);
+    } catch (e) {
+      if (e is StateError) {
+        return DatabaseFailure(e.message).asFailure();
+      }
+      return DatabaseFailure('اصلاح فاکتور انجام نشد.').asFailure();
+    }
+  }
+
+  @override
   Future<Result<void>> updateInvoiceStatus(String id, InvoiceStatus status) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;

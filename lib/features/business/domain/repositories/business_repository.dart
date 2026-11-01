@@ -34,6 +34,8 @@ abstract interface class BusinessRepository {
   Future<Result<List<InvoiceEntity>>> getInvoices({InvoiceType? type});
   Future<Result<InvoiceEntity>> getInvoiceById(String id);
   Future<Result<InvoiceEntity>> createInvoice(InvoiceEntity invoice);
+  Future<Result<InvoiceEntity>> updateInvoice(InvoiceEntity invoice);
+
   Future<Result<void>> updateInvoiceStatus(String id, InvoiceStatus status);
   Future<Result<void>> recordInvoicePayment(String id, Money paymentAmount);
   Future<Result<void>> deleteInvoice(String id);

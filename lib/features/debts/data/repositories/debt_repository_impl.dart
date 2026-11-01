@@ -154,6 +154,41 @@ class DebtRepositoryImpl implements DebtRepository {
   }
 
   @override
+  Future<Result<void>> updateDebt(DebtEntity debt) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.debtsReceivablesTable)
+            ..where((tbl) => tbl.id.equals(debt.id)))
+          .write(
+        DebtsReceivablesTableCompanion(
+          contactName: Value(debt.contactName),
+          contactPhone: Value(debt.contactPhone),
+          totalAmountMinor: Value(debt.totalAmount.minorUnits),
+          dueDate: Value(debt.dueDate?.millisecondsSinceEpoch),
+          notes: Value(debt.notes),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _db.into(_db.syncQueueTable).insert(
+            SyncQueueTableCompanion.insert(
+              syncEntityName: 'debts_receivables',
+              entityId: debt.id,
+              operation: 'UPDATE',
+              payloadJson:
+                  '{"id":"${debt.id}","total":${debt.totalAmount.minorUnits}}',
+              idempotencyKey: _uuid.v4(),
+              queuedAt: now,
+            ),
+          );
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('ویرایش بدهی/طلب انجام نشد.').asFailure();
+    }
+  }
+
+  @override
   Future<Result<void>> updateDebtStatus(String id, DebtStatus status) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;

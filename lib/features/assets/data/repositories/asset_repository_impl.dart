@@ -112,6 +112,43 @@ class AssetRepositoryImpl implements AssetRepository {
   }
 
   @override
+  Future<Result<void>> updateAsset(AssetEntity asset) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.assetsTable)..where((tbl) => tbl.id.equals(asset.id))).write(
+        AssetsTableCompanion(
+          name: Value(asset.name),
+          category: Value(asset.category.code),
+          customTypeName: Value(asset.customTypeName),
+          quantity: Value(asset.quantity),
+          unit: Value(asset.unit),
+          costBasisMinor: Value(asset.costBasis.minorUnits),
+          currentValueMinor: Value(asset.currentValue.minorUnits),
+          purchaseDate: Value(asset.purchaseDate.millisecondsSinceEpoch),
+          notes: Value(asset.notes),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _db.into(_db.syncQueueTable).insert(
+            SyncQueueTableCompanion.insert(
+              syncEntityName: 'assets',
+              entityId: asset.id,
+              operation: 'UPDATE',
+              payloadJson:
+                  '{"id":"${asset.id}","value":${asset.currentValue.minorUnits},"name":"${asset.name}"}',
+              idempotencyKey: _uuid.v4(),
+              queuedAt: now,
+            ),
+          );
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('ویرایش دارایی انجام نشد.').asFailure();
+    }
+  }
+
+  @override
   Future<Result<void>> updateAssetValuation(String id, Money currentValue) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;

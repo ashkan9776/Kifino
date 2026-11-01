@@ -27,6 +27,9 @@ import '../bloc/business_bloc.dart';
 import '../bloc/business_event.dart';
 import '../bloc/business_state.dart';
 import '../services/invoice_pdf_generator.dart';
+import '../widgets/edit_contact_sheet.dart';
+import '../widgets/edit_invoice_sheet.dart';
+import '../widgets/edit_product_sheet.dart';
 
 class BusinessHubPage extends StatefulWidget {
   const BusinessHubPage({super.key});
@@ -234,7 +237,7 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
             body: TabBarView(
               controller: _tabController,
               children: [
-                _buildInvoicesTab(context, state.invoices, state.contacts),
+                _buildInvoicesTab(context, state.invoices, state.contacts, state.products),
                 _buildProductsTab(context, state.products),
                 _buildContactsTab(context, state.contacts),
               ],
@@ -260,6 +263,7 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
     BuildContext context,
     List<InvoiceEntity> invoices,
     List<ContactEntity> contacts,
+    List<ProductEntity> products,
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -283,6 +287,10 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
         final contact = contacts.where((c) => c.id == invoice.contactId).firstOrNull;
 
         final isPaid = invoice.status == InvoiceStatus.paid;
+        final isCancelled = invoice.status == InvoiceStatus.cancelled;
+        // Editing a fully-paid or cancelled invoice is forbidden — payments
+        // and status are separate flows.
+        final canEdit = !invoice.isFullyPaid && !isCancelled;
         final statusColor = isPaid
             ? AppColors.income
             : (invoice.isOverdue ? AppColors.danger : AppColors.warning);
@@ -358,7 +366,19 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                       ),
                     ),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (canEdit)
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            tooltip: l10n.isPersian ? 'اصلاح فاکتور' : 'Edit invoice',
+                            onPressed: () => EditInvoiceSheet.show(
+                              context,
+                              invoice,
+                              contacts: contacts,
+                              products: products,
+                            ),
+                          ),
                         // PDF Preview & Print button
                         IconButton(
                           icon: const Icon(Icons.print_outlined, size: 20),
@@ -515,6 +535,11 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     Row(
                       children: [
                         IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
+                          onPressed: () => EditProductSheet.show(context, product),
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.receipt_long_outlined, size: 18),
                           tooltip: l10n.isPersian ? 'کاردکس' : 'Stock card',
                           onPressed: () =>
@@ -607,19 +632,31 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        contact.type.titleFa,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            contact.type.titleFa,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
+                          onPressed: () => EditContactSheet.show(context, contact),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     if (contact.outstandingBalance.minorUnits > 0)

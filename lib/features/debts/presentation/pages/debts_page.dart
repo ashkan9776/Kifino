@@ -17,6 +17,7 @@ import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/debt_entity.dart';
 import '../bloc/debt_bloc.dart';
+import '../widgets/edit_debt_sheet.dart';
 
 class DebtsPage extends StatefulWidget {
   const DebtsPage({super.key});
@@ -488,13 +489,24 @@ class _DebtsPageState extends State<DebtsPage> {
                                     color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
                                   ),
                                 ),
-                                TextButton.icon(
-                                  onPressed: () => _showPaymentDialog(context, debt),
-                                  icon: const Icon(Icons.add, size: 16),
-                                  label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
-                                  style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      icon: const Icon(Icons.edit_outlined, size: 18),
+                                      tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
+                                      onPressed: () => EditDebtSheet.show(context, debt),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () => _showPaymentDialog(context, debt),
+                                      icon: const Icon(Icons.add, size: 16),
+                                      label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
+                                      style: TextButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

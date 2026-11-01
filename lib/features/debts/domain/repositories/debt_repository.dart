@@ -7,6 +7,8 @@ abstract interface class DebtRepository {
   Future<Result<List<DebtEntity>>> getDebts({DebtType? type});
   Future<Result<DebtEntity>> createDebt(DebtEntity debt);
   Future<Result<void>> addPayment(String id, Money paymentAmount);
+  Future<Result<void>> updateDebt(DebtEntity debt);
+
   Future<Result<void>> updateDebtStatus(String id, DebtStatus status);
   Future<Result<void>> deleteDebt(String id);
 }

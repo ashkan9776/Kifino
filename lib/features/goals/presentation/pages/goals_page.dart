@@ -19,6 +19,7 @@ import '../../../../core/widgets/app_skeleton.dart';
 import '../../../../core/widgets/app_date_picker.dart';import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/goal_entity.dart';
 import '../bloc/goal_bloc.dart';
+import '../widgets/edit_goal_sheet.dart';
 
 class GoalsPage extends StatelessWidget {
   const GoalsPage({super.key});
@@ -530,6 +531,11 @@ class GoalsPage extends StatelessWidget {
                                           ? () => _showContributeSheet(context, goal)
                                           : null,
                                     ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => EditGoalSheet.show(context, goal),
+                                    icon: const Icon(Icons.edit_outlined),
+                                    tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
                                   ),
                                   IconButton(
                                     onPressed: () => _confirmDelete(context, goal),

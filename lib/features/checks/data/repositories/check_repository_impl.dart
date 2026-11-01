@@ -118,6 +118,42 @@ class CheckRepositoryImpl implements CheckRepository {
   }
 
   @override
+  Future<Result<void>> updateCheck(CheckEntity check) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.checksTable)..where((tbl) => tbl.id.equals(check.id))).write(
+        ChecksTableCompanion(
+          checkNumber: Value(check.checkNumber),
+          sayadiId: Value(check.sayadiId),
+          bankName: Value(check.bankName),
+          partyName: Value(check.partyName),
+          amountMinor: Value(check.amount.minorUnits),
+          dueDate: Value(check.dueDate.millisecondsSinceEpoch),
+          accountId: Value(check.accountId),
+          notes: Value(check.notes),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _db.into(_db.syncQueueTable).insert(
+            SyncQueueTableCompanion.insert(
+              syncEntityName: 'checks',
+              entityId: check.id,
+              operation: 'UPDATE',
+              payloadJson:
+                  '{"id":"${check.id}","amount":${check.amount.minorUnits},"number":"${check.checkNumber}"}',
+              idempotencyKey: _uuid.v4(),
+              queuedAt: now,
+            ),
+          );
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('ویرایش چک انجام نشد.').asFailure();
+    }
+  }
+
+  @override
   Future<Result<void>> updateCheckStatus(String id, CheckStatus status) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
