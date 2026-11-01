@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/business_metrics_entity.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../../domain/entities/invoice_entity.dart';
@@ -42,4 +43,17 @@ final class BusinessError extends BusinessState {
 
   @override
   List<Object?> get props => [message];
+}
+
+final class BusinessInvoiceVoucherPending extends BusinessState {
+  final InvoiceEntity invoice;
+  final String warningMessage;
+
+  const BusinessInvoiceVoucherPending({
+    required this.invoice,
+    required this.warningMessage,
+  });
+
+  @override
+  List<Object?> get props => [invoice, warningMessage];
 }

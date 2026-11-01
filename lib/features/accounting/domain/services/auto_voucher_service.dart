@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/money.dart';
 import '../../../business/domain/entities/invoice_entity.dart';
 import '../../../checks/domain/entities/check_entity.dart';
@@ -17,20 +18,35 @@ class AutoVoucherService {
     this._accountingRepository, {
     required this.settingsService,
     Uuid? uuid,
-  })  : _uuid = uuid ?? const Uuid();
+  }) : _uuid = uuid ?? const Uuid();
 
   /// Vouchers are linked to their invoice via referenceType+referenceId;
   /// this lookup makes generation idempotent — one invoice, one voucher.
   Future<bool> _hasVoucherFor(String referenceId) async {
     final existing = await _accountingRepository.getDocuments();
-    return existing.any((d) =>
-        d.referenceId == referenceId &&
-        (d.referenceType == 'invoice' || d.referenceType == 'cheque'));
+    return existing.any(
+      (d) =>
+          d.referenceId == referenceId &&
+          (d.referenceType == 'invoice' || d.referenceType == 'cheque'),
+    );
+  }
+
+  Future<String?> _resolveFiscalYearId(DateTime date) async {
+    try {
+      final years = await _accountingRepository.getFiscalYears();
+      for (final fy in years) {
+        if (!fy.isClosed &&
+            !date.isBefore(fy.startDate) &&
+            !date.isAfter(fy.endDate.add(const Duration(days: 1)))) {
+          return fy.id;
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Voids (soft-deletes) the voucher linked to a reference (e.g. when the
-  /// invoice itself is deleted). Quietly ignores period-lock errors — the
-  /// caller's business flow must not break on accounting cleanup.
+  /// invoice itself is deleted).
   Future<void> voidVoucherFor(String referenceId) async {
     try {
       final existing = await _accountingRepository.getDocuments();
@@ -40,7 +56,14 @@ class AutoVoucherService {
           await _accountingRepository.deleteDocument(doc.id);
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'خطا در ابطال سند حسابداری برای ارجاع $referenceId: $e',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
   }
 
   /// Automatically generates balanced double-entry accounting document for an invoice
@@ -53,25 +76,40 @@ class AutoVoucherService {
       throw StateError('برای این فاکتور قبلاً سند حسابداری صادر شده است.');
     }
 
+    final resolvedFiscalYearId =
+        fiscalYearId ?? await _resolveFiscalYearId(invoice.issueDate);
     final cfg = settingsService.load();
     final now = DateTime.now();
     final docId = _uuid.v4();
-    final docNumber = await _accountingRepository.getNextDocumentNumber(fiscalYearId);
+    final docNumber = await _accountingRepository.getNextDocumentNumber(
+      resolvedFiscalYearId,
+    );
 
     // Look up required subjects from the configurable mapping
-    final salesSubject = await _accountingRepository.getSubjectByCode(cfg.salesCode) ??
+    final salesSubject =
+        await _accountingRepository.getSubjectByCode(cfg.salesCode) ??
         await _accountingRepository.getSubjectByCode('060');
-    final customerSubject = await _accountingRepository.getSubjectByCode(cfg.receivableCode) ??
+    final customerSubject =
+        await _accountingRepository.getSubjectByCode(cfg.receivableCode) ??
         await _accountingRepository.getSubjectByCode('012');
-    final vatOutputSubject = await _accountingRepository.getSubjectByCode(cfg.vatOutputCode);
-    final discountSubject = await _accountingRepository.getSubjectByCode(cfg.discountSalesCode);
-    final inventorySubject = await _accountingRepository.getSubjectByCode(cfg.inventoryCode) ??
+    final vatOutputSubject = await _accountingRepository.getSubjectByCode(
+      cfg.vatOutputCode,
+    );
+    final discountSubject = await _accountingRepository.getSubjectByCode(
+      cfg.discountSalesCode,
+    );
+    final inventorySubject =
+        await _accountingRepository.getSubjectByCode(cfg.inventoryCode) ??
         await _accountingRepository.getSubjectByCode('015');
 
-    final supplierSubject = await _accountingRepository.getSubjectByCode(cfg.payableCode) ??
+    final supplierSubject =
+        await _accountingRepository.getSubjectByCode(cfg.payableCode) ??
         await _accountingRepository.getSubjectByCode('023');
-    final vatInputSubject = await _accountingRepository.getSubjectByCode(cfg.vatInputCode);
-    final purchaseDiscountSubject = await _accountingRepository.getSubjectByCode(cfg.purchaseDiscountCode);
+    final vatInputSubject = await _accountingRepository.getSubjectByCode(
+      cfg.vatInputCode,
+    );
+    final purchaseDiscountSubject = await _accountingRepository
+        .getSubjectByCode(cfg.purchaseDiscountCode);
 
     final List<AccountingTransactionEntity> txs = [];
     int order = 1;
@@ -88,7 +126,8 @@ class AutoVoucherService {
           detailSubjectName: invoice.contactName,
           debit: invoice.total,
           credit: const Money.zero(),
-          description: 'فاکتور فروش شماره ${invoice.invoiceNumber} - ${invoice.contactName}',
+          description:
+              'فاکتور فروش شماره ${invoice.invoiceNumber} - ${invoice.contactName}',
           rowOrder: order++,
           createdAt: now,
           updatedAt: now,
@@ -122,7 +161,8 @@ class AutoVoucherService {
           subject: salesSubject,
           debit: const Money.zero(),
           credit: invoice.subtotal,
-          description: 'فروش کالا/خدمات طبق فاکتور شماره ${invoice.invoiceNumber}',
+          description:
+              'فروش کالا/خدمات طبق فاکتور شماره ${invoice.invoiceNumber}',
           rowOrder: order++,
           createdAt: now,
           updatedAt: now,
@@ -139,7 +179,8 @@ class AutoVoucherService {
             subject: vatOutputSubject,
             debit: const Money.zero(),
             credit: invoice.tax,
-            description: 'مالیات بر ارزش افزوده فاکتور فروش شماره ${invoice.invoiceNumber}',
+            description:
+                'مالیات بر ارزش افزوده فاکتور فروش شماره ${invoice.invoiceNumber}',
             rowOrder: order++,
             createdAt: now,
             updatedAt: now,
@@ -157,7 +198,8 @@ class AutoVoucherService {
           subject: inventorySubject,
           debit: invoice.subtotal,
           credit: const Money.zero(),
-          description: 'خرید کالا طبق فاکتور خرید شماره ${invoice.invoiceNumber}',
+          description:
+              'خرید کالا طبق فاکتور خرید شماره ${invoice.invoiceNumber}',
           rowOrder: order++,
           createdAt: now,
           updatedAt: now,
@@ -174,7 +216,8 @@ class AutoVoucherService {
             subject: vatInputSubject,
             debit: invoice.tax,
             credit: const Money.zero(),
-            description: 'مالیات بر ارزش افزوده فاکتور خرید شماره ${invoice.invoiceNumber}',
+            description:
+                'مالیات بر ارزش افزوده فاکتور خرید شماره ${invoice.invoiceNumber}',
             rowOrder: order++,
             createdAt: now,
             updatedAt: now,
@@ -211,7 +254,8 @@ class AutoVoucherService {
           detailSubjectName: invoice.contactName,
           debit: const Money.zero(),
           credit: invoice.total,
-          description: 'بستانکاری تأمین‌کننده طبق فاکتور خرید شماره ${invoice.invoiceNumber}',
+          description:
+              'بستانکاری تأمین‌کننده طبق فاکتور خرید شماره ${invoice.invoiceNumber}',
           rowOrder: order++,
           createdAt: now,
           updatedAt: now,
@@ -223,12 +267,13 @@ class AutoVoucherService {
       id: docId,
       number: docNumber,
       date: invoice.issueDate,
-      title: 'سند فاکتور ${invoice.type.titleFa} شماره ${invoice.invoiceNumber}',
+      title:
+          'سند فاکتور ${invoice.type.titleFa} شماره ${invoice.invoiceNumber}',
       status: DocumentStatus.approved,
       isManual: false,
       referenceType: 'invoice',
       referenceId: invoice.id,
-      fiscalYearId: fiscalYearId,
+      fiscalYearId: resolvedFiscalYearId,
       approvedAt: now,
       transactions: txs,
       createdAt: now,
@@ -247,13 +292,23 @@ class AutoVoucherService {
   }) async {
     final now = DateTime.now();
     final docId = _uuid.v4();
-    final docNumber = await _accountingRepository.getNextDocumentNumber(fiscalYearId);
+    final docNumber = await _accountingRepository.getNextDocumentNumber(
+      fiscalYearId,
+    );
 
-    final notesReceivable = await _accountingRepository.getSubjectByCode('013001');
-    final notesInCollection = await _accountingRepository.getSubjectByCode('014001');
+    final notesReceivable = await _accountingRepository.getSubjectByCode(
+      '013001',
+    );
+    final notesInCollection = await _accountingRepository.getSubjectByCode(
+      '014001',
+    );
     final notesPayable = await _accountingRepository.getSubjectByCode('020001');
-    final customerSubject = await _accountingRepository.getSubjectByCode('012001');
-    final supplierSubject = await _accountingRepository.getSubjectByCode('023003');
+    final customerSubject = await _accountingRepository.getSubjectByCode(
+      '012001',
+    );
+    final supplierSubject = await _accountingRepository.getSubjectByCode(
+      '023003',
+    );
     final bankSubject = bankSubjectId != null
         ? await _accountingRepository.getSubjectById(bankSubjectId)
         : await _accountingRepository.getSubjectByCode('010');
@@ -261,7 +316,9 @@ class AutoVoucherService {
     final List<AccountingTransactionEntity> txs = [];
     String title = '';
 
-    final serial = cheque.checkNumber.isNotEmpty ? cheque.checkNumber : (cheque.sayadiId ?? '');
+    final serial = cheque.checkNumber.isNotEmpty
+        ? cheque.checkNumber
+        : (cheque.sayadiId ?? '');
 
     switch (event) {
       case 'register': // دریافت چک از مشتری

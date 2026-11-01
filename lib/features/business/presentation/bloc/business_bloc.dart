@@ -1,5 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/utils/app_logger.dart';
+
 import 'package:rxdart/rxdart.dart';
 
 import '../../domain/entities/business_metrics_entity.dart';
@@ -17,7 +21,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
   StreamSubscription? _dataSubscription;
 
   BusinessBloc(this._businessRepository, this._autoVoucherService)
-      : super(const BusinessInitial()) {
+    : super(const BusinessInitial()) {
     on<WatchBusinessDataStarted>(_onWatchDataStarted);
     on<BusinessDataUpdated>(_onDataUpdated);
     on<BusinessContactCreateSubmitted>(_onContactCreateSubmitted);
@@ -35,38 +39,37 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     emit(const BusinessLoading());
     await _dataSubscription?.cancel();
 
-    _dataSubscription = Rx.combineLatest4(
-      _businessRepository.watchBusinessMetrics(),
-      _businessRepository.watchInvoices(),
-      _businessRepository.watchProducts(),
-      _businessRepository.watchContacts(),
-      (
-        BusinessMetricsEntity metrics,
-        List<InvoiceEntity> invoices,
-        List<ProductEntity> products,
-        List<ContactEntity> contacts,
-      ) =>
-          BusinessDataUpdated(
-        metrics: metrics,
-        invoices: invoices,
-        products: products,
-        contacts: contacts,
-      ),
-    ).listen((event) {
-      add(event);
-    });
+    _dataSubscription =
+        Rx.combineLatest4(
+          _businessRepository.watchBusinessMetrics(),
+          _businessRepository.watchInvoices(),
+          _businessRepository.watchProducts(),
+          _businessRepository.watchContacts(),
+          (
+            BusinessMetricsEntity metrics,
+            List<InvoiceEntity> invoices,
+            List<ProductEntity> products,
+            List<ContactEntity> contacts,
+          ) => BusinessDataUpdated(
+            metrics: metrics,
+            invoices: invoices,
+            products: products,
+            contacts: contacts,
+          ),
+        ).listen((event) {
+          add(event);
+        });
   }
 
-  void _onDataUpdated(
-    BusinessDataUpdated event,
-    Emitter<BusinessState> emit,
-  ) {
-    emit(BusinessLoaded(
-      metrics: event.metrics,
-      invoices: event.invoices,
-      products: event.products,
-      contacts: event.contacts,
-    ));
+  void _onDataUpdated(BusinessDataUpdated event, Emitter<BusinessState> emit) {
+    emit(
+      BusinessLoaded(
+        metrics: event.metrics,
+        invoices: event.invoices,
+        products: event.products,
+        contacts: event.contacts,
+      ),
+    );
   }
 
   Future<void> _onContactCreateSubmitted(
@@ -112,19 +115,32 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     Emitter<BusinessState> emit,
   ) async {
     final result = await _businessRepository.createInvoice(event.invoice);
-    result.fold(
-      onSuccess: (_) => _createVoucherQuietly(event.invoice),
-      onFailure: (failure) => emit(BusinessError(failure.message)),
+    await result.fold(
+      onSuccess: (invoice) async {
+        try {
+          await _autoVoucherService.generateInvoiceVoucher(invoice);
+        } catch (e, st) {
+          AppLogger.warning(
+            'خطا در صدور خودکار سند حسابداری برای فاکتور ${invoice.invoiceNumber}: $e',
+            error: e,
+            stackTrace: st,
+          );
+          final isPeriodClosed =
+              e.toString().contains('بسته شده است') ||
+              e.toString().contains('closed');
+          final warning = isPeriodClosed
+              ? 'فاکتور ثبت شد، اما دوره مالی این تاریخ بسته است و سند حسابداری صادر نشد (سند ناقص).'
+              : 'فاکتور ثبت شد اما صدور سند حسابداری ناموفق بود: $e (سند ناقص).';
+          emit(
+            BusinessInvoiceVoucherPending(
+              invoice: invoice,
+              warningMessage: warning,
+            ),
+          );
+        }
+      },
+      onFailure: (failure) async => emit(BusinessError(failure.message)),
     );
-  }
-
-  /// Fires the double-entry voucher for the new invoice. Accounting must
-  /// never block or fail the invoice flow — a voucher problem is logged, not
-  /// surfaced as a business error.
-  Future<void> _createVoucherQuietly(InvoiceEntity invoice) async {
-    try {
-      await _autoVoucherService.generateInvoiceVoucher(invoice);
-    } catch (_) {}
   }
 
   Future<void> _onInvoicePaymentSubmitted(

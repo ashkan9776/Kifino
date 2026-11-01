@@ -4,6 +4,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
@@ -33,22 +34,22 @@ class _EditableItem {
     required int priceMinor,
     required int discountMinor,
     required bool isFa,
-  })  : descController = TextEditingController(text: desc),
-        qtyController = TextEditingController(
-          text: TextNormalizer.auto(
-            qty == qty.roundToDouble()
-                ? qty.toStringAsFixed(0)
-                : qty.toStringAsFixed(2),
-          ),
-        ),
-        priceController = TextEditingController(
-          text: formatNumberWithSeparators(priceMinor, toPersian: isFa),
-        ),
-        discountController = discountMinor > 0
-            ? TextEditingController(
-                text: formatNumberWithSeparators(discountMinor, toPersian: isFa),
-              )
-            : TextEditingController();
+  }) : descController = TextEditingController(text: desc),
+       qtyController = TextEditingController(
+         text: TextNormalizer.auto(
+           qty == qty.roundToDouble()
+               ? qty.toStringAsFixed(0)
+               : qty.toStringAsFixed(2),
+         ),
+       ),
+       priceController = TextEditingController(
+         text: formatNumberWithSeparators(priceMinor, toPersian: isFa),
+       ),
+       discountController = discountMinor > 0
+           ? TextEditingController(
+               text: formatNumberWithSeparators(discountMinor, toPersian: isFa),
+             )
+           : TextEditingController();
 
   void dispose() {
     descController.dispose();
@@ -124,19 +125,27 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
     _issueDate = inv.issueDate;
     _dueDate = inv.dueDate;
     _items = inv.items.isEmpty
-        ? [_EditableItem(desc: '', qty: 1, priceMinor: 0, discountMinor: 0, isFa: isFa)]
+        ? [
+            _EditableItem(
+              desc: '',
+              qty: 1,
+              priceMinor: 0,
+              discountMinor: 0,
+              isFa: isFa,
+            ),
+          ]
         : inv.items
-            .map(
-              (item) => _EditableItem(
-                productId: item.productId,
-                desc: item.description,
-                qty: item.quantity,
-                priceMinor: item.unitPrice.minorUnits,
-                discountMinor: item.discount.minorUnits,
-                isFa: isFa,
-              ),
-            )
-            .toList();
+              .map(
+                (item) => _EditableItem(
+                  productId: item.productId,
+                  desc: item.description,
+                  qty: item.quantity,
+                  priceMinor: item.unitPrice.minorUnits,
+                  discountMinor: item.discount.minorUnits,
+                  isFa: isFa,
+                ),
+              )
+              .toList();
   }
 
   @override
@@ -291,14 +300,19 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
         try {
           await sl<AutoVoucherService>().voidVoucherFor(old.id);
           await sl<AutoVoucherService>().generateInvoiceVoucher(updated);
-        } catch (_) {}
+        } catch (e, st) {
+          AppLogger.warning(
+            'خطا در به‌روزرسانی سند حسابداری فاکتور ویرایش‌شده ${old.id}: $e',
+            error: e,
+            stackTrace: st,
+          );
+        }
         if (mounted) Navigator.of(context).pop();
       },
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -309,29 +323,34 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
 
   void _addItem() {
     setState(() {
-      _items.add(_EditableItem(
-        desc: '',
-        qty: 1,
-        priceMinor: 0,
-        discountMinor: 0,
-        isFa: isFaLocale(context),
-      ));
+      _items.add(
+        _EditableItem(
+          desc: '',
+          qty: 1,
+          priceMinor: 0,
+          discountMinor: 0,
+          isFa: isFaLocale(context),
+        ),
+      );
     });
   }
 
   Widget _buildTotalsPreview(ThemeData theme, bool isDark, bool isFa) {
     final t = _totals;
-    final subtextColor =
-        isDark ? AppColors.darkSubtext : AppColors.lightSubtext;
+    final subtextColor = isDark
+        ? AppColors.darkSubtext
+        : AppColors.lightSubtext;
 
-    Widget row(String label, Money money,
-        {Color? color, bool bold = false}) {
+    Widget row(String label, Money money, {Color? color, bool bold = false}) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: theme.textTheme.bodySmall?.copyWith(color: subtextColor)),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(color: subtextColor),
+            ),
             AppMoneyText(
               money: money,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -353,32 +372,47 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
       ),
       child: Column(
         children: [
-          row(isFa ? 'جمع کل اقلام' : 'Items subtotal',
-              Money.fromMinor(t.subtotal, _currency)),
+          row(
+            isFa ? 'جمع کل اقلام' : 'Items subtotal',
+            Money.fromMinor(t.subtotal, _currency),
+          ),
           if (t.discount > 0)
-            row(isFa ? 'تخفیف‌ها' : 'Discounts',
-                Money.fromMinor(-t.discount, _currency),
-                color: AppColors.expense),
+            row(
+              isFa ? 'تخفیف‌ها' : 'Discounts',
+              Money.fromMinor(-t.discount, _currency),
+              color: AppColors.expense,
+            ),
           if (t.tax > 0)
-            row(isFa ? 'مالیات بر ارزش افزوده (۱۰٪)' : 'VAT (10%)',
-                Money.fromMinor(t.tax, _currency),
-                color: AppColors.warning),
+            row(
+              isFa ? 'مالیات بر ارزش افزوده (۱۰٪)' : 'VAT (10%)',
+              Money.fromMinor(t.tax, _currency),
+              color: AppColors.warning,
+            ),
           const Divider(height: 8),
-          row(isFa ? 'مبلغ نهایی فاکتور' : 'Invoice total',
-              Money.fromMinor(t.total, _currency),
-              bold: true),
+          row(
+            isFa ? 'مبلغ نهایی فاکتور' : 'Invoice total',
+            Money.fromMinor(t.total, _currency),
+            bold: true,
+          ),
           if (widget.invoice.paidAmount.minorUnits > 0)
-            row(isFa ? 'پرداخت‌شده' : 'Paid',
-                Money.fromMinor(widget.invoice.paidAmount.minorUnits, _currency),
-                color: AppColors.income),
+            row(
+              isFa ? 'پرداخت‌شده' : 'Paid',
+              Money.fromMinor(widget.invoice.paidAmount.minorUnits, _currency),
+              color: AppColors.income,
+            ),
           if (widget.invoice.paidAmount.minorUnits > 0)
-            row(isFa ? 'مانده جدید' : 'New balance',
-                Money.fromMinor(
-                    (t.total - widget.invoice.paidAmount.minorUnits)
-                        .clamp(0, double.maxFinite.toInt()),
-                    _currency),
-                color: AppColors.warning,
-                bold: true),
+            row(
+              isFa ? 'مانده جدید' : 'New balance',
+              Money.fromMinor(
+                (t.total - widget.invoice.paidAmount.minorUnits).clamp(
+                  0,
+                  double.maxFinite.toInt(),
+                ),
+                _currency,
+              ),
+              color: AppColors.warning,
+              bold: true,
+            ),
         ],
       ),
     );
@@ -408,13 +442,17 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  initialValue: (item.productId != null &&
+                  initialValue:
+                      (item.productId != null &&
                           widget.products.any((p) => p.id == item.productId))
                       ? item.productId
                       : null,
                   decoration: InputDecoration(
                     labelText: isFa ? 'کالا (اختیاری)' : 'Product (optional)',
-                    prefixIcon: const Icon(Icons.inventory_2_outlined, size: 20),
+                    prefixIcon: const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 20,
+                    ),
                     isDense: true,
                   ),
                   items: [
@@ -435,7 +473,8 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                         final p = widget.products
                             .where((p) => p.id == val)
                             .firstOrNull;
-                        if (p != null && item.descController.text.trim().isEmpty) {
+                        if (p != null &&
+                            item.descController.text.trim().isEmpty) {
                           item.descController.text = p.name;
                         }
                       }
@@ -446,8 +485,11 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
               if (_items.length > 1) ...[
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      size: 20, color: AppColors.danger),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 20,
+                    color: AppColors.danger,
+                  ),
                   tooltip: isFa ? 'حذف قلم' : 'Remove item',
                   onPressed: () => setState(() => _items.remove(item)),
                 ),
@@ -469,7 +511,9 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
               Expanded(
                 child: TextField(
                   controller: item.qtyController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [
                     PersianDigitsTextInputFormatter(enabled: isFa),
                   ],
@@ -512,7 +556,10 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                   ],
                   decoration: InputDecoration(
                     labelText: isFa ? 'تخفیف (ریال)' : 'Discount',
-                    prefixIcon: const Icon(Icons.local_offer_outlined, size: 20),
+                    prefixIcon: const Icon(
+                      Icons.local_offer_outlined,
+                      size: 20,
+                    ),
                     isDense: true,
                   ),
                   onChanged: (_) => setState(() {}),
@@ -530,11 +577,16 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                       Text(
                         isFa ? 'جمع قلم' : 'Line total',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
                         ),
                       ),
                       AppMoneyText(
-                        money: Money.fromMinor(calc?.total.minorUnits ?? 0, _currency),
+                        money: Money.fromMinor(
+                          calc?.total.minorUnits ?? 0,
+                          _currency,
+                        ),
                         style: theme.textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.income,
@@ -578,7 +630,9 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                 '${inv.type.titleFa} · ${isFa ? 'وضعیت' : 'status'}: ${inv.status.titleFa}'
                 '${inv.paidAmount.minorUnits > 0 ? ' · ${isFa ? 'پرداخت‌شده' : 'paid'}: ${inv.paidAmount.formatted}' : ''}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -600,7 +654,9 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                   prefixIcon: const Icon(Icons.person_outline),
                 ),
                 items: widget.contacts
-                    .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                    .map(
+                      (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                    )
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedContactId = val);
@@ -660,9 +716,7 @@ class _EditInvoiceSheetState extends State<EditInvoiceSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              ..._items.map(
-                (item) => _buildItemRow(item, theme, isDark, isFa),
-              ),
+              ..._items.map((item) => _buildItemRow(item, theme, isDark, isFa)),
               OutlinedButton.icon(
                 onPressed: _saving ? null : _addItem,
                 icon: const Icon(Icons.add, size: 18),
@@ -735,7 +789,9 @@ class _DateField extends StatelessWidget {
                   child: Text(
                     label,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -1,6 +1,9 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+
+import '../../../../core/utils/app_logger.dart';
 
 import '../../../../core/utils/money.dart';
 import '../../../notifications/domain/entities/app_notification_entity.dart';
@@ -93,7 +96,7 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
   StreamSubscription<List<CheckEntity>>? _subscription;
 
   CheckBloc(this._repository, this._notifications, this._autoVoucherService)
-      : super(CheckInitial()) {
+    : super(CheckInitial()) {
     on<WatchChecksStarted>(_onWatchStarted);
     on<_ChecksUpdated>(_onChecksUpdated);
     on<CheckCreateSubmitted>(_onCreateSubmitted);
@@ -104,10 +107,12 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
   void _onWatchStarted(WatchChecksStarted event, Emitter<CheckState> emit) {
     emit(CheckLoading());
     _subscription?.cancel();
-    _subscription = _repository.watchChecks(type: event.type).listen(
-      (checks) => add(_ChecksUpdated(checks)),
-      onError: (e) => emit(CheckFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchChecks(type: event.type)
+        .listen(
+          (checks) => add(_ChecksUpdated(checks)),
+          onError: (e) => emit(CheckFailure(e.toString())),
+        );
   }
 
   void _onChecksUpdated(_ChecksUpdated event, Emitter<CheckState> emit) {
@@ -124,14 +129,19 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
       }
     }
 
-    emit(CheckLoaded(
-      checks: event.checks,
-      totalPendingIssued: Money.fromMinor(pendingIssuedMinor, currency),
-      totalPendingReceived: Money.fromMinor(pendingReceivedMinor, currency),
-    ));
+    emit(
+      CheckLoaded(
+        checks: event.checks,
+        totalPendingIssued: Money.fromMinor(pendingIssuedMinor, currency),
+        totalPendingReceived: Money.fromMinor(pendingReceivedMinor, currency),
+      ),
+    );
   }
 
-  Future<void> _onCreateSubmitted(CheckCreateSubmitted event, Emitter<CheckState> emit) async {
+  Future<void> _onCreateSubmitted(
+    CheckCreateSubmitted event,
+    Emitter<CheckState> emit,
+  ) async {
     final result = await _repository.createCheck(event.check);
     result.fold(
       onSuccess: (_) => _scheduleDueReminder(event.check),
@@ -145,14 +155,18 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
     final reminderDate = DateTime(due.year, due.month, due.day, 9, 0);
     _notifications.scheduleNotification(
       title: 'چک ${check.checkNumber} سررسید شد',
-      body: 'چک ${check.partyName} به مبلغ ${check.amount.formatCompact()} امروز سررسید می‌شود.',
+      body:
+          'چک ${check.partyName} به مبلغ ${check.amount.formatCompact()} امروز سررسید می‌شود.',
       type: NotificationType.checkDue,
       referenceId: check.id,
       scheduledFor: reminderDate,
     );
   }
 
-  Future<void> _onStatusUpdated(CheckStatusUpdated event, Emitter<CheckState> emit) async {
+  Future<void> _onStatusUpdated(
+    CheckStatusUpdated event,
+    Emitter<CheckState> emit,
+  ) async {
     final result = await _repository.updateCheckStatus(event.id, event.status);
     result.fold(
       onSuccess: (_) => _createVoucherQuietly(event),
@@ -176,14 +190,25 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
       if (eventCode == null) return;
 
       final checks = await _repository.getChecks();
-      final check = checks.dataOrNull?.where((c) => c.id == event.id).firstOrNull;
+      final check = checks.dataOrNull
+          ?.where((c) => c.id == event.id)
+          .firstOrNull;
       if (check != null) {
         await _autoVoucherService.generateChequeVoucher(check, eventCode);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'خطا در به‌روزرسانی سند حسابداری چک ${event.id}: $e',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
-  Future<void> _onDeleteSubmitted(CheckDeleteSubmitted event, Emitter<CheckState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    CheckDeleteSubmitted event,
+    Emitter<CheckState> emit,
+  ) async {
     final result = await _repository.deleteCheck(event.id);
     result.fold(
       onSuccess: (_) => _notifications.cancelScheduled(event.id),
