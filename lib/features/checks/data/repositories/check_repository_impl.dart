@@ -32,7 +32,9 @@ class CheckRepositoryImpl implements CheckRepository {
       notes: data.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
@@ -99,12 +101,15 @@ class CheckRepositoryImpl implements CheckRepository {
 
         await _db.into(_db.checksTable).insert(companion);
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'checks',
                 entityId: cId,
                 operation: 'INSERT',
-                payloadJson: '{"id":"$cId","checkNumber":"${check.checkNumber}","amount":${check.amount.minorUnits}}',
+                payloadJson:
+                    '{"id":"$cId","checkNumber":"${check.checkNumber}","amount":${check.amount.minorUnits}}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -121,7 +126,9 @@ class CheckRepositoryImpl implements CheckRepository {
   Future<Result<void>> updateCheck(CheckEntity check) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.checksTable)..where((tbl) => tbl.id.equals(check.id))).write(
+      await (_db.update(
+        _db.checksTable,
+      )..where((tbl) => tbl.id.equals(check.id))).write(
         ChecksTableCompanion(
           checkNumber: Value(check.checkNumber),
           sayadiId: Value(check.sayadiId),
@@ -135,7 +142,9 @@ class CheckRepositoryImpl implements CheckRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'checks',
               entityId: check.id,
@@ -159,7 +168,9 @@ class CheckRepositoryImpl implements CheckRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final check = await (_db.select(_db.checksTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final check = await (_db.select(
+          _db.checksTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
         if (check == null) throw Exception('Check not found');
         if (check.status == status.code) return; // no-op
 
@@ -169,29 +180,103 @@ class CheckRepositoryImpl implements CheckRepository {
         final wasCleared = check.status == CheckStatus.cleared.code;
         final nowCleared = status == CheckStatus.cleared;
         if (check.accountId != null && wasCleared != nowCleared) {
-          final account = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(check.accountId!))).getSingleOrNull();
+          final account = await (_db.select(
+            _db.accountsTable,
+          )..where((t) => t.id.equals(check.accountId!))).getSingleOrNull();
           if (account != null) {
             final isIssued = check.type == CheckType.issued.code;
             // Signed effect: issued cleared = money out (−), received cleared = money in (+).
-            final signedDiff = isIssued ? -check.amountMinor : check.amountMinor;
+            final signedDiff = isIssued
+                ? -check.amountMinor
+                : check.amountMinor;
             final applied = nowCleared ? signedDiff : -signedDiff;
-            await (_db.update(_db.accountsTable)..where((t) => t.id.equals(account.id))).write(
+            await (_db.update(
+              _db.accountsTable,
+            )..where((t) => t.id.equals(account.id))).write(
               AccountsTableCompanion(
-                currentBalanceMinor: Value(account.currentBalanceMinor + applied),
+                currentBalanceMinor: Value(
+                  account.currentBalanceMinor + applied,
+                ),
                 updatedAt: Value(now),
               ),
             );
+
+            final txId = 'cheque_tx_${check.id}';
+            if (nowCleared) {
+              final serial = check.checkNumber.isNotEmpty
+                  ? check.checkNumber
+                  : (check.sayadiId ?? '');
+              final desc = isIssued
+                  ? 'پاس شدن چک شماره $serial در وجه ${check.partyName}'
+                  : 'وصول چک شماره $serial از ${check.partyName}';
+              await _db
+                  .into(_db.transactionsTable)
+                  .insertOnConflictUpdate(
+                    TransactionsTableCompanion.insert(
+                      id: txId,
+                      accountId: check.accountId!,
+                      type: isIssued ? 'expense' : 'income',
+                      amountMinor: check.amountMinor,
+                      currency: check.currency,
+                      transactionDate: now,
+                      description: desc,
+                      notes: Value('cheque:${check.id}'),
+                      createdAt: now,
+                      updatedAt: now,
+                      syncStatus: const Value(1),
+                    ),
+                  );
+              await _db
+                  .into(_db.syncQueueTable)
+                  .insert(
+                    SyncQueueTableCompanion.insert(
+                      syncEntityName: 'transactions',
+                      entityId: txId,
+                      operation: 'INSERT',
+                      payloadJson:
+                          '{"id":"$txId","account_id":"${check.accountId}","amount_minor":${check.amountMinor},"currency":"${check.currency}","type":"${isIssued ? "expense" : "income"}"}',
+                      idempotencyKey: _uuid.v4(),
+                      queuedAt: now,
+                    ),
+                  );
+            } else {
+              await (_db.update(
+                _db.transactionsTable,
+              )..where((t) => t.id.equals(txId))).write(
+                TransactionsTableCompanion(
+                  deletedAt: Value(now),
+                  updatedAt: Value(now),
+                  syncStatus: const Value(3),
+                ),
+              );
+              await _db
+                  .into(_db.syncQueueTable)
+                  .insert(
+                    SyncQueueTableCompanion.insert(
+                      syncEntityName: 'transactions',
+                      entityId: txId,
+                      operation: 'DELETE',
+                      payloadJson: '{"id":"$txId"}',
+                      idempotencyKey: _uuid.v4(),
+                      queuedAt: now,
+                    ),
+                  );
+            }
           }
         }
 
-        await (_db.update(_db.checksTable)..where((t) => t.id.equals(id))).write(
+        await (_db.update(
+          _db.checksTable,
+        )..where((t) => t.id.equals(id))).write(
           ChecksTableCompanion(
             status: Value(status.code),
             updatedAt: Value(now),
           ),
         );
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'checks',
                 entityId: id,
@@ -203,7 +288,9 @@ class CheckRepositoryImpl implements CheckRepository {
             );
 
         // Audit trail for status corrections (before/after).
-        await _db.into(_db.accountingAuditLogsTable).insert(
+        await _db
+            .into(_db.accountingAuditLogsTable)
+            .insert(
               AccountingAuditLogsTableCompanion.insert(
                 id: _uuid.v4(),
                 entityType: 'check',
@@ -230,12 +317,50 @@ class CheckRepositoryImpl implements CheckRepository {
   Future<Result<void>> deleteCheck(String id) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.checksTable)..where((t) => t.id.equals(id))).write(
-        ChecksTableCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
-      );
+      await _db.transaction(() async {
+        final check = await (_db.select(
+          _db.checksTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (check != null && check.deletedAt == null) {
+          if (check.status == CheckStatus.cleared.code &&
+              check.accountId != null) {
+            final account = await (_db.select(
+              _db.accountsTable,
+            )..where((t) => t.id.equals(check.accountId!))).getSingleOrNull();
+            if (account != null) {
+              final isIssued = check.type == CheckType.issued.code;
+              final signedDiff = isIssued
+                  ? -check.amountMinor
+                  : check.amountMinor;
+              await (_db.update(
+                _db.accountsTable,
+              )..where((t) => t.id.equals(account.id))).write(
+                AccountsTableCompanion(
+                  currentBalanceMinor: Value(
+                    account.currentBalanceMinor - signedDiff,
+                  ),
+                  updatedAt: Value(now),
+                ),
+              );
+              final txId = 'cheque_tx_${check.id}';
+              await (_db.update(
+                _db.transactionsTable,
+              )..where((t) => t.id.equals(txId))).write(
+                TransactionsTableCompanion(
+                  deletedAt: Value(now),
+                  updatedAt: Value(now),
+                  syncStatus: const Value(3),
+                ),
+              );
+            }
+          }
+          await (_db.update(
+            _db.checksTable,
+          )..where((t) => t.id.equals(id))).write(
+            ChecksTableCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+          );
+        }
+      });
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('حذف چک انجام نشد.').asFailure();

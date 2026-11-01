@@ -143,9 +143,15 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
     Emitter<CheckState> emit,
   ) async {
     final result = await _repository.createCheck(event.check);
-    result.fold(
-      onSuccess: (_) => _scheduleDueReminder(event.check),
-      onFailure: (failure) => emit(CheckFailure(failure.message)),
+    await result.fold(
+      onSuccess: (created) async {
+        _scheduleDueReminder(created);
+        final eventCode = created.type == CheckType.received
+            ? 'register'
+            : 'issue';
+        await _createVoucherQuietly(created, eventCode);
+      },
+      onFailure: (failure) async => emit(CheckFailure(failure.message)),
     );
   }
 
@@ -167,38 +173,103 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
     CheckStatusUpdated event,
     Emitter<CheckState> emit,
   ) async {
+    final checks = await _repository.getChecks();
+    final currentCheck = checks.dataOrNull
+        ?.where((c) => c.id == event.id)
+        .firstOrNull;
+    final oldStatus = currentCheck?.status;
+
     final result = await _repository.updateCheckStatus(event.id, event.status);
-    result.fold(
-      onSuccess: (_) => _createVoucherQuietly(event),
-      onFailure: (failure) => emit(CheckFailure(failure.message)),
+    await result.fold(
+      onSuccess: (_) async {
+        if (currentCheck != null) {
+          await _syncVouchersOnStatusChange(
+            check: currentCheck.copyWith(status: event.status),
+            oldStatus: oldStatus,
+            newStatus: event.status,
+          );
+        }
+      },
+      onFailure: (failure) async => emit(CheckFailure(failure.message)),
     );
   }
 
-  /// Double-entry voucher for check state transitions. Accounting must never
-  /// block the check flow — failures are swallowed on purpose.
-  Future<void> _createVoucherQuietly(CheckStatusUpdated event) async {
-    // Status corrections must not double-count: void the previous voucher
-    // first, then fire the voucher for the NEW status (if it has one).
+  Future<void> _syncVouchersOnStatusChange({
+    required CheckEntity check,
+    CheckStatus? oldStatus,
+    required CheckStatus newStatus,
+  }) async {
     try {
-      await _autoVoucherService.voidVoucherFor(event.id);
+      if (check.type == CheckType.received) {
+        // Ensure initial register voucher exists
+        await _autoVoucherService.generateChequeVoucher(check, 'register');
 
-      final eventCode = switch (event.status) {
-        CheckStatus.cleared => 'clear',
-        CheckStatus.transferred => 'deposit',
-        _ => null,
-      };
-      if (eventCode == null) return;
+        switch (newStatus) {
+          case CheckStatus.cleared:
+            // Ensure deposited first in collection, then cleared into bank
+            await _autoVoucherService.generateChequeVoucher(check, 'deposit');
+            await _autoVoucherService.generateChequeVoucher(check, 'clear');
+            break;
+          case CheckStatus.transferred:
+            if (oldStatus == CheckStatus.cleared) {
+              await _autoVoucherService.voidVoucherFor(
+                check.id,
+                event: 'clear',
+              );
+            }
+            await _autoVoucherService.generateChequeVoucher(check, 'deposit');
+            break;
+          case CheckStatus.pending:
+            await _autoVoucherService.voidVoucherFor(check.id, event: 'clear');
+            await _autoVoucherService.voidVoucherFor(
+              check.id,
+              event: 'deposit',
+            );
+            break;
+          case CheckStatus.bounced:
+          case CheckStatus.cancelled:
+            await _autoVoucherService.voidVoucherFor(check.id, event: 'clear');
+            await _autoVoucherService.voidVoucherFor(
+              check.id,
+              event: 'deposit',
+            );
+            break;
+        }
+      } else {
+        // Issued check
+        // Ensure initial issue voucher exists
+        await _autoVoucherService.generateChequeVoucher(check, 'issue');
 
-      final checks = await _repository.getChecks();
-      final check = checks.dataOrNull
-          ?.where((c) => c.id == event.id)
-          .firstOrNull;
-      if (check != null) {
-        await _autoVoucherService.generateChequeVoucher(check, eventCode);
+        switch (newStatus) {
+          case CheckStatus.cleared:
+            await _autoVoucherService.generateChequeVoucher(check, 'clear');
+            break;
+          case CheckStatus.pending:
+          case CheckStatus.bounced:
+          case CheckStatus.cancelled:
+          case CheckStatus.transferred:
+            await _autoVoucherService.voidVoucherFor(check.id, event: 'clear');
+            break;
+        }
       }
     } catch (e, st) {
       AppLogger.warning(
-        'خطا در به‌روزرسانی سند حسابداری چک ${event.id}: $e',
+        'خطا در همگام‌سازی اسناد چک ${check.id} به وضعیت $newStatus: $e',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  Future<void> _createVoucherQuietly(
+    CheckEntity check,
+    String eventCode,
+  ) async {
+    try {
+      await _autoVoucherService.generateChequeVoucher(check, eventCode);
+    } catch (e, st) {
+      AppLogger.warning(
+        'خطا در صدور سند حسابداری چک ${check.id} (رویداد $eventCode): $e',
         error: e,
         stackTrace: st,
       );
@@ -210,9 +281,20 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
     Emitter<CheckState> emit,
   ) async {
     final result = await _repository.deleteCheck(event.id);
-    result.fold(
-      onSuccess: (_) => _notifications.cancelScheduled(event.id),
-      onFailure: (failure) => emit(CheckFailure(failure.message)),
+    await result.fold(
+      onSuccess: (_) async {
+        _notifications.cancelScheduled(event.id);
+        try {
+          await _autoVoucherService.voidVoucherFor(event.id);
+        } catch (e, st) {
+          AppLogger.warning(
+            'خطا در ابطال اسناد چک حذف شده ${event.id}: $e',
+            error: e,
+            stackTrace: st,
+          );
+        }
+      },
+      onFailure: (failure) async => emit(CheckFailure(failure.message)),
     );
   }
 

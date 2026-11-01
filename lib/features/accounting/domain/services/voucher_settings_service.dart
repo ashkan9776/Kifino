@@ -16,6 +16,11 @@ class VoucherAccountSettings {
   final String payableCode; // بستانکاران (purchase credit)
   final String vatInputCode; // مالیات خرید
   final String purchaseDiscountCode; // تخفیف خرید
+  // Cheque accounting codes
+  final String notesReceivableCode; // اسناد دریافتنی نزد صندوق (013001)
+  final String notesInCollectionCode; // اسناد در جریان وصول (014001)
+  final String notesPayableCode; // اسناد پرداختنی (020001)
+  final String bankCode; // موجودی بانک (010)
 
   const VoucherAccountSettings({
     this.salesCode = '060001',
@@ -27,6 +32,10 @@ class VoucherAccountSettings {
     this.payableCode = '023003',
     this.vatInputCode = '018001',
     this.purchaseDiscountCode = '066001',
+    this.notesReceivableCode = '013001',
+    this.notesInCollectionCode = '014001',
+    this.notesPayableCode = '020001',
+    this.bankCode = '010',
   });
 
   static const VoucherAccountSettings defaults = VoucherAccountSettings();
@@ -41,6 +50,10 @@ class VoucherAccountSettings {
     String? payableCode,
     String? vatInputCode,
     String? purchaseDiscountCode,
+    String? notesReceivableCode,
+    String? notesInCollectionCode,
+    String? notesPayableCode,
+    String? bankCode,
   }) {
     return VoucherAccountSettings(
       salesCode: salesCode ?? this.salesCode,
@@ -52,20 +65,29 @@ class VoucherAccountSettings {
       payableCode: payableCode ?? this.payableCode,
       vatInputCode: vatInputCode ?? this.vatInputCode,
       purchaseDiscountCode: purchaseDiscountCode ?? this.purchaseDiscountCode,
+      notesReceivableCode: notesReceivableCode ?? this.notesReceivableCode,
+      notesInCollectionCode:
+          notesInCollectionCode ?? this.notesInCollectionCode,
+      notesPayableCode: notesPayableCode ?? this.notesPayableCode,
+      bankCode: bankCode ?? this.bankCode,
     );
   }
 
   Map<String, String> toMap() => {
-        'salesCode': salesCode,
-        'receivableCode': receivableCode,
-        'vatOutputCode': vatOutputCode,
-        'discountSalesCode': discountSalesCode,
-        'inventoryCode': inventoryCode,
-        'purchaseCode': purchaseCode,
-        'payableCode': payableCode,
-        'vatInputCode': vatInputCode,
-        'purchaseDiscountCode': purchaseDiscountCode,
-      };
+    'salesCode': salesCode,
+    'receivableCode': receivableCode,
+    'vatOutputCode': vatOutputCode,
+    'discountSalesCode': discountSalesCode,
+    'inventoryCode': inventoryCode,
+    'purchaseCode': purchaseCode,
+    'payableCode': payableCode,
+    'vatInputCode': vatInputCode,
+    'purchaseDiscountCode': purchaseDiscountCode,
+    'notesReceivableCode': notesReceivableCode,
+    'notesInCollectionCode': notesInCollectionCode,
+    'notesPayableCode': notesPayableCode,
+    'bankCode': bankCode,
+  };
 
   factory VoucherAccountSettings.fromMap(Map<String, dynamic> map) {
     const d = defaults;
@@ -81,6 +103,13 @@ class VoucherAccountSettings {
       vatInputCode: map['vatInputCode'] as String? ?? d.vatInputCode,
       purchaseDiscountCode:
           map['purchaseDiscountCode'] as String? ?? d.purchaseDiscountCode,
+      notesReceivableCode:
+          map['notesReceivableCode'] as String? ?? d.notesReceivableCode,
+      notesInCollectionCode:
+          map['notesInCollectionCode'] as String? ?? d.notesInCollectionCode,
+      notesPayableCode:
+          map['notesPayableCode'] as String? ?? d.notesPayableCode,
+      bankCode: map['bankCode'] as String? ?? d.bankCode,
     );
   }
 
@@ -88,7 +117,9 @@ class VoucherAccountSettings {
 
   static VoucherAccountSettings decode(String raw) {
     try {
-      return VoucherAccountSettings.fromMap(jsonDecode(raw) as Map<String, dynamic>);
+      return VoucherAccountSettings.fromMap(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
     } catch (_) {
       return defaults;
     }
