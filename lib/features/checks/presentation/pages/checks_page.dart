@@ -135,6 +135,7 @@ class _ChecksPageState extends State<ChecksPage> {
 
   void _showAddCheckDialog(BuildContext context) {
     final l10n = context.l10n;
+    final checkBloc = context.read<CheckBloc>();
     final numberController = TextEditingController();
     final sayadiController = TextEditingController();
     final bankController = TextEditingController();
@@ -318,7 +319,7 @@ class _ChecksPageState extends State<ChecksPage> {
 
                               if (party.isNotEmpty && amountVal > 0 && number.isNotEmpty) {
                                 final now = DateTime.now();
-                                context.read<CheckBloc>().add(
+                                checkBloc.add(
                                       CheckCreateSubmitted(
                                         CheckEntity(
                                           id: '',
@@ -406,7 +407,7 @@ class _ChecksPageState extends State<ChecksPage> {
                     itemCount: targets.length,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpacing.xs),
-                    itemBuilder: (context, index) {
+                    itemBuilder: (menuContext, index) {
                       final target = targets[index];
                       final entry = ChecksPage._statusMenuEntry(target, isFa);
                       final (tone, icon) = ChecksPage._statusStyle(target);
@@ -415,6 +416,9 @@ class _ChecksPageState extends State<ChecksPage> {
                         borderRadius: AppSpacing.borderRadiusSm,
                         onTap: () {
                           Navigator.pop(sheetContext);
+                          // The page context (NOT menuContext) must carry the
+                          // confirm flow: this menu is popped before the dialog
+                          // opens, so menuContext is unmounted by confirm time.
                           _confirmStatusChange(context, check, target);
                         },
                         child: Container(
@@ -494,6 +498,10 @@ class _ChecksPageState extends State<ChecksPage> {
     final isFa = l10n.isPersian;
     final theme = Theme.of(context);
 
+    // Capture the bloc BEFORE awaiting anything: the confirm dialog can outlive
+    // any bottom-sheet context, so dispatching must not depend on it.
+    final checkBloc = context.read<CheckBloc>();
+
     // Resolve the linked account display name for the «وصول شد» text.
     var accountName = check.bankName;
     final accState = context.read<AccountsBloc>().state;
@@ -570,10 +578,8 @@ class _ChecksPageState extends State<ChecksPage> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      context.read<CheckBloc>().add(
-            CheckStatusUpdated(id: check.id, status: target),
-          );
+    if (confirmed == true) {
+      checkBloc.add(CheckStatusUpdated(id: check.id, status: target));
     }
   }
 
