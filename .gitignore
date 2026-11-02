@@ -39,6 +39,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+.gradle/
 
 # Local tooling / private workspace files
 .zcode*
