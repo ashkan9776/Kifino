@@ -37,11 +37,11 @@ class SecurityState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isLocked,
-        isPinSet,
-        isBiometricEnabled,
-        canBiometric,
-        errorMessage,
-        isAuthenticating,
-      ];
+    isLocked,
+    isPinSet,
+    isBiometricEnabled,
+    canBiometric,
+    errorMessage,
+    isAuthenticating,
+  ];
 }

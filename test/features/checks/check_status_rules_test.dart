@@ -16,35 +16,39 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     repo = CheckRepositoryImpl(db);
 
-    await db.into(db.accountsTable).insertOnConflictUpdate(
-      AccountsTableCompanion.insert(
-        id: 'acc-bank',
-        name: 'بانک ملت',
-        type: 'bankCard',
-        currency: 'TOMAN',
-        initialBalanceMinor: const Value(50000000),
-        currentBalanceMinor: const Value(50000000),
-        createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-        updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-      ),
-    );
+    await db
+        .into(db.accountsTable)
+        .insertOnConflictUpdate(
+          AccountsTableCompanion.insert(
+            id: 'acc-bank',
+            name: 'بانک ملت',
+            type: 'bankCard',
+            currency: 'TOMAN',
+            initialBalanceMinor: const Value(50000000),
+            currentBalanceMinor: const Value(50000000),
+            createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+            updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+          ),
+        );
 
-    await db.into(db.checksTable).insertOnConflictUpdate(
-      ChecksTableCompanion.insert(
-        id: 'ch-1',
-        checkNumber: '123456',
-        bankName: 'ملت',
-        type: 'received', // چک دریافتی
-        amountMinor: 20000000,
-        currency: 'TOMAN',
-        partyName: 'مشتری الف',
-        dueDate: DateTime(2026, 3, 1).millisecondsSinceEpoch,
-        status: 'pending',
-        accountId: const Value('acc-bank'),
-        createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-        updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-      ),
-    );
+    await db
+        .into(db.checksTable)
+        .insertOnConflictUpdate(
+          ChecksTableCompanion.insert(
+            id: 'ch-1',
+            checkNumber: '123456',
+            bankName: 'ملت',
+            type: 'received', // چک دریافتی
+            amountMinor: 20000000,
+            currency: 'TOMAN',
+            partyName: 'مشتری الف',
+            dueDate: DateTime(2026, 3, 1).millisecondsSinceEpoch,
+            status: 'pending',
+            accountId: const Value('acc-bank'),
+            createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+            updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+          ),
+        );
   });
 
   tearDown(() async => db.close());
@@ -75,26 +79,31 @@ void main() {
     expect(await accountBalance(), equals(50000000));
   });
 
-  test('issued check clearing deducts money and correction reverts it', () async {
-    await (db.update(db.checksTable)..where((tbl) => tbl.id.equals('ch-1')))
-        .write(const ChecksTableCompanion(type: Value('issued')));
+  test(
+    'issued check clearing deducts money and correction reverts it',
+    () async {
+      await (db.update(db.checksTable)..where((tbl) => tbl.id.equals('ch-1')))
+          .write(const ChecksTableCompanion(type: Value('issued')));
 
-    await repo.updateCheckStatus('ch-1', CheckStatus.cleared);
-    expect(await accountBalance(), equals(30000000)); // 50M − 20M
+      await repo.updateCheckStatus('ch-1', CheckStatus.cleared);
+      expect(await accountBalance(), equals(30000000)); // 50M − 20M
 
-    await repo.updateCheckStatus('ch-1', CheckStatus.pending);
-    expect(await accountBalance(), equals(50000000));
-  });
+      await repo.updateCheckStatus('ch-1', CheckStatus.pending);
+      expect(await accountBalance(), equals(50000000));
+    },
+  );
 
   test('every status change writes an audit entry with before/after', () async {
     await repo.updateCheckStatus('ch-1', CheckStatus.cleared);
     await repo.updateCheckStatus('ch-1', CheckStatus.pending);
 
-    final logs = await (db.select(db.accountingAuditLogsTable)
-          ..where((tbl) =>
-              (tbl.entityType.equals('check')) &
-              (tbl.entityId.equals('ch-1'))))
-        .get();
+    final logs =
+        await (db.select(db.accountingAuditLogsTable)..where(
+              (tbl) =>
+                  (tbl.entityType.equals('check')) &
+                  (tbl.entityId.equals('ch-1')),
+            ))
+            .get();
 
     expect(logs.length, equals(2));
     expect(logs.last.beforeJson, contains('"status":"cleared"'));
@@ -103,9 +112,9 @@ void main() {
 
   test('status change to the SAME status is a no-op (no audit spam)', () async {
     await repo.updateCheckStatus('ch-1', CheckStatus.pending);
-    final logs = await (db.select(db.accountingAuditLogsTable)
-          ..where((tbl) => tbl.entityType.equals('check')))
-        .get();
+    final logs = await (db.select(
+      db.accountingAuditLogsTable,
+    )..where((tbl) => tbl.entityType.equals('check'))).get();
     expect(logs, isEmpty);
   });
 }

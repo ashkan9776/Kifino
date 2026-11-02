@@ -65,7 +65,8 @@ class AppMetricCard extends StatelessWidget {
             Text(
               delta!,
               style: AppTypography.labelMedium.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.55),
               ),
             ),
           ],

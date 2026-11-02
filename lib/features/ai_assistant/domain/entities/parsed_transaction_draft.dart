@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 
@@ -23,12 +24,12 @@ class ParsedTransactionDraft extends Equatable {
 
   @override
   List<Object?> get props => [
-        originalText,
-        description,
-        amount,
-        type,
-        suggestedCategory,
-        date,
-        confidence,
-      ];
+    originalText,
+    description,
+    amount,
+    type,
+    suggestedCategory,
+    date,
+    confidence,
+  ];
 }

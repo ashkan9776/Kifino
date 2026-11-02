@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import '../repositories/sync_repository.dart';
 import 'remote_sync_client.dart';
 
@@ -21,10 +22,7 @@ class SyncEngine {
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
 
-  SyncEngine({
-    required this._syncRepository,
-    required this._remoteClient,
-  });
+  SyncEngine({required this._syncRepository, required this._remoteClient});
 
   /// Computes exponential backoff delay in seconds: min(5 * 2^retryCount, 300)
   int calculateBackoffSeconds(int retryCount) {
@@ -36,7 +34,11 @@ class SyncEngine {
   /// Drains the pending outbox queue
   Future<SyncCycleResult> runSyncCycle() async {
     if (_isSyncing) {
-      return const SyncCycleResult(syncedCount: 0, failedCount: 0, error: 'Sync already in progress');
+      return const SyncCycleResult(
+        syncedCount: 0,
+        failedCount: 0,
+        error: 'Sync already in progress',
+      );
     }
 
     _isSyncing = true;
@@ -45,10 +47,16 @@ class SyncEngine {
     String? lastErr;
 
     try {
-      final operationsResult = await _syncRepository.getPendingOperations(limit: 100);
+      final operationsResult = await _syncRepository.getPendingOperations(
+        limit: 100,
+      );
       if (operationsResult.isFailure) {
         _isSyncing = false;
-        return SyncCycleResult(syncedCount: 0, failedCount: 0, error: operationsResult.failureOrNull?.message);
+        return SyncCycleResult(
+          syncedCount: 0,
+          failedCount: 0,
+          error: operationsResult.failureOrNull?.message,
+        );
       }
 
       final operations = operationsResult.dataOrNull ?? [];
@@ -71,7 +79,8 @@ class SyncEngine {
           await _syncRepository.markOperationSuccess(op.queueId!);
           synced++;
         } else {
-          final errMsg = pushResult.failureOrNull?.message ?? 'Unknown sync failure';
+          final errMsg =
+              pushResult.failureOrNull?.message ?? 'Unknown sync failure';
           lastErr = errMsg;
           failed++;
           await _syncRepository.recordOperationFailure(op.queueId!, errMsg);
@@ -84,7 +93,11 @@ class SyncEngine {
         error: lastErr,
       );
     } catch (e) {
-      return SyncCycleResult(syncedCount: synced, failedCount: failed, error: e.toString());
+      return SyncCycleResult(
+        syncedCount: synced,
+        failedCount: failed,
+        error: e.toString(),
+      );
     } finally {
       _isSyncing = false;
     }

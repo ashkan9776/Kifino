@@ -150,7 +150,10 @@ class DesignSystemShowcasePage extends StatelessWidget {
                 Container(
                   width: 12,
                   height: 12,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ],
             ),
@@ -180,7 +183,10 @@ class DesignSystemShowcasePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('کیفینو ۱۲۳ Kifino', style: style),
-                Text(label, style: AppTypography.labelMedium.copyWith(color: Colors.grey)),
+                Text(
+                  label,
+                  style: AppTypography.labelMedium.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -194,13 +200,29 @@ class DesignSystemShowcasePage extends StatelessWidget {
       children: [
         AppButton(label: 'Primary — ثبت هزینه', onPressed: () {}),
         const SizedBox(height: AppSpacing.sm),
-        AppButton(label: 'Secondary', variant: AppButtonVariant.secondary, onPressed: () {}),
+        AppButton(
+          label: 'Secondary',
+          variant: AppButtonVariant.secondary,
+          onPressed: () {},
+        ),
         const SizedBox(height: AppSpacing.sm),
-        AppButton(label: 'Outline', variant: AppButtonVariant.outline, onPressed: () {}),
+        AppButton(
+          label: 'Outline',
+          variant: AppButtonVariant.outline,
+          onPressed: () {},
+        ),
         const SizedBox(height: AppSpacing.sm),
-        AppButton(label: 'Danger — حذف', variant: AppButtonVariant.danger, onPressed: () {}),
+        AppButton(
+          label: 'Danger — حذف',
+          variant: AppButtonVariant.danger,
+          onPressed: () {},
+        ),
         const SizedBox(height: AppSpacing.sm),
-        const AppButton(label: 'Loading — در حال ثبت…', isLoading: true, onPressed: null),
+        const AppButton(
+          label: 'Loading — در حال ثبت…',
+          isLoading: true,
+          onPressed: null,
+        ),
         const SizedBox(height: AppSpacing.sm),
         const AppButton(label: 'Disabled', onPressed: null),
         // Disabled state: onPressed == null
@@ -286,11 +308,31 @@ class DesignSystemShowcasePage extends StatelessWidget {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: const [
-        AppStatusBadge(label: 'پرداخت شد', icon: Icons.check_rounded, tone: AppStatusTone.success),
-        AppStatusBadge(label: 'در انتظار', icon: Icons.schedule_rounded, tone: AppStatusTone.warning),
-        AppStatusBadge(label: 'معوق', icon: Icons.error_outline_rounded, tone: AppStatusTone.danger),
-        AppStatusBadge(label: 'همگام شد', icon: Icons.cloud_done_rounded, tone: AppStatusTone.info),
-        AppStatusBadge(label: 'پیش‌نویس', icon: Icons.edit_note_rounded, tone: AppStatusTone.neutral),
+        AppStatusBadge(
+          label: 'پرداخت شد',
+          icon: Icons.check_rounded,
+          tone: AppStatusTone.success,
+        ),
+        AppStatusBadge(
+          label: 'در انتظار',
+          icon: Icons.schedule_rounded,
+          tone: AppStatusTone.warning,
+        ),
+        AppStatusBadge(
+          label: 'معوق',
+          icon: Icons.error_outline_rounded,
+          tone: AppStatusTone.danger,
+        ),
+        AppStatusBadge(
+          label: 'همگام شد',
+          icon: Icons.cloud_done_rounded,
+          tone: AppStatusTone.info,
+        ),
+        AppStatusBadge(
+          label: 'پیش‌نویس',
+          icon: Icons.edit_note_rounded,
+          tone: AppStatusTone.neutral,
+        ),
       ],
     );
   }

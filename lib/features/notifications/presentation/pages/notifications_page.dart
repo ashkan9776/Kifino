@@ -71,8 +71,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     : const AppEmptyState(
                         icon: Icons.notifications_none_rounded,
                         title: 'هیچ اعلانی وجود ندارد',
-                        description:
-                            'یادآورهای سررسید چک، اقساط، بدهی‌ها و هشدارهای بودجه در این بخش نمایش داده می‌شوند.',
+                        description: 'یادآورهای سررسید چک، اقساط، بدهی‌ها و هشدارهای بودجه در این بخش نمایش داده می‌شوند.',
                       );
               }
 
@@ -88,12 +87,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         label: TextNormalizer.auto('$unreadCount خوانده‌نشده'),
                         color: unreadCount > 0
                             ? AppColors.primary
-                            : (isDark ? AppColors.darkSubtext : AppColors.lightSubtext),
+                            : (isDark
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       _CountChip(
                         label: TextNormalizer.auto('$all.length کل'),
-                        color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                        color: isDark
+                            ? AppColors.darkSubtext
+                            : AppColors.lightSubtext,
                       ),
                       const Spacer(),
                       if (all.isNotEmpty)
@@ -121,14 +124,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: AlignmentDirectional.centerEnd,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.expense,
                                 borderRadius: AppSpacing.borderRadiusMd,
                               ),
-                              child: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.white),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.white,
+                              ),
                             ),
                             onDismissed: (_) =>
                                 notifService.deleteNotification(notif.id),
@@ -270,7 +276,9 @@ class _NotificationCard extends StatelessWidget {
       onTap: onTap,
       backgroundColor: notif.isRead
           ? (isDark ? AppColors.darkSurface : AppColors.lightSurface)
-          : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant),
+          : (isDark
+                ? AppColors.darkSurfaceVariant
+                : AppColors.lightSurfaceVariant),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
@@ -320,20 +328,22 @@ class _NotificationCard extends StatelessWidget {
                   Text(
                     notif.body,
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                       height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    TextNormalizer.auto(AppDateFormatter.formatRelative(
-                      notif.createdAt,
-                      locale: 'fa',
-                    )),
+                    TextNormalizer.auto(
+                      AppDateFormatter.formatRelative(
+                        notif.createdAt,
+                        locale: 'fa',
+                      ),
+                    ),
                     style: AppTypography.labelMedium.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
+                      color: Theme.of(context).colorScheme.onSurface
                           .withValues(alpha: 0.45),
                     ),
                   ),
@@ -349,19 +359,27 @@ class _NotificationCard extends StatelessWidget {
   static (IconData, Color) _typeVisual(NotificationType type, bool isDark) {
     switch (type) {
       case NotificationType.checkDue:
-        return (Icons.fact_check_rounded,
-            isDark ? AppColors.debtOrangeDark : AppColors.debtOrangeLight);
+        return (
+          Icons.fact_check_rounded,
+          isDark ? AppColors.debtOrangeDark : AppColors.debtOrangeLight,
+        );
       case NotificationType.installmentDue:
-        return (Icons.calendar_month_rounded,
-            isDark ? AppColors.expenseDark : AppColors.expenseLight);
+        return (
+          Icons.calendar_month_rounded,
+          isDark ? AppColors.expenseDark : AppColors.expenseLight,
+        );
       case NotificationType.debtDue:
-        return (Icons.handshake_rounded,
-            isDark ? AppColors.transferDark : AppColors.transferLight);
+        return (
+          Icons.handshake_rounded,
+          isDark ? AppColors.transferDark : AppColors.transferLight,
+        );
       case NotificationType.lowStock:
         return (Icons.inventory_2_rounded, AppColors.warning);
       case NotificationType.budgetAlert:
-        return (Icons.warning_amber_rounded,
-            isDark ? AppColors.expenseDark : AppColors.expenseLight);
+        return (
+          Icons.warning_amber_rounded,
+          isDark ? AppColors.expenseDark : AppColors.expenseLight,
+        );
     }
   }
 }

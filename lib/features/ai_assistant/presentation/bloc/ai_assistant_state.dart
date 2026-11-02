@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/parsed_transaction_draft.dart';
 import '../../domain/services/financial_context_provider.dart';
 
@@ -54,10 +55,10 @@ class AiAssistantState extends Equatable {
 
   @override
   List<Object?> get props => [
-        messages,
-        isLoading,
-        summary,
-        errorMessage,
-        transactionCreatedSuccessfully,
-      ];
+    messages,
+    isLoading,
+    summary,
+    errorMessage,
+    transactionCreatedSuccessfully,
+  ];
 }

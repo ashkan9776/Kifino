@@ -21,20 +21,32 @@ void main() {
       expect(codes.contains('015'), isTrue); // موجودی کالا
       expect(codes.contains('017'), isTrue); // دارایی‌های ثابت
       expect(codes.contains('020'), isTrue); // اسناد پرداختنی
-      expect(codes.contains('023'), isTrue); // سایر حساب‌های پرداختنی و بستانکاران
+      expect(
+        codes.contains('023'),
+        isTrue,
+      ); // سایر حساب‌های پرداختنی و بستانکاران
       expect(codes.contains('030'), isTrue); // حقوق صاحبان سهام
       expect(codes.contains('040'), isTrue); // هزینه‌ها
       expect(codes.contains('060'), isTrue); // فروش
-      expect(codes.contains('070'), isTrue); // بهای تمام شده کالای فروش رفته (COGS)
+      expect(
+        codes.contains('070'),
+        isTrue,
+      ); // بهای تمام شده کالای فروش رفته (COGS)
 
       // Permanency classification
-      final bankKol = standardIranianChartOfAccounts.firstWhere((s) => s.code == '010');
+      final bankKol = standardIranianChartOfAccounts.firstWhere(
+        (s) => s.code == '010',
+      );
       expect(bankKol.isPermanent, isTrue); // Balance Sheet
 
-      final salesKol = standardIranianChartOfAccounts.firstWhere((s) => s.code == '060');
+      final salesKol = standardIranianChartOfAccounts.firstWhere(
+        (s) => s.code == '060',
+      );
       expect(salesKol.isPermanent, isFalse); // Income Statement (Temporary)
 
-      final expenseKol = standardIranianChartOfAccounts.firstWhere((s) => s.code == '040');
+      final expenseKol = standardIranianChartOfAccounts.firstWhere(
+        (s) => s.code == '040',
+      );
       expect(expenseKol.isPermanent, isFalse); // Income Statement (Temporary)
     });
 
@@ -192,7 +204,10 @@ void main() {
         updatedAt: now,
       );
       expect(tafsili.formattedCode, equals('011/001/001'));
-      expect(tafsili.formattedName, equals('011/001/001 - صندوق مرکزی فروشگاه'));
+      expect(
+        tafsili.formattedName,
+        equals('011/001/001 - صندوق مرکزی فروشگاه'),
+      );
     });
   });
 }

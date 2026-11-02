@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+
 import 'text_normalizer.dart';
 
 /// Representation of a Solar Hijri (Jalali / Shamsi) calendar date.
@@ -10,17 +11,33 @@ class JalaliDate {
   const JalaliDate(this.year, this.month, this.day);
 
   static const List<String> persianMonthNames = [
-    'فروردین', 'اردیبهشت', 'خرداد',
-    'تیر', 'مرداد', 'شهریور',
-    'مهر', 'آبان', 'آذر',
-    'دی', 'بهمن', 'اسفند',
+    'فروردین',
+    'اردیبهشت',
+    'خرداد',
+    'تیر',
+    'مرداد',
+    'شهریور',
+    'مهر',
+    'آبان',
+    'آذر',
+    'دی',
+    'بهمن',
+    'اسفند',
   ];
 
   static const List<String> englishPersianMonthNames = [
-    'Farvardin', 'Ordibehesht', 'Khordad',
-    'Tir', 'Mordad', 'Shahrivar',
-    'Mehr', 'Aban', 'Azar',
-    'Dey', 'Bahman', 'Esfand',
+    'Farvardin',
+    'Ordibehesht',
+    'Khordad',
+    'Tir',
+    'Mordad',
+    'Shahrivar',
+    'Mehr',
+    'Aban',
+    'Azar',
+    'Dey',
+    'Bahman',
+    'Esfand',
   ];
 
   String get monthName => persianMonthNames[month - 1];
@@ -38,7 +55,8 @@ class JalaliDate {
     int gm = gMonth - 1;
     int gd = gDay - 1;
 
-    int gDayNo = 365 * gy + ((gy + 3) ~/ 4) - ((gy + 99) ~/ 100) + ((gy + 399) ~/ 400);
+    int gDayNo =
+        365 * gy + ((gy + 3) ~/ 4) - ((gy + 99) ~/ 100) + ((gy + 399) ~/ 400);
 
     for (int i = 0; i < gm; ++i) {
       gDayNo += gDaysInMonth[i];
@@ -115,7 +133,16 @@ class JalaliDate {
     final gDaysInMonth = [
       31,
       (leap ? 29 : 28),
-      31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
     ];
 
     int gm = 0;
@@ -129,13 +156,18 @@ class JalaliDate {
   }
 
   String format({bool usePersianDigits = true}) {
-    final str = '$year/${month.toString().padLeft(2, '0')}/${day.toString().padLeft(2, '0')}';
+    final str =
+        '$year/${month.toString().padLeft(2, '0')}/${day.toString().padLeft(2, '0')}';
     return usePersianDigits ? TextNormalizer.toPersianDigits(str) : str;
   }
 
   String formatFull({bool usePersianDigits = true}) {
-    final dStr = usePersianDigits ? TextNormalizer.toPersianDigits('$day') : '$day';
-    final yStr = usePersianDigits ? TextNormalizer.toPersianDigits('$year') : '$year';
+    final dStr = usePersianDigits
+        ? TextNormalizer.toPersianDigits('$day')
+        : '$day';
+    final yStr = usePersianDigits
+        ? TextNormalizer.toPersianDigits('$year')
+        : '$year';
     return '$dStr $monthName $yStr';
   }
 
@@ -144,7 +176,11 @@ class JalaliDate {
 }
 
 class AppDateFormatter {
-  static String format(DateTime date, {String locale = 'fa', bool isJalali = false}) {
+  static String format(
+    DateTime date, {
+    String locale = 'fa',
+    bool isJalali = false,
+  }) {
     if (isJalali || locale.startsWith('fa')) {
       final j = JalaliDate.fromDateTime(date);
       return j.formatFull(usePersianDigits: locale.startsWith('fa'));
@@ -153,7 +189,11 @@ class AppDateFormatter {
     }
   }
 
-  static String formatShort(DateTime date, {String locale = 'fa', bool isJalali = false}) {
+  static String formatShort(
+    DateTime date, {
+    String locale = 'fa',
+    bool isJalali = false,
+  }) {
     if (isJalali || locale.startsWith('fa')) {
       final j = JalaliDate.fromDateTime(date);
       return j.format(usePersianDigits: locale.startsWith('fa'));
@@ -164,7 +204,9 @@ class AppDateFormatter {
 
   static String formatTime(DateTime date, {String locale = 'fa'}) {
     final formatted = DateFormat('HH:mm').format(date);
-    return locale.startsWith('fa') ? TextNormalizer.toPersianDigits(formatted) : formatted;
+    return locale.startsWith('fa')
+        ? TextNormalizer.toPersianDigits(formatted)
+        : formatted;
   }
 
   static String formatRelative(DateTime date, {String locale = 'fa'}) {
@@ -194,7 +236,6 @@ class AppDateFormatter {
     }
   }
 }
-
 
 /// Start of the Jalali month containing [dateTime] — «ماه جاری» boundaries
 /// must follow the Shamsi calendar, not the Gregorian one.

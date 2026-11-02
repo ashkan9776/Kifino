@@ -13,7 +13,8 @@ class BusinessContactsTable extends Table {
   TextColumn get email => text().nullable()();
   TextColumn get address => text().nullable()();
   TextColumn get taxNumber => text().nullable()();
-  IntColumn get outstandingBalanceMinor => integer().withDefault(const Constant(0))();
+  IntColumn get outstandingBalanceMinor =>
+      integer().withDefault(const Constant(0))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
   IntColumn get deletedAt => integer().nullable()();
@@ -35,10 +36,13 @@ class ProductsTable extends Table {
   TextColumn get barcode => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get unit => text().withDefault(const Constant('unit'))();
-  TextColumn get secondaryUnit => text().nullable()(); // e.g. 'کارتن' when unit is 'عدد'
-  IntColumn get conversionFactor => integer()
-      .withDefault(const Constant(1))(); // base units per secondary unit
-  IntColumn get purchasePriceMinor => integer().withDefault(const Constant(0))();
+  TextColumn get secondaryUnit =>
+      text().nullable()(); // e.g. 'کارتن' when unit is 'عدد'
+  IntColumn get conversionFactor => integer().withDefault(
+    const Constant(1),
+  )(); // base units per secondary unit
+  IntColumn get purchasePriceMinor =>
+      integer().withDefault(const Constant(0))();
   IntColumn get sellingPriceMinor => integer()();
   TextColumn get currency => text()();
   RealColumn get currentStock => real().withDefault(const Constant(0.0))();
@@ -62,7 +66,8 @@ class InventoryLogsTable extends Table {
   TextColumn get id => text()();
   TextColumn get productId => text()();
   RealColumn get changeQuantity => real()();
-  TextColumn get movementType => text()(); // purchase, sale, adjustment, return, loss
+  TextColumn get movementType =>
+      text()(); // purchase, sale, adjustment, return, loss
   TextColumn get referenceId => text().nullable()(); // invoiceId
   IntColumn get costPerUnitMinor => integer().nullable()();
   TextColumn get notes => text().nullable()();
@@ -85,7 +90,8 @@ class InvoicesTable extends Table {
   TextColumn get invoiceNumber => text()();
   TextColumn get contactId => text()();
   TextColumn get type => text()(); // sale, purchase, quote
-  TextColumn get status => text()(); // draft, sent, partiallyPaid, paid, overdue, cancelled
+  TextColumn get status =>
+      text()(); // draft, sent, partiallyPaid, paid, overdue, cancelled
   IntColumn get issueDate => integer()();
   IntColumn get dueDate => integer()();
   IntColumn get subtotalMinor => integer()();

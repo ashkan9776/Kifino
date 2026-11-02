@@ -68,35 +68,70 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     sl.registerLazySingleton<AppDatabase>(() => db);
 
-    sl.registerLazySingleton<AccountRepository>(() => AccountRepositoryImpl(db));
-    sl.registerLazySingleton<CategoryRepository>(() => CategoryRepositoryImpl(db));
-    sl.registerLazySingleton<TransactionRepository>(() => TransactionRepositoryImpl(db));
+    sl.registerLazySingleton<AccountRepository>(
+      () => AccountRepositoryImpl(db),
+    );
+    sl.registerLazySingleton<CategoryRepository>(
+      () => CategoryRepositoryImpl(db),
+    );
+    sl.registerLazySingleton<TransactionRepository>(
+      () => TransactionRepositoryImpl(db),
+    );
     sl.registerLazySingleton<BudgetRepository>(() => BudgetRepositoryImpl(db));
     sl.registerLazySingleton<DebtRepository>(() => DebtRepositoryImpl(db));
-    sl.registerLazySingleton<InstallmentRepository>(() => InstallmentRepositoryImpl(db));
+    sl.registerLazySingleton<InstallmentRepository>(
+      () => InstallmentRepositoryImpl(db),
+    );
     sl.registerLazySingleton<CheckRepository>(() => CheckRepositoryImpl(db));
     sl.registerLazySingleton<AssetRepository>(() => AssetRepositoryImpl(db));
-    sl.registerLazySingleton<BusinessRepository>(() => BusinessRepositoryImpl(db));
+    sl.registerLazySingleton<BusinessRepository>(
+      () => BusinessRepositoryImpl(db),
+    );
     sl.registerLazySingleton<GoalRepository>(() => GoalRepositoryImpl(db));
 
-    sl.registerLazySingleton<AccountingRepository>(() => AccountingRepositoryImpl(db));
-        sl.registerLazySingleton<VoucherSettingsService>(() => VoucherSettingsService(prefs));
-    sl.registerLazySingleton<AutoVoucherService>(
-      () => AutoVoucherService(sl<AccountingRepository>(), settingsService: sl<VoucherSettingsService>()),
+    sl.registerLazySingleton<AccountingRepository>(
+      () => AccountingRepositoryImpl(db),
     );
-    sl.registerFactory<AccountingDocumentBloc>(() => AccountingDocumentBloc(sl<AccountingRepository>()));
-    sl.registerFactory<ChartOfAccountsCubit>(() => ChartOfAccountsCubit(sl<AccountingRepository>()));
-    sl.registerFactory<TrialBalanceBloc>(() => TrialBalanceBloc(sl<AccountingRepository>()));
-    sl.registerFactory<LedgerBloc>(() => LedgerBloc(sl<AccountingRepository>()));
-    sl.registerFactory<FinancialStatementsBloc>(() => FinancialStatementsBloc(sl<AccountingRepository>()));
+    sl.registerLazySingleton<VoucherSettingsService>(
+      () => VoucherSettingsService(prefs),
+    );
+    sl.registerLazySingleton<AutoVoucherService>(
+      () => AutoVoucherService(
+        sl<AccountingRepository>(),
+        settingsService: sl<VoucherSettingsService>(),
+      ),
+    );
+    sl.registerFactory<AccountingDocumentBloc>(
+      () => AccountingDocumentBloc(sl<AccountingRepository>()),
+    );
+    sl.registerFactory<ChartOfAccountsCubit>(
+      () => ChartOfAccountsCubit(sl<AccountingRepository>()),
+    );
+    sl.registerFactory<TrialBalanceBloc>(
+      () => TrialBalanceBloc(sl<AccountingRepository>()),
+    );
+    sl.registerFactory<LedgerBloc>(
+      () => LedgerBloc(sl<AccountingRepository>()),
+    );
+    sl.registerFactory<FinancialStatementsBloc>(
+      () => FinancialStatementsBloc(sl<AccountingRepository>()),
+    );
 
     sl.registerLazySingleton<SyncRepository>(() => SyncRepositoryImpl(db));
-    sl.registerLazySingleton<RemoteSyncClient>(() => const ProductionRemoteSyncClient());
+    sl.registerLazySingleton<RemoteSyncClient>(
+      () => const ProductionRemoteSyncClient(),
+    );
     sl.registerLazySingleton<SyncEngine>(
-      () => SyncEngine(syncRepository: sl<SyncRepository>(), remoteClient: sl<RemoteSyncClient>()),
+      () => SyncEngine(
+        syncRepository: sl<SyncRepository>(),
+        remoteClient: sl<RemoteSyncClient>(),
+      ),
     );
     sl.registerFactory<SyncBloc>(
-      () => SyncBloc(syncRepository: sl<SyncRepository>(), syncEngine: sl<SyncEngine>()),
+      () => SyncBloc(
+        syncRepository: sl<SyncRepository>(),
+        syncEngine: sl<SyncEngine>(),
+      ),
     );
 
     sl.registerFactory<AiAssistantBloc>(
@@ -109,15 +144,25 @@ void main() {
       ),
     );
 
-    sl.registerLazySingleton<SecurityService>(() => SecurityService(secureStorage: sl<FlutterSecureStorage>()));
-    sl.registerFactory<SecurityCubit>(() => SecurityCubit(securityService: sl<SecurityService>()));
+    sl.registerLazySingleton<SecurityService>(
+      () => SecurityService(secureStorage: sl<FlutterSecureStorage>()),
+    );
+    sl.registerFactory<SecurityCubit>(
+      () => SecurityCubit(securityService: sl<SecurityService>()),
+    );
     sl.registerLazySingleton<BackupService>(() => BackupService(db));
-    sl.registerLazySingleton<NotificationService>(() => NotificationService(db: db));
+    sl.registerLazySingleton<NotificationService>(
+      () => NotificationService(db: db),
+    );
 
     sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(prefs));
-    sl.registerLazySingleton<CompanyController>(() => CompanyController(CompanyRegistry(prefs)));
+    sl.registerLazySingleton<CompanyController>(
+      () => CompanyController(CompanyRegistry(prefs)),
+    );
     sl.registerLazySingleton<SettingsService>(() => SettingsService(prefs));
-    sl.registerFactory<SettingsCubit>(() => SettingsCubit(sl<SettingsService>()));
+    sl.registerFactory<SettingsCubit>(
+      () => SettingsCubit(sl<SettingsService>()),
+    );
 
     await sl<CategoryRepository>().seedDefaultCategoriesIfEmpty();
   });
@@ -127,7 +172,9 @@ void main() {
     await sl.reset();
   });
 
-  testWidgets('KifinoApp smoke test renders navigation and dashboard', (WidgetTester tester) async {
+  testWidgets('KifinoApp smoke test renders navigation and dashboard', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
 

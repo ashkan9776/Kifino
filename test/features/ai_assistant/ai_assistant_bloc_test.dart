@@ -44,8 +44,14 @@ void main() {
         name: 'حساب اصلی',
         type: AccountType.bankCard,
         currency: Currency.irr,
-        initialBalance: const Money(minorUnits: 100000000, currency: Currency.irr),
-        currentBalance: const Money(minorUnits: 100000000, currency: Currency.irr),
+        initialBalance: const Money(
+          minorUnits: 100000000,
+          currency: Currency.irr,
+        ),
+        currentBalance: const Money(
+          minorUnits: 100000000,
+          currency: Currency.irr,
+        ),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -126,8 +132,11 @@ void main() {
       wait: const Duration(milliseconds: 200),
       expect: () => [
         predicate<AiAssistantState>((state) => state.isLoading == true),
-        predicate<AiAssistantState>((state) =>
-            state.isLoading == false && state.transactionCreatedSuccessfully == true),
+        predicate<AiAssistantState>(
+          (state) =>
+              state.isLoading == false &&
+              state.transactionCreatedSuccessfully == true,
+        ),
       ],
       verify: (_) async {
         final txsRes = await txRepo.getRecentTransactions(limit: 10);

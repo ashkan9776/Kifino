@@ -10,10 +10,7 @@ import '../theme/app_typography.dart';
 class ScaffoldWithNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const ScaffoldWithNavBar({
-    super.key,
-    required this.navigationShell,
-  });
+  const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   void _onTap(int index) {
     navigationShell.goBranch(
@@ -74,7 +71,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,12 +136,18 @@ class ScaffoldWithNavBar extends StatelessWidget {
                   onDestinationSelected: _onTap,
                   labelType: NavigationRailLabelType.all,
                   leading: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     child: FloatingActionButton(
                       onPressed: () => _openQuickAddSheet(context),
                       elevation: 0,
-                      backgroundColor: isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight,
-                      foregroundColor: isDark ? AppColors.darkBackground : Colors.white,
+                      backgroundColor: isDark
+                          ? AppColors.primaryBlueDark
+                          : AppColors.primaryBlueLight,
+                      foregroundColor: isDark
+                          ? AppColors.darkBackground
+                          : Colors.white,
                       child: const Icon(Icons.add_rounded, size: 28),
                     ),
                   ),
@@ -212,9 +220,17 @@ class _FloatingNavBar extends StatelessWidget {
 
     final destinations = [
       (Icons.dashboard_outlined, Icons.dashboard_rounded, l10n.navHome),
-      (Icons.receipt_long_outlined, Icons.receipt_long_rounded, l10n.navActivity),
+      (
+        Icons.receipt_long_outlined,
+        Icons.receipt_long_rounded,
+        l10n.navActivity,
+      ),
       (Icons.insights_outlined, Icons.insights_rounded, l10n.navAnalytics),
-      (Icons.business_center_outlined, Icons.business_center_rounded, l10n.navBusiness),
+      (
+        Icons.business_center_outlined,
+        Icons.business_center_rounded,
+        l10n.navBusiness,
+      ),
       (Icons.more_horiz_rounded, Icons.more_horiz_rounded, l10n.navMore),
     ];
 
@@ -229,14 +245,20 @@ class _FloatingNavBar extends StatelessWidget {
                 height: 62,
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   borderRadius: AppSpacing.borderRadiusXl,
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.10),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.35 : 0.10,
+                      ),
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -284,8 +306,12 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight;
-    final idle = isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary;
+    final primary = isDark
+        ? AppColors.primaryBlueDark
+        : AppColors.primaryBlueLight;
+    final idle = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
     final color = selected ? primary : idle;
 
     return Expanded(
@@ -302,17 +328,15 @@ class _NavItem extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(vertical: 5),
               decoration: BoxDecoration(
-                color: selected ? primary.withValues(alpha: 0.12) : Colors.transparent,
+                color: selected
+                    ? primary.withValues(alpha: 0.12)
+                    : Colors.transparent,
                 borderRadius: AppSpacing.borderRadiusMd,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    selected ? selectedIcon : icon,
-                    size: 22,
-                    color: color,
-                  ),
+                  Icon(selected ? selectedIcon : icon, size: 22, color: color),
                   const SizedBox(height: 2),
                   FittedBox(
                     fit: BoxFit.scaleDown,
@@ -322,7 +346,9 @@ class _NavItem extends StatelessWidget {
                       style: AppTypography.labelMedium.copyWith(
                         fontSize: 9.5,
                         color: color,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -393,7 +419,9 @@ class _QuickAddTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant;
+    final surface = isDark
+        ? AppColors.darkSurfaceVariant
+        : AppColors.lightSurfaceVariant;
 
     return Material(
       color: Colors.transparent,

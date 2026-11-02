@@ -6,7 +6,8 @@ import 'package:kifino/core/database/app_database.dart';
 import 'package:kifino/features/notifications/domain/entities/app_notification_entity.dart';
 import 'package:kifino/features/notifications/domain/services/notification_service.dart';
 
-class FakeLocalNotificationsPlugin extends Fake implements FlutterLocalNotificationsPlugin {
+class FakeLocalNotificationsPlugin extends Fake
+    implements FlutterLocalNotificationsPlugin {
   bool initialized = false;
   int zonedScheduleCallCount = 0;
   String? lastScheduledTitle;
@@ -17,7 +18,8 @@ class FakeLocalNotificationsPlugin extends Fake implements FlutterLocalNotificat
   Future<bool?> initialize({
     required InitializationSettings settings,
     DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
-    DidReceiveBackgroundNotificationResponseCallback? onDidReceiveBackgroundNotificationResponse,
+    DidReceiveBackgroundNotificationResponseCallback?
+    onDidReceiveBackgroundNotificationResponse,
   }) async {
     initialized = true;
     return true;
@@ -53,7 +55,10 @@ void main() {
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     fakeNotifications = FakeLocalNotificationsPlugin();
-    service = NotificationService(db: db, localNotifications: fakeNotifications);
+    service = NotificationService(
+      db: db,
+      localNotifications: fakeNotifications,
+    );
   });
 
   tearDown(() async {
@@ -66,31 +71,37 @@ void main() {
       expect(fakeNotifications.initialized, isTrue);
     });
 
-    test('scheduleNotification saves notification and shows system notification', () async {
-      final scheduledDate = DateTime.now().add(const Duration(days: 3));
+    test(
+      'scheduleNotification saves notification and shows system notification',
+      () async {
+        final scheduledDate = DateTime.now().add(const Duration(days: 3));
 
-      await service.scheduleNotification(
-        title: 'سررسید قسط وام',
-        body: 'قسط شماره ۲ به مبلغ ۵,۰۰۰,۰۰۰ ریال',
-        type: NotificationType.installmentDue,
-        referenceId: 'inst-123',
-        scheduledFor: scheduledDate,
-      );
+        await service.scheduleNotification(
+          title: 'سررسید قسط وام',
+          body: 'قسط شماره ۲ به مبلغ ۵,۰۰۰,۰۰۰ ریال',
+          type: NotificationType.installmentDue,
+          referenceId: 'inst-123',
+          scheduledFor: scheduledDate,
+        );
 
-      // Future date → OS-level scheduled reminder (zonedSchedule)
-      expect(fakeNotifications.zonedScheduleCallCount, equals(1));
-      expect(fakeNotifications.lastScheduledTitle, equals('سررسید قسط وام'));
-      expect(fakeNotifications.lastScheduledBody, equals('قسط شماره ۲ به مبلغ ۵,۰۰۰,۰۰۰ ریال'));
+        // Future date → OS-level scheduled reminder (zonedSchedule)
+        expect(fakeNotifications.zonedScheduleCallCount, equals(1));
+        expect(fakeNotifications.lastScheduledTitle, equals('سررسید قسط وام'));
+        expect(
+          fakeNotifications.lastScheduledBody,
+          equals('قسط شماره ۲ به مبلغ ۵,۰۰۰,۰۰۰ ریال'),
+        );
 
-      // Check database persistence
-      final notifications = await service.watchNotifications().first;
-      expect(notifications.length, equals(1));
-      final notif = notifications.first;
-      expect(notif.title, equals('سررسید قسط وام'));
-      expect(notif.type, equals(NotificationType.installmentDue));
-      expect(notif.referenceId, equals('inst-123'));
-      expect(notif.isRead, isFalse);
-    });
+        // Check database persistence
+        final notifications = await service.watchNotifications().first;
+        expect(notifications.length, equals(1));
+        final notif = notifications.first;
+        expect(notif.title, equals('سررسید قسط وام'));
+        expect(notif.type, equals(NotificationType.installmentDue));
+        expect(notif.referenceId, equals('inst-123'));
+        expect(notif.isRead, isFalse);
+      },
+    );
 
     test('markAsRead updates notification state to read', () async {
       await service.scheduleNotification(

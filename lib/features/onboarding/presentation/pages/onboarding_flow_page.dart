@@ -117,7 +117,11 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
     if (_accountNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFa ? 'لطفاً نام حساب را وارد کنید' : 'Please enter an account name'),
+          content: Text(
+            isFa
+                ? 'لطفاً نام حساب را وارد کنید'
+                : 'Please enter an account name',
+          ),
           backgroundColor: AppColors.expenseLight,
         ),
       );
@@ -142,7 +146,10 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
       final ok = await onboardingCubit.createFirstAccount(
         name: _accountNameController.text,
         type: _selectedAccountType,
-        initialBalance: Money.fromMinor(_initialBalanceMinor, _selectedCurrency),
+        initialBalance: Money.fromMinor(
+          _initialBalanceMinor,
+          _selectedCurrency,
+        ),
         bankName: _bankNameController.text,
         cardLastFour: _cardLastFourController.text,
       );
@@ -196,10 +203,7 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
           children: [
             // Fixed slot: changing the child count/type here would force the
             // PageView below to remount and snap back to page 0.
-            _ProgressDots(
-              currentStep: _currentStep,
-              totalSteps: _totalSteps,
-            ),
+            _ProgressDots(currentStep: _currentStep, totalSteps: _totalSteps),
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -243,7 +247,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -260,9 +265,12 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                isFa ? 'سیستم‌عامل مالی شما' : 'Your Financial Operating System',
+                isFa
+                    ? 'سیستم‌عامل مالی شما'
+                    : 'Your Financial Operating System',
                 style: AppTypography.bodyLarge.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.65),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -289,9 +297,12 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            isFa ? 'بعداً از تنظیمات هم قابل تغییر است' : 'You can change this later in settings',
+            isFa
+                ? 'بعداً از تنظیمات هم قابل تغییر است'
+                : 'You can change this later in settings',
             style: AppTypography.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.65),
             ),
             textAlign: TextAlign.center,
           ),
@@ -340,9 +351,12 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            isFa ? 'تمام محاسبات بر این اساس انجام می‌شود' : 'All calculations are based on this',
+            isFa
+                ? 'تمام محاسبات بر این اساس انجام می‌شود'
+                : 'All calculations are based on this',
             style: AppTypography.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.65),
             ),
             textAlign: TextAlign.center,
           ),
@@ -354,7 +368,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                   title: isFa ? 'تومان ایران' : 'Iranian Toman',
                   symbol: Currency.toman.symbol,
                   isSelected: _selectedCurrency == Currency.toman,
-                  onTap: () => setState(() => _selectedCurrency = Currency.toman),
+                  onTap: () =>
+                      setState(() => _selectedCurrency = Currency.toman),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -372,7 +387,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
           Text(
             isFa ? 'سایر ارزها' : 'Other currencies',
             style: AppTypography.labelLarge.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.65),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -405,7 +421,10 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
       onTap: () => setState(() => _selectedCurrency = currency),
       borderRadius: AppSpacing.borderRadiusLg,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         child: Row(
           children: [
             Container(
@@ -413,7 +432,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -433,18 +453,23 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                   Text(
                     currency.displayName,
                     style: AppTypography.labelMedium.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context).colorScheme.onSurface
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                 ],
               ),
             ),
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
               size: 22,
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary),
+                  : (isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary),
             ),
           ],
         ),
@@ -457,7 +482,12 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
   Widget _buildAccountStep(BuildContext context) {
     final isFa = _isPersian;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -472,7 +502,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                 ? 'برای شروع ثبت تراکنش به یک حساب نیاز دارید'
                 : 'You need an account to start recording transactions',
             style: AppTypography.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.65),
             ),
             textAlign: TextAlign.center,
           ),
@@ -519,7 +550,9 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                 PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
               ],
               decoration: InputDecoration(
-                labelText: isFa ? '۴ رقم آخر کارت (اختیاری)' : 'Card last 4 digits (optional)',
+                labelText: isFa
+                    ? '۴ رقم آخر کارت (اختیاری)'
+                    : 'Card last 4 digits (optional)',
                 prefixIcon: const Icon(Icons.credit_card_rounded),
                 counterText: '',
               ),
@@ -563,11 +596,17 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                   color: colors.income.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.celebration_rounded, size: 48, color: colors.income),
+                child: Icon(
+                  Icons.celebration_rounded,
+                  size: 48,
+                  color: colors.income,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                isFa ? 'فضای کاری مالی شما آماده است 🎉' : 'Your financial workspace is ready 🎉',
+                isFa
+                    ? 'فضای کاری مالی شما آماده است 🎉'
+                    : 'Your financial workspace is ready 🎉',
                 style: AppTypography.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -577,7 +616,8 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
                     ? 'همه‌چیز برای شروع ثبت تراکنش‌ها آماده است'
                     : 'Everything is set up to start tracking your money',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.65),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -592,7 +632,9 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
               const SizedBox(height: AppSpacing.md),
               AppButton(
                 label: isFa ? 'رفتن به داشبورد' : 'Go to dashboard',
-                onPressed: _isFinishing ? null : () => _finish(goToAddTransaction: false),
+                onPressed: _isFinishing
+                    ? null
+                    : () => _finish(goToAddTransaction: false),
                 width: double.infinity,
                 variant: AppButtonVariant.secondary,
               ),
@@ -613,10 +655,7 @@ class _ProgressDots extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
 
-  const _ProgressDots({
-    required this.currentStep,
-    required this.totalSteps,
-  });
+  const _ProgressDots({required this.currentStep, required this.totalSteps});
 
   @override
   Widget build(BuildContext context) {
@@ -673,8 +712,9 @@ class _BottomBar extends StatelessWidget {
     if (currentStep >= totalSteps - 1) return const SizedBox.shrink();
 
     final isFa = isPersian;
-    final primaryLabel =
-        currentStep == 0 ? (isFa ? 'شروع کنیم' : 'Get started') : (isFa ? 'ادامه' : 'Continue');
+    final primaryLabel = currentStep == 0
+        ? (isFa ? 'شروع کنیم' : 'Get started')
+        : (isFa ? 'ادامه' : 'Continue');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -730,8 +770,9 @@ class _LanguageCard extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       borderColor: borderColor,
-      backgroundColor:
-          isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : null,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+          : null,
       child: Column(
         children: [
           Container(
@@ -739,7 +780,8 @@ class _LanguageCard extends StatelessWidget {
             height: 52,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -755,16 +797,22 @@ class _LanguageCard extends StatelessWidget {
           Text(
             sub,
             style: AppTypography.labelMedium.copyWith(
-              color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Icon(
-            isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+            isSelected
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
             size: 22,
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary),
+                : (isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary),
           ),
         ],
       ),
@@ -795,8 +843,9 @@ class _CurrencyCard extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       borderColor: borderColor,
-      backgroundColor:
-          isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : null,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+          : null,
       child: Column(
         children: [
           Container(
@@ -804,7 +853,8 @@ class _CurrencyCard extends StatelessWidget {
             height: 52,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -823,11 +873,15 @@ class _CurrencyCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Icon(
-            isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+            isSelected
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
             size: 22,
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary),
+                : (isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary),
           ),
         ],
       ),

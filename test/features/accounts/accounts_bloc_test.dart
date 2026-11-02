@@ -41,21 +41,39 @@ void main() {
       act: (bloc) async {
         bloc.add(const WatchAccountsStarted());
         await pumpEventQueue();
-        bloc.add(AccountCreateRequested(AccountEntity(
-          id: 'acc-new',
-          name: 'Wallet',
-          type: AccountType.cashWallet,
-          currency: Currency.toman,
-          initialBalance: const Money(minorUnits: 500000, currency: Currency.toman),
-          currentBalance: const Money(minorUnits: 500000, currency: Currency.toman),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        )));
+        bloc.add(
+          AccountCreateRequested(
+            AccountEntity(
+              id: 'acc-new',
+              name: 'Wallet',
+              type: AccountType.cashWallet,
+              currency: Currency.toman,
+              initialBalance: const Money(
+                minorUnits: 500000,
+                currency: Currency.toman,
+              ),
+              currentBalance: const Money(
+                minorUnits: 500000,
+                currency: Currency.toman,
+              ),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ),
+        );
       },
       expect: () => [
         isA<AccountsLoading>(),
-        isA<AccountsLoaded>().having((s) => s.totalBalance.minorUnits, 'empty', equals(0)),
-        isA<AccountsLoaded>().having((s) => s.totalBalance.minorUnits, 'updated', equals(500000)),
+        isA<AccountsLoaded>().having(
+          (s) => s.totalBalance.minorUnits,
+          'empty',
+          equals(0),
+        ),
+        isA<AccountsLoaded>().having(
+          (s) => s.totalBalance.minorUnits,
+          'updated',
+          equals(500000),
+        ),
       ],
     );
   });

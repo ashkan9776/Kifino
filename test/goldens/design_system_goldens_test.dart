@@ -31,10 +31,7 @@ void main() {
           theme: dark ? AppTheme.darkTheme : AppTheme.lightTheme,
           home: Scaffold(
             body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: child,
-              ),
+              child: Padding(padding: const EdgeInsets.all(16), child: child),
             ),
           ),
         ),
@@ -48,9 +45,12 @@ void main() {
 
     // Real font (not Ahem blocks) so goldens are meaningful.
     setUpAll(() async {
-      final regular = await rootBundle
-          .load('packages/vazirmatn/fonts/Vazirmatn-Regular.ttf');
-      final bold = await rootBundle.load('packages/vazirmatn/fonts/Vazirmatn-Bold.ttf');
+      final regular = await rootBundle.load(
+        'packages/vazirmatn/fonts/Vazirmatn-Regular.ttf',
+      );
+      final bold = await rootBundle.load(
+        'packages/vazirmatn/fonts/Vazirmatn-Bold.ttf',
+      );
       final loader = FontLoader('Vazirmatn')
         ..addFont(Future.value(regular))
         ..addFont(Future.value(bold));

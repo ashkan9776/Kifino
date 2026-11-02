@@ -49,8 +49,9 @@ void main() {
     );
   });
 
-  testWidgets('typing pushes back into the notifier (two-way sync)',
-      (tester) async {
+  testWidgets('typing pushes back into the notifier (two-way sync)', (
+    tester,
+  ) async {
     await pumpField(tester);
 
     await tester.enterText(find.byType(TextField), '2,500');

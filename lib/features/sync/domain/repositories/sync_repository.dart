@@ -6,7 +6,9 @@ abstract interface class SyncRepository {
   Stream<List<SyncOperationEntity>> watchPendingOperations();
   Stream<List<SyncOperationEntity>> watchFailedOperations();
 
-  Future<Result<List<SyncOperationEntity>>> getPendingOperations({int limit = 50});
+  Future<Result<List<SyncOperationEntity>>> getPendingOperations({
+    int limit = 50,
+  });
   Future<Result<void>> markOperationSuccess(int queueId);
   Future<Result<void>> recordOperationFailure(int queueId, String error);
   Future<Result<void>> retryAllFailed();

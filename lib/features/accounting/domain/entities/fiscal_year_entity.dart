@@ -57,14 +57,14 @@ class FiscalYearEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        yearNumber,
-        startDate,
-        endDate,
-        isClosed,
-        isActive,
-        openingDocumentId,
-        closingDocumentId,
-      ];
+    id,
+    title,
+    yearNumber,
+    startDate,
+    endDate,
+    isClosed,
+    isActive,
+    openingDocumentId,
+    closingDocumentId,
+  ];
 }

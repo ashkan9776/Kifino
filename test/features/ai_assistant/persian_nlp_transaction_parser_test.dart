@@ -133,7 +133,10 @@ void main() {
       runwayMonths: 7.5,
       overspentBudgetsCount: 0,
       totalDebts: const Money(minorUnits: 10000000, currency: Currency.irr),
-      totalReceivables: const Money(minorUnits: 5000000, currency: Currency.irr),
+      totalReceivables: const Money(
+        minorUnits: 5000000,
+        currency: Currency.irr,
+      ),
       topSpendingCategories: const {'خوراک و غذا': 8000000, 'مسکن': 10000000},
       healthScore: 85,
     );

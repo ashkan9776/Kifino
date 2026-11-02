@@ -15,8 +15,12 @@ abstract class AccountingRepository {
   Future<List<AccountingSubjectEntity>> getChildSubjects(String parentId);
   Future<AccountingSubjectEntity?> getSubjectByCode(String code);
   Future<AccountingSubjectEntity?> getSubjectById(String id);
-  Future<AccountingSubjectEntity> createSubject(AccountingSubjectEntity subject);
-  Future<AccountingSubjectEntity> updateSubject(AccountingSubjectEntity subject);
+  Future<AccountingSubjectEntity> createSubject(
+    AccountingSubjectEntity subject,
+  );
+  Future<AccountingSubjectEntity> updateSubject(
+    AccountingSubjectEntity subject,
+  );
   Future<void> deleteSubject(String id);
 
   // Accounting Documents
@@ -28,8 +32,12 @@ abstract class AccountingRepository {
   });
   Future<AccountingDocumentEntity?> getDocumentById(String id);
   Future<int> getNextDocumentNumber(String? fiscalYearId);
-  Future<AccountingDocumentEntity> createDocument(AccountingDocumentEntity document);
-  Future<AccountingDocumentEntity> updateDocument(AccountingDocumentEntity document);
+  Future<AccountingDocumentEntity> createDocument(
+    AccountingDocumentEntity document,
+  );
+  Future<AccountingDocumentEntity> updateDocument(
+    AccountingDocumentEntity document,
+  );
   Future<void> approveDocument(String documentId);
   Future<void> deleteDocument(String documentId);
 
@@ -71,7 +79,7 @@ abstract class AccountingRepository {
   // ── Phase 1: integrity, audit, floating details, fiscal close/open ──
 
   /// Audit trail for accounting documents, newest first.
-    Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit});
+  Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit});
 
   /// Audit entries for one entity (e.g. a check's status history), newest first.
   Stream<List<AccountingAuditLogEntity>> watchEntityAuditLogs({
@@ -118,5 +126,7 @@ abstract class AccountingRepository {
   /// Closes the fiscal year: builds the balanced closing voucher (temporary
   /// accounts → accumulated profit/loss), locks the period, creates the next
   /// fiscal year and its balanced opening voucher. Returns the closing doc.
-  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(String fiscalYearId);
+  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(
+    String fiscalYearId,
+  );
 }

@@ -55,9 +55,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         currency: initialBalance.currency,
         initialBalance: initialBalance,
         currentBalance: initialBalance,
-        bankName: (trimmedBankName != null && trimmedBankName.isNotEmpty) ? trimmedBankName : null,
+        bankName: (trimmedBankName != null && trimmedBankName.isNotEmpty)
+            ? trimmedBankName
+            : null,
         cardNumberLastFour:
-            (trimmedLastFour != null && trimmedLastFour.length == 4) ? trimmedLastFour : null,
+            (trimmedLastFour != null && trimmedLastFour.length == 4)
+            ? trimmedLastFour
+            : null,
         createdAt: now,
         updatedAt: now,
       );

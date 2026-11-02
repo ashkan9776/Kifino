@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
@@ -112,7 +113,10 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
               onTap: () => _pickSubjectDialog(context),
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
@@ -127,7 +131,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                         _selectedSubject != null
                             ? _selectedSubject!.formattedName
                             : 'انتخاب سرفصل حساب...',
-                        style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTypography.titleSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -150,24 +156,37 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                     children: [
                       Column(
                         children: [
-                          Text('مانده اول دوره', style: AppTypography.bodySmall),
+                          Text(
+                            'مانده اول دوره',
+                            style: AppTypography.bodySmall,
+                          ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               AppMoneyText(
                                 money: _report!.openingBalance,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '(${_report!.openingSide})',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      Container(width: 1, height: 30, color: Colors.grey.withValues(alpha: 0.3)),
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       Column(
                         children: [
                           Text('گردش بدهکار', style: AppTypography.bodySmall),
@@ -175,11 +194,18 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                           AppMoneyText(
                             money: _report!.sumDebit,
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13, color: Colors.red),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Colors.red,
+                            ),
                           ),
                         ],
                       ),
-                      Container(width: 1, height: 30, color: Colors.grey.withValues(alpha: 0.3)),
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       Column(
                         children: [
                           Text('گردش بستانکار', style: AppTypography.bodySmall),
@@ -187,11 +213,18 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                           AppMoneyText(
                             money: _report!.sumCredit,
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                       ),
-                      Container(width: 1, height: 30, color: Colors.grey.withValues(alpha: 0.3)),
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       Column(
                         children: [
                           Text('مانده نهایی', style: AppTypography.bodySmall),
@@ -200,7 +233,10 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             children: [
                               AppMoneyText(
                                 money: _report!.closingBalance,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -211,8 +247,8 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                                   color: _report!.closingSide == 'بد'
                                       ? Colors.red
                                       : _report!.closingSide == 'بس'
-                                          ? Colors.green
-                                          : colors.textPrimary,
+                                      ? Colors.green
+                                      : colors.textPrimary,
                                 ),
                               ),
                             ],
@@ -232,24 +268,34 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _report == null || _report!.entries.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.chrome_reader_mode, size: 50, color: colors.textSecondary),
-                            const SizedBox(height: 10),
-                            Text('گردشی برای این سرفصل ثبت نشده است', style: AppTypography.bodyMedium),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chrome_reader_mode,
+                          size: 50,
+                          color: colors.textSecondary,
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: _report!.entries.length,
-                        itemBuilder: (context, index) {
-                          final entry = _report!.entries[index];
-                          return _buildLedgerRowCard(entry, colors);
-                        },
-                      ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'گردشی برای این سرفصل ثبت نشده است',
+                          style: AppTypography.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    itemCount: _report!.entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = _report!.entries[index];
+                      return _buildLedgerRowCard(entry, colors);
+                    },
+                  ),
           ),
         ],
       ),
@@ -272,14 +318,20 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           'ردیف ${TextNormalizer.toPersianDigits(entry.rowIndex.toString())} • سند #${TextNormalizer.toPersianDigits(entry.documentNumber.toString())}',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -293,7 +345,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
               const SizedBox(height: 6),
               Text(
                 entry.description,
-                style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Divider(height: 16),
               Row(
@@ -302,19 +356,31 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                   Row(
                     children: [
                       if (entry.debit.minorUnits > 0) ...[
-                        const Text('بدهکار: ', style: TextStyle(fontSize: 11, color: Colors.red)),
+                        const Text(
+                          'بدهکار: ',
+                          style: TextStyle(fontSize: 11, color: Colors.red),
+                        ),
                         AppMoneyText(
                           money: entry.debit,
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
                         ),
                       ],
                       if (entry.credit.minorUnits > 0) ...[
-                        const Text('بستانکار: ', style: TextStyle(fontSize: 11, color: Colors.green)),
+                        const Text(
+                          'بستانکار: ',
+                          style: TextStyle(fontSize: 11, color: Colors.green),
+                        ),
                         AppMoneyText(
                           money: entry.credit,
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
                       ],
                     ],
@@ -324,17 +390,22 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                       Text('مانده: ', style: AppTypography.bodySmall),
                       AppMoneyText(
                         money: entry.runningBalance,
-                        style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTypography.titleSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: entry.balanceSide == 'بد'
                               ? Colors.red.withValues(alpha: 0.1)
                               : entry.balanceSide == 'بس'
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.grey.withValues(alpha: 0.1),
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.grey.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -345,8 +416,8 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             color: entry.balanceSide == 'بد'
                                 ? Colors.red
                                 : entry.balanceSide == 'بس'
-                                    ? Colors.green
-                                    : colors.textPrimary,
+                                ? Colors.green
+                                : colors.textPrimary,
                           ),
                         ),
                       ),
@@ -374,7 +445,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
           builder: (modalCtx, setModalState) {
             final filtered = _subjects.where((s) {
               final q = query.trim().toLowerCase();
-              return q.isEmpty || s.name.toLowerCase().contains(q) || s.code.contains(q);
+              return q.isEmpty ||
+                  s.name.toLowerCase().contains(q) ||
+                  s.code.contains(q);
             }).toList();
 
             return DraggableScrollableSheet(
@@ -387,14 +460,22 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Text('انتخاب سرفصل حسابداری', style: AppTypography.titleMedium),
+                      Text(
+                        'انتخاب سرفصل حسابداری',
+                        style: AppTypography.titleMedium,
+                      ),
                       const SizedBox(height: 10),
                       TextField(
                         decoration: InputDecoration(
                           hintText: 'جستجوی سرفصل (نام یا کد)...',
                           prefixIcon: const Icon(Icons.search),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         onChanged: (val) {
                           setModalState(() => query = val);
@@ -409,9 +490,15 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             final sub = filtered[i];
                             return ListTile(
                               dense: true,
-                              title: Text(sub.formattedName,
-                                  style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text('${sub.level.titleFa} • ${sub.type.titleFa}'),
+                              title: Text(
+                                sub.formattedName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${sub.level.titleFa} • ${sub.type.titleFa}',
+                              ),
                               onTap: () {
                                 setState(() => _selectedSubject = sub);
                                 Navigator.pop(ctx);

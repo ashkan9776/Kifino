@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import 'product_entity.dart';
 
@@ -21,11 +22,11 @@ class BusinessMetricsEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalSales,
-        unpaidReceivables,
-        activeProductsCount,
-        lowStockCount,
-        totalInvoicesCount,
-        lowStockProducts,
-      ];
+    totalSales,
+    unpaidReceivables,
+    activeProductsCount,
+    lowStockCount,
+    totalInvoicesCount,
+    lowStockProducts,
+  ];
 }

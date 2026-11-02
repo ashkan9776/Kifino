@@ -11,16 +11,17 @@ class SettingsService {
 
   /// ISO language code: 'fa' (default) or 'en'.
   String loadLanguageCode() =>
-      prefs.getString(AppConstants.prefLanguageKey) ?? AppConstants.defaultLocale;
+      prefs.getString(AppConstants.prefLanguageKey) ??
+      AppConstants.defaultLocale;
 
   /// Currency code, e.g. 'TOMAN' (default).
   String loadCurrencyCode() =>
-      prefs.getString(AppConstants.prefCurrencyKey) ?? AppConstants.defaultCurrencyCode;
+      prefs.getString(AppConstants.prefCurrencyKey) ??
+      AppConstants.defaultCurrencyCode;
 
   /// Index into ThemeMode.values (0=system, 1=light, 2=dark).
-  int loadThemeModeIndex() => int.tryParse(
-        prefs.getString(AppConstants.prefThemeModeKey) ?? '',
-      ) ??
+  int loadThemeModeIndex() =>
+      int.tryParse(prefs.getString(AppConstants.prefThemeModeKey) ?? '') ??
       ThemeModeIndex.system;
 
   bool loadOnboardingCompleted() =>

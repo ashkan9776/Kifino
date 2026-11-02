@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
@@ -12,10 +13,8 @@ class SecurityService {
   static const String _pinSaltKey = 'kifino_sec_pin_salt';
   static const String _biometricEnabledKey = 'kifino_sec_bio_enabled';
 
-  SecurityService({
-    required this.secureStorage,
-    LocalAuthentication? localAuth,
-  }) : _localAuth = localAuth ?? LocalAuthentication();
+  SecurityService({required this.secureStorage, LocalAuthentication? localAuth})
+    : _localAuth = localAuth ?? LocalAuthentication();
 
   String _hashPin(String pin, String salt) {
     final bytes = utf8.encode('$salt:$pin:$salt');
@@ -54,7 +53,10 @@ class SecurityService {
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {
-    await secureStorage.write(key: _biometricEnabledKey, value: enabled.toString());
+    await secureStorage.write(
+      key: _biometricEnabledKey,
+      value: enabled.toString(),
+    );
   }
 
   Future<bool> canCheckBiometrics() async {
@@ -67,7 +69,9 @@ class SecurityService {
     }
   }
 
-  Future<bool> authenticateBiometric({String reason = 'لطفاً هویت خود را تأیید کنید'}) async {
+  Future<bool> authenticateBiometric({
+    String reason = 'لطفاً هویت خود را تأیید کنید',
+  }) async {
     try {
       return await _localAuth.authenticate(
         localizedReason: reason,

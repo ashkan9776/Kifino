@@ -23,7 +23,8 @@ class AccountingDashboardPage extends StatefulWidget {
   const AccountingDashboardPage({super.key});
 
   @override
-  State<AccountingDashboardPage> createState() => _AccountingDashboardPageState();
+  State<AccountingDashboardPage> createState() =>
+      _AccountingDashboardPageState();
 }
 
 class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
@@ -47,7 +48,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.read<AccountingDocumentBloc>().add(const LoadAccountingDocuments());
+              context.read<AccountingDocumentBloc>().add(
+                const LoadAccountingDocuments(),
+              );
               context.read<TrialBalanceBloc>().add(const LoadTrialBalance());
             },
             tooltip: 'تازه‌سازی',
@@ -56,7 +59,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          context.read<AccountingDocumentBloc>().add(const LoadAccountingDocuments());
+          context.read<AccountingDocumentBloc>().add(
+            const LoadAccountingDocuments(),
+          );
           context.read<TrialBalanceBloc>().add(const LoadTrialBalance());
         },
         child: ListView(
@@ -115,15 +120,15 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
-  Widget _buildFiscalYearBanner(KifinoColorsExtension colors, JalaliDate jalaliNow) {
+  Widget _buildFiscalYearBanner(
+    KifinoColorsExtension colors,
+    JalaliDate jalaliNow,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.primary.withValues(alpha: 0.8),
-          ],
+          colors: [colors.primary, colors.primary.withValues(alpha: 0.8)],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
@@ -147,7 +152,11 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.account_balance, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.account_balance,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 8),
               const Expanded(
@@ -163,14 +172,21 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'سال مالی فعال',
-                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -178,12 +194,18 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           const SizedBox(height: 12),
           Text(
             'امروز: ${TextNormalizer.toPersianDigits(jalaliNow.day.toString())} ${jalaliNow.monthName} ${TextNormalizer.toPersianDigits(jalaliNow.year.toString())} هجری شمسی',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'مبتنی بر استانداردهای حسابداری مصوب ایران و سیستم‌های مالی یکپارچه',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -269,7 +291,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   children: [
                     Text(
                       item.title,
-                      style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -291,7 +315,10 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
-  Widget _buildQuickAccessGrid(BuildContext context, KifinoColorsExtension colors) {
+  Widget _buildQuickAccessGrid(
+    BuildContext context,
+    KifinoColorsExtension colors,
+  ) {
     final items = [
       const _ModuleItem(
         title: 'لاگ حسابرسی',
@@ -370,7 +397,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   children: [
                     Text(
                       item.title,
-                      style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -396,10 +425,12 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     return BlocBuilder<TrialBalanceBloc, TrialBalanceState>(
       builder: (context, state) {
         if (state is TrialBalanceLoading) {
-          return const Center(child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: CircularProgressIndicator(),
-          ));
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         if (state is TrialBalanceLoaded) {
@@ -416,18 +447,27 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       Row(
                         children: [
                           Icon(
-                            isBalanced ? Icons.check_circle : Icons.warning_amber_rounded,
+                            isBalanced
+                                ? Icons.check_circle
+                                : Icons.warning_amber_rounded,
                             color: isBalanced ? colors.income : colors.expense,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          Text('تراز کل سیستم مالی', style: AppTypography.titleSmall),
+                          Text(
+                            'تراز کل سیستم مالی',
+                            style: AppTypography.titleSmall,
+                          ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: (isBalanced ? colors.income : colors.expense).withValues(alpha: 0.15),
+                          color: (isBalanced ? colors.income : colors.expense)
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -448,7 +488,10 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('مجموع گردش بدهکار:', style: AppTypography.bodySmall),
+                          Text(
+                            'مجموع گردش بدهکار:',
+                            style: AppTypography.bodySmall,
+                          ),
                           const SizedBox(height: 4),
                           AppMoneyText(money: state.report.sumTotalDebit),
                         ],
@@ -456,7 +499,10 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('مجموع گردش بستانکار:', style: AppTypography.bodySmall),
+                          Text(
+                            'مجموع گردش بستانکار:',
+                            style: AppTypography.bodySmall,
+                          ),
                           const SizedBox(height: 4),
                           AppMoneyText(money: state.report.sumTotalCredit),
                         ],
@@ -482,9 +528,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
 
     return FutureBuilder<IncomeStatementReport>(
       future: sl<AccountingRepository>().getIncomeStatementReport(
-            startDate: monthStart,
-            endDate: now,
-          ),
+        startDate: monthStart,
+        endDate: now,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const SizedBox.shrink();
@@ -528,13 +574,16 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     Expanded(
                       child: Text(
                         'سود و زیان دوره',
-                        style: AppTypography.titleSmall
-                            .copyWith(fontWeight: FontWeight.bold),
+                        style: AppTypography.titleSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: netColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
@@ -573,13 +622,16 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('سود (زیان) خالص:',
-                            style: AppTypography.bodySmall),
+                        Text(
+                          'سود (زیان) خالص:',
+                          style: AppTypography.bodySmall,
+                        ),
                         const SizedBox(height: 4),
                         AppMoneyText(
                           money: net,
-                          style: AppTypography.moneyTile
-                              .copyWith(fontWeight: FontWeight.bold),
+                          style: AppTypography.moneyTile.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -596,7 +648,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   /// «فاکتورهای سررسیدشده» — up to 5 overdue business invoices. Rendered
   /// only when there is at least one overdue invoice.
   Widget _buildOverdueInvoicesSection(
-      BuildContext context, KifinoColorsExtension colors) {
+    BuildContext context,
+    KifinoColorsExtension colors,
+  ) {
     return FutureBuilder<Result<List<InvoiceEntity>>>(
       future: sl<BusinessRepository>().getInvoices(),
       builder: (context, snapshot) {
@@ -623,18 +677,24 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       size: 18,
                     ),
                     const SizedBox(width: 6),
-                    Text('فاکتورهای سررسیدشده',
-                        style: AppTypography.titleMedium),
+                    Text(
+                      'فاکتورهای سررسیدشده',
+                      style: AppTypography.titleMedium,
+                    ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.expense.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        TextNormalizer.toPersianDigits(overdue.length.toString()),
+                        TextNormalizer.toPersianDigits(
+                          overdue.length.toString(),
+                        ),
                         style: TextStyle(
                           color: colors.expense,
                           fontSize: 11,
@@ -651,7 +711,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
               ],
             ),
             const SizedBox(height: 8),
-            ...shown.map((inv) => _buildOverdueInvoiceTile(context, inv, colors)),
+            ...shown.map(
+              (inv) => _buildOverdueInvoiceTile(context, inv, colors),
+            ),
           ],
         );
       },
@@ -659,7 +721,10 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   }
 
   Widget _buildOverdueInvoiceTile(
-      BuildContext context, InvoiceEntity invoice, KifinoColorsExtension colors) {
+    BuildContext context,
+    InvoiceEntity invoice,
+    KifinoColorsExtension colors,
+  ) {
     final daysOverdue = DateTime.now().difference(invoice.dueDate).inDays;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -677,7 +742,11 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.receipt_long, color: colors.expense, size: 20),
+                child: Icon(
+                  Icons.receipt_long,
+                  color: colors.expense,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -693,8 +762,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     const SizedBox(height: 4),
                     Text(
                       invoice.contactName ?? 'بدون طرف حساب',
-                      style: AppTypography.bodySmall
-                          .copyWith(color: colors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -705,8 +775,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   AppMoneyText(
-                      money: invoice.remainingBalance,
-                      style: AppTypography.moneyTile),
+                    money: invoice.remainingBalance,
+                    style: AppTypography.moneyTile,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${TextNormalizer.toPersianDigits(daysOverdue.toString())} روز تأخیر',
@@ -729,10 +800,12 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     return BlocBuilder<AccountingDocumentBloc, AccountingDocumentState>(
       builder: (context, state) {
         if (state is AccountingDocumentLoading) {
-          return const Center(child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: CircularProgressIndicator(),
-          ));
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         if (state is AccountingDocumentLoaded) {
@@ -744,12 +817,20 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.receipt_long_outlined, size: 40, color: colors.textSecondary),
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 40,
+                        color: colors.textSecondary,
+                      ),
                       const SizedBox(height: 8),
-                      Text('هنوز سند حسابداری ثبت نشده است', style: AppTypography.bodyMedium),
+                      Text(
+                        'هنوز سند حسابداری ثبت نشده است',
+                        style: AppTypography.bodyMedium,
+                      ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
-                        onPressed: () => context.push('/accounting/documents/create'),
+                        onPressed: () =>
+                            context.push('/accounting/documents/create'),
                         icon: const Icon(Icons.add),
                         label: const Text('ثبت اولین سند حسابداری'),
                       ),
@@ -761,7 +842,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           }
 
           return Column(
-            children: docs.map((doc) => _buildDocTile(context, doc, colors)).toList(),
+            children: docs
+                .map((doc) => _buildDocTile(context, doc, colors))
+                .toList(),
           );
         }
 
@@ -770,7 +853,11 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
-  Widget _buildDocTile(BuildContext context, AccountingDocumentEntity doc, KifinoColorsExtension colors) {
+  Widget _buildDocTile(
+    BuildContext context,
+    AccountingDocumentEntity doc,
+    KifinoColorsExtension colors,
+  ) {
     final jalali = JalaliDate.fromDateTime(doc.date);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -784,7 +871,8 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: (doc.isBalanced ? colors.primary : colors.expense).withValues(alpha: 0.1),
+                  color: (doc.isBalanced ? colors.primary : colors.expense)
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
@@ -810,7 +898,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     const SizedBox(height: 4),
                     Text(
                       '${jalali.day} ${jalali.monthName} ${jalali.year} • ${doc.transactions.length} آرتیکل',
-                      style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -818,10 +908,16 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  AppMoneyText(money: doc.totalDebit, style: AppTypography.moneyTile),
+                  AppMoneyText(
+                    money: doc.totalDebit,
+                    style: AppTypography.moneyTile,
+                  ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: doc.status == DocumentStatus.approved
                           ? colors.income.withValues(alpha: 0.15)
@@ -848,7 +944,11 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
-  void _showDocumentDetailsModal(BuildContext context, AccountingDocumentEntity doc, KifinoColorsExtension colors) {
+  void _showDocumentDetailsModal(
+    BuildContext context,
+    AccountingDocumentEntity doc,
+    KifinoColorsExtension colors,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -882,9 +982,15 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('سند حسابداری #${TextNormalizer.toPersianDigits(doc.number.toString())}', style: AppTypography.titleLarge),
+                      Text(
+                        'سند حسابداری #${TextNormalizer.toPersianDigits(doc.number.toString())}',
+                        style: AppTypography.titleLarge,
+                      ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: doc.isBalanced
                               ? colors.income.withValues(alpha: 0.15)
@@ -894,7 +1000,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                         child: Text(
                           doc.isBalanced ? 'متوازن' : 'نامتوازن',
                           style: TextStyle(
-                            color: doc.isBalanced ? colors.income : colors.expense,
+                            color: doc.isBalanced
+                                ? colors.income
+                                : colors.expense,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -903,12 +1011,22 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('شرح کلی: ${doc.title}', style: AppTypography.bodyMedium),
-                  Text('تاریخ: ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
-                      style: AppTypography.bodySmall.copyWith(color: colors.textSecondary)),
+                  Text(
+                    'شرح کلی: ${doc.title}',
+                    style: AppTypography.bodyMedium,
+                  ),
+                  Text(
+                    'تاریخ: ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
                   const Divider(height: 24),
 
-                  Text('آرتیکل‌های سند (تراکنش‌های دوبل):', style: AppTypography.titleSmall),
+                  Text(
+                    'آرتیکل‌های سند (تراکنش‌های دوبل):',
+                    style: AppTypography.titleSmall,
+                  ),
                   const SizedBox(height: 8),
 
                   ...doc.transactions.map((tx) {
@@ -917,13 +1035,18 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.2),
+                        ),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isDeb
                                   ? Colors.red.withValues(alpha: 0.1)
@@ -945,20 +1068,28 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  tx.subject != null ? tx.subject!.formattedName : tx.subjectId,
-                                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                  tx.subject != null
+                                      ? tx.subject!.formattedName
+                                      : tx.subjectId,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 if (tx.description.isNotEmpty)
                                   Text(
                                     tx.description,
-                                    style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
                               ],
                             ),
                           ),
                           AppMoneyText(
                             money: isDeb ? tx.debit : tx.credit,
-                            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),

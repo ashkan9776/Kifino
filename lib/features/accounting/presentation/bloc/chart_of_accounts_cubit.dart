@@ -29,11 +29,11 @@ final class ChartOfAccountsLoaded extends ChartOfAccountsState {
 
   @override
   List<Object?> get props => [
-        allSubjects,
-        filteredSubjects,
-        selectedLevel,
-        searchQuery,
-      ];
+    allSubjects,
+    filteredSubjects,
+    selectedLevel,
+    searchQuery,
+  ];
 }
 
 final class ChartOfAccountsError extends ChartOfAccountsState {
@@ -112,9 +112,8 @@ class ChartOfAccountsCubit extends Cubit<ChartOfAccountsState> {
     return subjects.where((s) {
       final matchesLevel = level == null || s.level == level;
       final q = query.trim().toLowerCase();
-      final matchesQuery = q.isEmpty ||
-          s.name.toLowerCase().contains(q) ||
-          s.code.contains(q);
+      final matchesQuery =
+          q.isEmpty || s.name.toLowerCase().contains(q) || s.code.contains(q);
       return matchesLevel && matchesQuery;
     }).toList();
   }

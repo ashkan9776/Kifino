@@ -24,7 +24,8 @@ class NotificationsTable extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
   TextColumn get body => text()();
-  TextColumn get type => text()(); // installmentDue, checkDue, debtDue, budgetAlert, lowStock
+  TextColumn get type =>
+      text()(); // installmentDue, checkDue, debtDue, budgetAlert, lowStock
   TextColumn get referenceId => text().nullable()();
   IntColumn get scheduledFor => integer()();
   BoolColumn get isRead => boolean().withDefault(const Constant(false))();

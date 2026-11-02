@@ -19,10 +19,10 @@ class ValidationException extends AppException {
 
 class CurrencyMismatchException extends AppException {
   CurrencyMismatchException(String sourceCurrency, String targetCurrency)
-      : super(
-          'Currency mismatch: cannot perform calculation between $sourceCurrency and $targetCurrency',
-          code: 'CURRENCY_MISMATCH',
-        );
+    : super(
+        'Currency mismatch: cannot perform calculation between $sourceCurrency and $targetCurrency',
+        code: 'CURRENCY_MISMATCH',
+      );
 }
 
 class SecurityException extends AppException {

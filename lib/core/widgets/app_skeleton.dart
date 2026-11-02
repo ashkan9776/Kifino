@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 
@@ -14,12 +15,10 @@ class AppSkeleton extends StatefulWidget {
     this.borderRadius = AppSpacing.borderRadiusMd,
   });
 
-  const AppSkeleton.circle({
-    super.key,
-    required double size,
-  })  : width = size,
-        height = size,
-        borderRadius = const BorderRadius.all(Radius.circular(999));
+  const AppSkeleton.circle({super.key, required double size})
+    : width = size,
+      height = size,
+      borderRadius = const BorderRadius.all(Radius.circular(999));
 
   @override
   State<AppSkeleton> createState() => _AppSkeletonState();
@@ -42,9 +41,10 @@ class _AppSkeletonState extends State<AppSkeleton>
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.45, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.45,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -56,8 +56,9 @@ class _AppSkeletonState extends State<AppSkeleton>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor =
-        isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant;
+    final baseColor = isDark
+        ? AppColors.darkSurfaceVariant
+        : AppColors.lightSurfaceVariant;
 
     return AnimatedBuilder(
       animation: _animation,

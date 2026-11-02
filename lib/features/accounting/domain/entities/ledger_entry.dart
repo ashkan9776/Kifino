@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import 'accounting_subject_entity.dart';
 
@@ -29,17 +30,17 @@ class LedgerEntry extends Equatable {
 
   @override
   List<Object?> get props => [
-        rowIndex,
-        transactionId,
-        documentId,
-        documentNumber,
-        date,
-        description,
-        debit,
-        credit,
-        runningBalance,
-        balanceSide,
-      ];
+    rowIndex,
+    transactionId,
+    documentId,
+    documentNumber,
+    date,
+    description,
+    debit,
+    credit,
+    runningBalance,
+    balanceSide,
+  ];
 }
 
 class LedgerReport extends Equatable {
@@ -59,13 +60,11 @@ class LedgerReport extends Equatable {
     this.endDate,
   });
 
-  Money get sumDebit => Money.fromMinor(
-        entries.fold(0, (sum, e) => sum + e.debit.minorUnits),
-      );
+  Money get sumDebit =>
+      Money.fromMinor(entries.fold(0, (sum, e) => sum + e.debit.minorUnits));
 
-  Money get sumCredit => Money.fromMinor(
-        entries.fold(0, (sum, e) => sum + e.credit.minorUnits),
-      );
+  Money get sumCredit =>
+      Money.fromMinor(entries.fold(0, (sum, e) => sum + e.credit.minorUnits));
 
   Money get closingBalance =>
       entries.isNotEmpty ? entries.last.runningBalance : openingBalance;
@@ -75,11 +74,11 @@ class LedgerReport extends Equatable {
 
   @override
   List<Object?> get props => [
-        subject,
-        openingBalance,
-        openingSide,
-        entries,
-        startDate,
-        endDate,
-      ];
+    subject,
+    openingBalance,
+    openingSide,
+    entries,
+    startDate,
+    endDate,
+  ];
 }

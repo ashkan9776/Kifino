@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -37,9 +38,8 @@ class _BackupPageState extends State<BackupPage> {
           );
         },
         onFailure: (failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failure.message)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(failure.message)));
         },
       );
     } finally {
@@ -95,7 +95,9 @@ class _BackupPageState extends State<BackupPage> {
                   setState(() => _lastBackupPath = filePath);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('فایل پشتیبان با موفقیت در مسیر ذخیره شد:\n$filePath'),
+                      content: Text(
+                        'فایل پشتیبان با موفقیت در مسیر ذخیره شد:\n$filePath',
+                      ),
                       duration: const Duration(seconds: 4),
                     ),
                   );
@@ -205,208 +207,235 @@ class _BackupPageState extends State<BackupPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: const Text('پشتیبان‌گیری و بازیابی'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          // 1. Export Card
-          AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          appBar: AppBar(title: const Text('پشتیبان‌گیری و بازیابی')),
+          body: ListView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              // 1. Export Card
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 28),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'پشتیبان‌گیری کامل از اطلاعات',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.cloud_upload_outlined,
+                              color: AppColors.primary,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'پشتیبان‌گیری کامل از اطلاعات',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'رمزنگاری‌شده با استاندارد نظامی AES-256',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? AppColors.darkSubtext
+                                        : AppColors.lightSubtext,
                                   ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'رمزنگاری‌شده با استاندارد نظامی AES-256',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const Text(
+                        'از تمامی حساب‌ها، تراکنش‌ها، چک‌ها، اقساط، فاکتورها و مخاطبان یک فایل رمزگذاری‌شده تهیه می‌شود.',
+                        style: TextStyle(fontSize: 13, height: 1.5),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppButton(
+                        label: _isLoading
+                            ? 'در حال تهیه پشتیبان...'
+                            : 'ایجاد فایل پشتیبان جدید',
+                        icon: const Icon(Icons.download_rounded, size: 20),
+                        isLoading: _isLoading,
+                        onPressed: _isLoading ? null : _showCreateBackupDialog,
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  const Text(
-                    'از تمامی حساب‌ها، تراکنش‌ها، چک‌ها، اقساط، فاکتورها و مخاطبان یک فایل رمزگذاری‌شده تهیه می‌شود.',
-                    style: TextStyle(fontSize: 13, height: 1.5),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    label: _isLoading ? 'در حال تهیه پشتیبان...' : 'ایجاد فایل پشتیبان جدید',
-                    icon: const Icon(Icons.download_rounded, size: 20),
-                    isLoading: _isLoading,
-                    onPressed: _isLoading ? null : _showCreateBackupDialog,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // 1.5 Excel (CSV) Export Card
-          AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentIndigo.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.table_view_rounded, color: AppColors.accentIndigo, size: 28),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'خروجی اکسل (CSV)',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'تمام تراکنش‌ها با تاریخ شمسی، قابل بازکردن در Excel',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    label: _isExportingCsv ? 'در حال ساخت فایل...' : 'ساخت فایل اکسل تراکنش‌ها',
-                    variant: AppButtonVariant.outline,
-                    icon: const Icon(Icons.ios_share_rounded, size: 20),
-                    isLoading: _isExportingCsv,
-                    onPressed: _isExportingCsv ? null : _exportCsv,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // 2. Restore Card
-          AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.income.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.settings_backup_restore_rounded, color: AppColors.income, size: 28),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'بازیابی از فایل پشتیبان',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'بازگردانی کامل اطلاعات از فایل .kfn',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  const Text(
-                    'اطلاعات موجود درون فایل پشتیبان همراه با اعتبارسنجی چک‌سام بدون دستکاری وارد دیتابیس می‌شوند.',
-                    style: TextStyle(fontSize: 13, height: 1.5),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    label: 'انتخاب و بازیابی فایل',
-                    variant: AppButtonVariant.outline,
-                    icon: const Icon(Icons.upload_file_rounded, size: 20),
-                    onPressed: _isLoading ? null : _showRestoreDialog,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          if (_lastBackupPath != null)
-            AppCard(
-              backgroundColor: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('آخرین فایل ایجادشده:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    SelectableText(
-                      _lastBackupPath!,
-                      style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
-                    ),
-                  ],
                 ),
               ),
-            ),
-        ],
-      ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // 1.5 Excel (CSV) Export Card
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentIndigo.withValues(
+                                alpha: 0.1,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.table_view_rounded,
+                              color: AppColors.accentIndigo,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'خروجی اکسل (CSV)',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'تمام تراکنش‌ها با تاریخ شمسی، قابل بازکردن در Excel',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? AppColors.darkSubtext
+                                        : AppColors.lightSubtext,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppButton(
+                        label: _isExportingCsv
+                            ? 'در حال ساخت فایل...'
+                            : 'ساخت فایل اکسل تراکنش‌ها',
+                        variant: AppButtonVariant.outline,
+                        icon: const Icon(Icons.ios_share_rounded, size: 20),
+                        isLoading: _isExportingCsv,
+                        onPressed: _isExportingCsv ? null : _exportCsv,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // 2. Restore Card
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.income.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.settings_backup_restore_rounded,
+                              color: AppColors.income,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'بازیابی از فایل پشتیبان',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'بازگردانی کامل اطلاعات از فایل .kfn',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? AppColors.darkSubtext
+                                        : AppColors.lightSubtext,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const Text(
+                        'اطلاعات موجود درون فایل پشتیبان همراه با اعتبارسنجی چک‌سام بدون دستکاری وارد دیتابیس می‌شوند.',
+                        style: TextStyle(fontSize: 13, height: 1.5),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppButton(
+                        label: 'انتخاب و بازیابی فایل',
+                        variant: AppButtonVariant.outline,
+                        icon: const Icon(Icons.upload_file_rounded, size: 20),
+                        onPressed: _isLoading ? null : _showRestoreDialog,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.lg),
+
+              if (_lastBackupPath != null)
+                AppCard(
+                  backgroundColor: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'آخرین فایل ایجادشده:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText(
+                          _lastBackupPath!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import 'accounting_subject_entity.dart';
 
@@ -66,15 +67,15 @@ class AccountingTransactionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        documentId,
-        subjectId,
-        subject,
-        detailSubjectId,
-        detailSubjectName,
-        debit,
-        credit,
-        description,
-        rowOrder,
-      ];
+    id,
+    documentId,
+    subjectId,
+    subject,
+    detailSubjectId,
+    detailSubjectName,
+    debit,
+    credit,
+    description,
+    rowOrder,
+  ];
 }

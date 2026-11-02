@@ -65,11 +65,14 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
     final l10n = context.l10n;
     if (_saving) return;
     final name = _nameController.text.trim();
-    final targetMinor = int.tryParse(normalizeNumericInput(_targetController.text)) ?? 0;
+    final targetMinor =
+        int.tryParse(normalizeNumericInput(_targetController.text)) ?? 0;
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'نام هدف را وارد کنید.' : 'Enter the goal name.'),
+          content: Text(
+            l10n.isPersian ? 'نام هدف را وارد کنید.' : 'Enter the goal name.',
+          ),
         ),
       );
       return;
@@ -77,7 +80,11 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
     if (targetMinor <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'مبلغ هدف را درست وارد کنید.' : 'Enter a valid target amount.'),
+          content: Text(
+            l10n.isPersian
+                ? 'مبلغ هدف را درست وارد کنید.'
+                : 'Enter a valid target amount.',
+          ),
         ),
       );
       return;
@@ -108,9 +115,8 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -182,7 +188,8 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
                   final now = DateTime.now();
                   final picked = await showAppDatePicker(
                     context: context,
-                    initialDate: _targetDate ?? now.add(const Duration(days: 365)),
+                    initialDate:
+                        _targetDate ?? now.add(const Duration(days: 365)),
                     firstDate: now,
                     lastDate: now.add(const Duration(days: 3650)),
                   );
@@ -192,10 +199,15 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -213,7 +225,10 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
                         children: [
                           Text(
                             _targetDate != null
-                                ? AppDateFormatter.formatShort(_targetDate!, locale: context.l10n.localeName)
+                                ? AppDateFormatter.formatShort(
+                                    _targetDate!,
+                                    locale: context.l10n.localeName,
+                                  )
                                 : (isFa ? 'بدون تاریخ' : 'No date'),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -224,7 +239,8 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
                             IconButton(
                               visualDensity: VisualDensity.compact,
                               icon: const Icon(Icons.close, size: 16),
-                              onPressed: () => setState(() => _targetDate = null),
+                              onPressed: () =>
+                                  setState(() => _targetDate = null),
                             ),
                         ],
                       ),

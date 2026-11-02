@@ -13,7 +13,8 @@ class AppColors {
   // Brand — Electric Blue is the light-theme primary, Bright Blue the dark.
   static const Color primaryBlueLight = KifinoPalette.blue600; // #247BFF
   static const Color primaryBlueDark = KifinoPalette.blue500; // #3187FF
-  static const Color accentIndigo = KifinoPalette.purple400; // #8B7CFF (asset accent)
+  static const Color accentIndigo =
+      KifinoPalette.purple400; // #8B7CFF (asset accent)
   static const Color accentIndigoLight = Color(0xFFA794FF);
 
   // Standard Semantic Shortcuts
@@ -212,7 +213,10 @@ class KifinoColorsExtension extends ThemeExtension<KifinoColorsExtension> {
   }
 
   @override
-  KifinoColorsExtension lerp(ThemeExtension<KifinoColorsExtension>? other, double t) {
+  KifinoColorsExtension lerp(
+    ThemeExtension<KifinoColorsExtension>? other,
+    double t,
+  ) {
     if (other is! KifinoColorsExtension) return this;
     return KifinoColorsExtension(
       income: Color.lerp(income, other.income, t)!,
@@ -237,5 +241,6 @@ class KifinoColorsExtension extends ThemeExtension<KifinoColorsExtension> {
 
 extension BuildContextColors on BuildContext {
   KifinoColorsExtension get customColors =>
-      Theme.of(this).extension<KifinoColorsExtension>() ?? KifinoColorsExtension.light;
+      Theme.of(this).extension<KifinoColorsExtension>() ??
+      KifinoColorsExtension.light;
 }

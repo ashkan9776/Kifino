@@ -38,6 +38,7 @@ import '../features/accounting/presentation/bloc/financial_statements_bloc.dart'
 import '../features/accounting/presentation/bloc/ledger_bloc.dart';
 import '../features/accounting/presentation/bloc/trial_balance_bloc.dart';
 import 'localization/app_localizations.dart';
+import 'localization/persian_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -47,10 +48,7 @@ class _LifecycleLockObserver extends StatefulWidget {
   final SecurityCubit cubit;
   final Widget child;
 
-  const _LifecycleLockObserver({
-    required this.cubit,
-    required this.child,
-  });
+  const _LifecycleLockObserver({required this.cubit, required this.child});
 
   @override
   State<_LifecycleLockObserver> createState() => _LifecycleLockObserverState();
@@ -112,34 +110,57 @@ class KifinoApp extends StatelessWidget {
           return MultiBlocProvider(
             providers: [
               BlocProvider<AccountsBloc>(
-                create: (context) => AccountsBloc(sl<AccountRepository>())..add(const WatchAccountsStarted()),
+                create: (context) =>
+                    AccountsBloc(sl<AccountRepository>())
+                      ..add(const WatchAccountsStarted()),
               ),
               BlocProvider<TransactionBloc>(
-                create: (context) => TransactionBloc(sl<TransactionRepository>())..add(const WatchTransactionsStarted()),
+                create: (context) =>
+                    TransactionBloc(sl<TransactionRepository>())
+                      ..add(const WatchTransactionsStarted()),
               ),
               BlocProvider<BudgetBloc>(
-                create: (context) => BudgetBloc(sl<BudgetRepository>())..add(const WatchBudgetsStarted()),
+                create: (context) =>
+                    BudgetBloc(sl<BudgetRepository>())
+                      ..add(const WatchBudgetsStarted()),
               ),
               BlocProvider<DebtBloc>(
-                create: (context) => DebtBloc(sl<DebtRepository>(), sl<NotificationService>())..add(const WatchDebtsStarted()),
+                create: (context) =>
+                    DebtBloc(sl<DebtRepository>(), sl<NotificationService>())
+                      ..add(const WatchDebtsStarted()),
               ),
               BlocProvider<InstallmentBloc>(
-                create: (context) => InstallmentBloc(sl<InstallmentRepository>(), sl<NotificationService>())..add(const WatchInstallmentsStarted()),
+                create: (context) => InstallmentBloc(
+                  sl<InstallmentRepository>(),
+                  sl<NotificationService>(),
+                )..add(const WatchInstallmentsStarted()),
               ),
               BlocProvider<CheckBloc>(
-                create: (context) => CheckBloc(sl<CheckRepository>(), sl<NotificationService>(), sl<AutoVoucherService>())..add(const WatchChecksStarted()),
+                create: (context) => CheckBloc(
+                  sl<CheckRepository>(),
+                  sl<NotificationService>(),
+                  sl<AutoVoucherService>(),
+                )..add(const WatchChecksStarted()),
               ),
               BlocProvider<AssetBloc>(
-                create: (context) => AssetBloc(sl<AssetRepository>())..add(const WatchAssetsStarted()),
+                create: (context) =>
+                    AssetBloc(sl<AssetRepository>())
+                      ..add(const WatchAssetsStarted()),
               ),
               BlocProvider<BusinessBloc>(
-                create: (context) => BusinessBloc(sl<BusinessRepository>(), sl<AutoVoucherService>())..add(const WatchBusinessDataStarted()),
+                create: (context) => BusinessBloc(
+                  sl<BusinessRepository>(),
+                  sl<AutoVoucherService>(),
+                )..add(const WatchBusinessDataStarted()),
               ),
               BlocProvider<AiAssistantBloc>(
-                create: (context) => sl<AiAssistantBloc>()..add(const AiAssistantContextRefreshed()),
+                create: (context) =>
+                    sl<AiAssistantBloc>()
+                      ..add(const AiAssistantContextRefreshed()),
               ),
               BlocProvider<SyncBloc>(
-                create: (context) => sl<SyncBloc>()..add(const SyncInitRequested()),
+                create: (context) =>
+                    sl<SyncBloc>()..add(const SyncInitRequested()),
               ),
               BlocProvider<SecurityCubit>(
                 create: (context) => sl<SecurityCubit>()..init(),
@@ -153,9 +174,7 @@ class KifinoApp extends StatelessWidget {
               BlocProvider<TrialBalanceBloc>(
                 create: (context) => sl<TrialBalanceBloc>(),
               ),
-              BlocProvider<LedgerBloc>(
-                create: (context) => sl<LedgerBloc>(),
-              ),
+              BlocProvider<LedgerBloc>(create: (context) => sl<LedgerBloc>()),
               BlocProvider<FinancialStatementsBloc>(
                 create: (context) => sl<FinancialStatementsBloc>(),
               ),
@@ -170,6 +189,8 @@ class KifinoApp extends StatelessWidget {
               supportedLocales: AppLocalizations.supportedLocales,
               localizationsDelegates: const [
                 AppLocalizations.delegate,
+                AppPersianMaterialLocalizations.delegate,
+                AppPersianCupertinoLocalizationsDelegate(),
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,

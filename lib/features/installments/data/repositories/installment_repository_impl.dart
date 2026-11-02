@@ -34,7 +34,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       notes: data.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
@@ -62,7 +64,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   }
 
   @override
-  Future<Result<InstallmentEntity>> createInstallment(InstallmentEntity installment) async {
+  Future<Result<InstallmentEntity>> createInstallment(
+    InstallmentEntity installment,
+  ) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       final instId = installment.id.isEmpty ? _uuid.v4() : installment.id;
@@ -88,12 +92,15 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
 
         await _db.into(_db.installmentsTable).insert(companion);
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'installments',
                 entityId: instId,
                 operation: 'INSERT',
-                payloadJson: '{"id":"$instId","title":"${installment.title}","total":${installment.totalAmount.minorUnits}}',
+                payloadJson:
+                    '{"id":"$instId","title":"${installment.title}","total":${installment.totalAmount.minorUnits}}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -112,27 +119,39 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final inst = await (_db.select(_db.installmentsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final inst = await (_db.select(
+          _db.installmentsTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
         if (inst == null) throw Exception('Installment not found');
 
         final nextPaidCount = inst.paidInstallmentsCount + 1;
         final isCompleted = nextPaidCount >= inst.numberOfInstallments;
-        final nextDueEpoch = inst.nextDueDate + (inst.recurrenceIntervalDays * 86400000);
+        final nextDueEpoch =
+            inst.nextDueDate + (inst.recurrenceIntervalDays * 86400000);
 
-        await (_db.update(_db.installmentsTable)..where((t) => t.id.equals(id))).write(
+        await (_db.update(
+          _db.installmentsTable,
+        )..where((t) => t.id.equals(id))).write(
           InstallmentsTableCompanion(
             paidInstallmentsCount: Value(nextPaidCount),
             nextDueDate: Value(nextDueEpoch),
-            status: Value(isCompleted ? InstallmentStatus.completed.code : inst.status),
+            status: Value(
+              isCompleted ? InstallmentStatus.completed.code : inst.status,
+            ),
             updatedAt: Value(now),
           ),
         );
 
         // Deduct balance from linked account
-        final account = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
+        final account = await (_db.select(
+          _db.accountsTable,
+        )..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
         if (account != null) {
-          final newBalance = account.currentBalanceMinor - inst.installmentAmountMinor;
-          await (_db.update(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).write(
+          final newBalance =
+              account.currentBalanceMinor - inst.installmentAmountMinor;
+          await (_db.update(
+            _db.accountsTable,
+          )..where((t) => t.id.equals(inst.accountId))).write(
             AccountsTableCompanion(
               currentBalanceMinor: Value(newBalance),
               updatedAt: Value(now),
@@ -144,7 +163,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         // exist as a real expense transaction — otherwise analytics and the
         // transaction list never see installment payments.
         final txId = _uuid.v4();
-        await _db.into(_db.transactionsTable).insert(
+        await _db
+            .into(_db.transactionsTable)
+            .insert(
               TransactionsTableCompanion.insert(
                 id: txId,
                 accountId: inst.accountId,
@@ -160,7 +181,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncStatus: const Value(1),
               ),
             );
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'transactions',
                 entityId: txId,
@@ -173,7 +196,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
             );
 
         // Payment history row (Phase 3 rework) — reviewable & correctable.
-        await _db.into(_db.installmentPaymentsTable).insert(
+        await _db
+            .into(_db.installmentPaymentsTable)
+            .insert(
               InstallmentPaymentsTableCompanion.insert(
                 id: _uuid.v4(),
                 installmentId: id,
@@ -186,12 +211,15 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
               ),
             );
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'installments',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson: '{"id":"$id","paidCount":$nextPaidCount,"isCompleted":$isCompleted}',
+                payloadJson:
+                    '{"id":"$id","paidCount":$nextPaidCount,"isCompleted":$isCompleted}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -200,7 +228,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
 
       return const Success(null);
     } catch (e) {
-      return DatabaseFailure('پرداخت قسط انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('پرداخت قسط انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -208,7 +237,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   Future<Result<void>> deleteInstallment(String id) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.installmentsTable)..where((t) => t.id.equals(id))).write(
+      await (_db.update(
+        _db.installmentsTable,
+      )..where((t) => t.id.equals(id))).write(
         InstallmentsTableCompanion(
           deletedAt: Value(now),
           updatedAt: Value(now),
@@ -226,18 +257,25 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final inst = await (_db.select(_db.installmentsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final inst = await (_db.select(
+          _db.installmentsTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
         if (inst == null) throw StateError('قسط پیدا نشد.');
         if (inst.status == InstallmentStatus.completed.code) {
           throw StateError('این قسط قبلاً کامل پرداخت شده است.');
         }
 
-        final remainingCount = inst.numberOfInstallments - inst.paidInstallmentsCount;
-        if (remainingCount <= 0) throw StateError('قسط پرداخت‌نشده‌ای باقی نمانده.');
+        final remainingCount =
+            inst.numberOfInstallments - inst.paidInstallmentsCount;
+        if (remainingCount <= 0) {
+          throw StateError('قسط پرداخت‌نشده‌ای باقی نمانده.');
+        }
         final remainingMinor = inst.installmentAmountMinor * remainingCount;
 
         // Update plan state: fully paid.
-        await (_db.update(_db.installmentsTable)..where((t) => t.id.equals(id))).write(
+        await (_db.update(
+          _db.installmentsTable,
+        )..where((t) => t.id.equals(id))).write(
           InstallmentsTableCompanion(
             paidInstallmentsCount: Value(inst.numberOfInstallments),
             status: const Value('completed'),
@@ -246,11 +284,17 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         );
 
         // Deduct the remaining total once.
-        final account = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
+        final account = await (_db.select(
+          _db.accountsTable,
+        )..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
         if (account != null) {
-          await (_db.update(_db.accountsTable)..where((t) => t.id.equals(inst.accountId))).write(
+          await (_db.update(
+            _db.accountsTable,
+          )..where((t) => t.id.equals(inst.accountId))).write(
             AccountsTableCompanion(
-              currentBalanceMinor: Value(account.currentBalanceMinor - remainingMinor),
+              currentBalanceMinor: Value(
+                account.currentBalanceMinor - remainingMinor,
+              ),
               updatedAt: Value(now),
             ),
           );
@@ -258,7 +302,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
 
         // One summary expense transaction for the early payoff.
         final txId = _uuid.v4();
-        await _db.into(_db.transactionsTable).insert(
+        await _db
+            .into(_db.transactionsTable)
+            .insert(
               TransactionsTableCompanion.insert(
                 id: txId,
                 accountId: inst.accountId,
@@ -274,7 +320,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncStatus: const Value(1),
               ),
             );
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'transactions',
                 entityId: txId,
@@ -287,8 +335,14 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
             );
 
         // History rows for every settled قسط.
-        for (var i = inst.paidInstallmentsCount + 1; i <= inst.numberOfInstallments; i++) {
-          await _db.into(_db.installmentPaymentsTable).insert(
+        for (
+          var i = inst.paidInstallmentsCount + 1;
+          i <= inst.numberOfInstallments;
+          i++
+        ) {
+          await _db
+              .into(_db.installmentPaymentsTable)
+              .insert(
                 InstallmentPaymentsTableCompanion.insert(
                   id: _uuid.v4(),
                   installmentId: id,
@@ -302,12 +356,15 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
               );
         }
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'installments',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson: '{"id":"$id","paidRemaining":$remainingMinor,"count":$remainingCount}',
+                payloadJson:
+                    '{"id":"$id","paidRemaining":$remainingMinor,"count":$remainingCount}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -317,7 +374,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       return const Success(null);
     } catch (e) {
       if (e is StateError) return DatabaseFailure(e.message).asFailure();
-      return DatabaseFailure('تسویه کامل انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('تسویه کامل انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -325,13 +383,15 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   Future<Result<void>> updateInstallment(InstallmentEntity installment) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.installmentsTable)
-            ..where((tbl) => tbl.id.equals(installment.id)))
-          .write(
+      await (_db.update(
+        _db.installmentsTable,
+      )..where((tbl) => tbl.id.equals(installment.id))).write(
         InstallmentsTableCompanion(
           title: Value(installment.title),
           totalAmountMinor: Value(installment.totalAmount.minorUnits),
-          installmentAmountMinor: Value(installment.installmentAmount.minorUnits),
+          installmentAmountMinor: Value(
+            installment.installmentAmount.minorUnits,
+          ),
           numberOfInstallments: Value(installment.numberOfInstallments),
           recurrenceIntervalDays: Value(installment.recurrenceIntervalDays),
           nextDueDate: Value(installment.nextDueDate.millisecondsSinceEpoch),
@@ -340,7 +400,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'installments',
               entityId: installment.id,
@@ -359,22 +421,28 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
   }
 
   @override
-  Future<List<InstallmentPaymentEntity>> getPaymentHistory(String installmentId) async {
+  Future<List<InstallmentPaymentEntity>> getPaymentHistory(
+    String installmentId,
+  ) async {
     final query = _db.select(_db.installmentPaymentsTable)
-      ..where((tbl) =>
-          tbl.installmentId.equals(installmentId) & tbl.deletedAt.isNull())
+      ..where(
+        (tbl) =>
+            tbl.installmentId.equals(installmentId) & tbl.deletedAt.isNull(),
+      )
       ..orderBy([(tbl) => OrderingTerm.desc(tbl.paidAt)]);
     final rows = await query.get();
     return rows
-        .map((r) => InstallmentPaymentEntity(
-              id: r.id,
-              installmentId: r.installmentId,
-              amountMinor: r.amountMinor,
-              installmentIndex: r.installmentIndex,
-              ledgerTransactionId: r.ledgerTransactionId,
-              notes: r.notes,
-              paidAt: DateTime.fromMillisecondsSinceEpoch(r.paidAt),
-            ))
+        .map(
+          (r) => InstallmentPaymentEntity(
+            id: r.id,
+            installmentId: r.installmentId,
+            amountMinor: r.amountMinor,
+            installmentIndex: r.installmentIndex,
+            ledgerTransactionId: r.ledgerTransactionId,
+            notes: r.notes,
+            paidAt: DateTime.fromMillisecondsSinceEpoch(r.paidAt),
+          ),
+        )
         .toList();
   }
 
@@ -384,27 +452,29 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final payment = await (_db.select(_db.installmentPaymentsTable)
-              ..where((tbl) => tbl.id.equals(paymentId)))
-            .getSingleOrNull();
+        final payment = await (_db.select(
+          _db.installmentPaymentsTable,
+        )..where((tbl) => tbl.id.equals(paymentId))).getSingleOrNull();
         if (payment == null || payment.deletedAt != null) return;
 
-        final inst = await (_db.select(_db.installmentsTable)
-              ..where((tbl) => tbl.id.equals(payment.installmentId)))
-            .getSingleOrNull();
+        final inst =
+            await (_db.select(_db.installmentsTable)
+                  ..where((tbl) => tbl.id.equals(payment.installmentId)))
+                .getSingleOrNull();
         if (inst == null) return;
 
         // 1. Money returns to the linked account.
-        final account = await (_db.select(_db.accountsTable)
-              ..where((tbl) => tbl.id.equals(inst.accountId)))
-            .getSingleOrNull();
+        final account = await (_db.select(
+          _db.accountsTable,
+        )..where((tbl) => tbl.id.equals(inst.accountId))).getSingleOrNull();
         if (account != null) {
-          await (_db.update(_db.accountsTable)
-                ..where((tbl) => tbl.id.equals(inst.accountId)))
-              .write(
+          await (_db.update(
+            _db.accountsTable,
+          )..where((tbl) => tbl.id.equals(inst.accountId))).write(
             AccountsTableCompanion(
-              currentBalanceMinor:
-                  Value(account.currentBalanceMinor + payment.amountMinor),
+              currentBalanceMinor: Value(
+                account.currentBalanceMinor + payment.amountMinor,
+              ),
               updatedAt: Value(now),
             ),
           );
@@ -413,9 +483,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         // 2. The linked ledger expense is soft-deleted (reverts analytics).
         final txId = payment.ledgerTransactionId;
         if (txId != null) {
-          await (_db.update(_db.transactionsTable)
-                ..where((tbl) => tbl.id.equals(txId)))
-              .write(
+          await (_db.update(
+            _db.transactionsTable,
+          )..where((tbl) => tbl.id.equals(txId))).write(
             TransactionsTableCompanion(
               deletedAt: Value(now),
               updatedAt: Value(now),
@@ -429,25 +499,33 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
               ..where((tbl) => tbl.id.equals(paymentId)))
             .write(InstallmentPaymentsTableCompanion(deletedAt: Value(now)));
 
-        final newPaidCount = (inst.paidInstallmentsCount - 1).clamp(0, inst.numberOfInstallments);
+        final newPaidCount = (inst.paidInstallmentsCount - 1).clamp(
+          0,
+          inst.numberOfInstallments,
+        );
         final isCompleted = newPaidCount >= inst.numberOfInstallments;
         final nextDueEpoch =
-            inst.startDate + newPaidCount * inst.recurrenceIntervalDays * 86400000;
+            inst.startDate +
+            newPaidCount * inst.recurrenceIntervalDays * 86400000;
 
-        await (_db.update(_db.installmentsTable)
-              ..where((tbl) => tbl.id.equals(inst.id)))
-            .write(
+        await (_db.update(
+          _db.installmentsTable,
+        )..where((tbl) => tbl.id.equals(inst.id))).write(
           InstallmentsTableCompanion(
             paidInstallmentsCount: Value(newPaidCount),
             nextDueDate: Value(nextDueEpoch),
-            status: Value(isCompleted
-                ? InstallmentStatus.completed.code
-                : InstallmentStatus.ongoing.code),
+            status: Value(
+              isCompleted
+                  ? InstallmentStatus.completed.code
+                  : InstallmentStatus.ongoing.code,
+            ),
             updatedAt: Value(now),
           ),
         );
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'installments',
                 entityId: inst.id,

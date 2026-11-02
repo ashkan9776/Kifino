@@ -64,18 +64,23 @@ class DetailLedgerCubit extends Cubit<DetailLedgerState> {
   Future<bool> renameLedger({required String id, required String title}) =>
       _mutate(() => _repository.updateDetailLedger(id: id, title: title));
 
-  Future<bool> deleteLedger(String id) => _mutate(() => _repository.deleteDetailLedger(id));
+  Future<bool> deleteLedger(String id) =>
+      _mutate(() => _repository.deleteDetailLedger(id));
 
   Future<bool> createValue({
     required String ledgerId,
     required String title,
     String? code,
-  }) =>
-      _mutate(
-        () => _repository.createDetailValue(ledgerId: ledgerId, title: title, code: code),
-      );
+  }) => _mutate(
+    () => _repository.createDetailValue(
+      ledgerId: ledgerId,
+      title: title,
+      code: code,
+    ),
+  );
 
-  Future<bool> deleteValue(String id) => _mutate(() => _repository.deleteDetailValue(id));
+  Future<bool> deleteValue(String id) =>
+      _mutate(() => _repository.deleteDetailValue(id));
 
   /// Runs a mutation, reloads on success, surfaces the (Persian) error on
   /// failure while keeping the currently visible list intact. Returns whether
@@ -88,13 +93,16 @@ class DetailLedgerCubit extends Cubit<DetailLedgerState> {
       return true;
     } catch (e) {
       final current = state;
-      final ledgers =
-          current is DetailLedgerLoaded ? current.ledgers : const <DetailLedgerWithValues>[];
-      emit(DetailLedgerLoaded(
-        ledgers: ledgers,
-        errorMessage: _message(e),
-        errorStamp: DateTime.now().microsecondsSinceEpoch,
-      ));
+      final ledgers = current is DetailLedgerLoaded
+          ? current.ledgers
+          : const <DetailLedgerWithValues>[];
+      emit(
+        DetailLedgerLoaded(
+          ledgers: ledgers,
+          errorMessage: _message(e),
+          errorStamp: DateTime.now().microsecondsSinceEpoch,
+        ),
+      );
       return false;
     }
   }

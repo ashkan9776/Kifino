@@ -62,7 +62,8 @@ class FinancialStatementsBloc
     extends Bloc<FinancialStatementsEvent, FinancialStatementsState> {
   final AccountingRepository _repository;
 
-  FinancialStatementsBloc(this._repository) : super(FinancialStatementsInitial()) {
+  FinancialStatementsBloc(this._repository)
+    : super(FinancialStatementsInitial()) {
     on<LoadFinancialStatements>(_onLoad);
   }
 

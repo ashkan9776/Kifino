@@ -70,7 +70,9 @@ class FinancialHealthCard extends StatelessWidget {
                   ),
                   valueColor: runwayMonths >= 6
                       ? AppColors.income
-                      : (runwayMonths >= 3 ? AppColors.warning : AppColors.danger),
+                      : (runwayMonths >= 3
+                            ? AppColors.warning
+                            : AppColors.danger),
                   icon: Icons.hourglass_top_rounded,
                 ),
               ),
@@ -79,10 +81,14 @@ class FinancialHealthCard extends StatelessWidget {
               Expanded(
                 child: _MetricItem(
                   label: l10n.savingsRate,
-                  valueText: TextNormalizer.auto('${savingsRatePercent.toStringAsFixed(1)}%'),
+                  valueText: TextNormalizer.auto(
+                    '${savingsRatePercent.toStringAsFixed(1)}%',
+                  ),
                   valueColor: savingsRatePercent >= 20
                       ? AppColors.income
-                      : (savingsRatePercent >= 0 ? AppColors.primary : AppColors.danger),
+                      : (savingsRatePercent >= 0
+                            ? AppColors.primary
+                            : AppColors.danger),
                   icon: Icons.savings_outlined,
                 ),
               ),
@@ -95,10 +101,14 @@ class FinancialHealthCard extends StatelessWidget {
               Expanded(
                 child: _MetricItem(
                   label: l10n.budgetAdherence,
-                  valueText: TextNormalizer.auto('${budgetAdherencePercent.toStringAsFixed(0)}%'),
+                  valueText: TextNormalizer.auto(
+                    '${budgetAdherencePercent.toStringAsFixed(0)}%',
+                  ),
                   valueColor: budgetAdherencePercent >= 85
                       ? AppColors.income
-                      : (budgetAdherencePercent >= 65 ? AppColors.warning : AppColors.danger),
+                      : (budgetAdherencePercent >= 65
+                            ? AppColors.warning
+                            : AppColors.danger),
                   icon: Icons.pie_chart_outline_rounded,
                 ),
               ),
@@ -106,7 +116,9 @@ class FinancialHealthCard extends StatelessWidget {
               // Daily Average
               Expanded(
                 child: AppCard(
-                  backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                  backgroundColor: isDark
+                      ? AppColors.darkBackground
+                      : AppColors.lightBackground,
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,14 +128,18 @@ class FinancialHealthCard extends StatelessWidget {
                           Icon(
                             Icons.calendar_today_outlined,
                             size: 14,
-                            color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                            color: isDark
+                                ? AppColors.darkSubtext
+                                : AppColors.lightSubtext,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               l10n.dailyAverage,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                                color: isDark
+                                    ? AppColors.darkSubtext
+                                    : AppColors.lightSubtext,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -168,7 +184,9 @@ class _MetricItem extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return AppCard(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +203,9 @@ class _MetricItem extends StatelessWidget {
                 child: Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                    color: isDark
+                        ? AppColors.darkSubtext
+                        : AppColors.lightSubtext,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

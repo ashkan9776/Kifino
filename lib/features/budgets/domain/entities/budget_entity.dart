@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum BudgetPeriodType {
@@ -58,7 +59,8 @@ class BudgetEntity extends Equatable {
   }
 
   bool get isOverBudget => amountSpent > amountLimit;
-  bool get isNearLimit => usagePercent >= alertThresholdPercent && !isOverBudget;
+  bool get isNearLimit =>
+      usagePercent >= alertThresholdPercent && !isOverBudget;
   bool get isDeleted => deletedAt != null;
 
   BudgetEntity copyWith({
@@ -83,7 +85,8 @@ class BudgetEntity extends Equatable {
       periodType: periodType ?? this.periodType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      alertThresholdPercent: alertThresholdPercent ?? this.alertThresholdPercent,
+      alertThresholdPercent:
+          alertThresholdPercent ?? this.alertThresholdPercent,
       categoryIds: categoryIds ?? this.categoryIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -93,17 +96,17 @@ class BudgetEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        amountLimit,
-        amountSpent,
-        periodType,
-        startDate,
-        endDate,
-        alertThresholdPercent,
-        categoryIds,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    name,
+    amountLimit,
+    amountSpent,
+    periodType,
+    startDate,
+    endDate,
+    alertThresholdPercent,
+    categoryIds,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

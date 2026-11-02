@@ -50,10 +50,7 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
     final colors = context.customColors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تفصیلی شناور'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('تفصیلی شناور'), centerTitle: true),
       body: BlocConsumer<DetailLedgerCubit, DetailLedgerState>(
         listener: (context, state) {
           if (state is DetailLedgerLoaded && state.errorMessage != null) {
@@ -94,21 +91,26 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
               return const AppEmptyState(
                 icon: Icons.category_outlined,
                 title: 'هنوز تفصیلی شناوری تعریف نشده است',
-                description:
-                    'تفصیلی شناور بُعد تحلیلی اسناد است (مانند مشتریان، پروژه‌ها یا مراکز هزینه) بدون ایجاد سرفصل موازی.',
+                description: 'تفصیلی شناور بُعد تحلیلی اسناد است (مانند مشتریان، پروژه‌ها یا مراکز هزینه) بدون ایجاد سرفصل موازی.',
               );
             }
             return RefreshIndicator(
               onRefresh: () async => context.read<DetailLedgerCubit>().load(),
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: state.ledgers.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   return _LedgerCard(
                     item: state.ledgers[index],
-                    expanded: _expandedLedgerIds.contains(state.ledgers[index].ledger.id),
-                    onToggle: () => _toggleExpanded(state.ledgers[index].ledger.id),
+                    expanded: _expandedLedgerIds.contains(
+                      state.ledgers[index].ledger.id,
+                    ),
+                    onToggle: () =>
+                        _toggleExpanded(state.ledgers[index].ledger.id),
                   );
                 },
               ),
@@ -126,10 +128,16 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
     );
   }
 
-  Future<void> _showLedgerSheet(BuildContext context, {String? ledgerId, String? initialTitle}) {
+  Future<void> _showLedgerSheet(
+    BuildContext context, {
+    String? ledgerId,
+    String? initialTitle,
+  }) {
     return _showFormSheet(
       context,
-      title: ledgerId == null ? 'تعریف تفصیلی شناور جدید' : 'ویرایش عنوان تفصیلی',
+      title: ledgerId == null
+          ? 'تعریف تفصیلی شناور جدید'
+          : 'ویرایش عنوان تفصیلی',
       fields: [
         _SheetField(
           label: 'عنوان تفصیلی',
@@ -159,8 +167,16 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
       context,
       title: 'افزودن مقدار به تفصیلی',
       fields: [
-        const _SheetField(label: 'عنوان مقدار', hint: 'مثال: شرکت الف', isRequired: true),
-        const _SheetField(label: 'کد (اختیاری)', hint: 'مثال: 01', isRequired: false),
+        const _SheetField(
+          label: 'عنوان مقدار',
+          hint: 'مثال: شرکت الف',
+          isRequired: true,
+        ),
+        const _SheetField(
+          label: 'کد (اختیاری)',
+          hint: 'مثال: 01',
+          isRequired: false,
+        ),
       ],
       onSubmit: (values) async {
         final cubit = context.read<DetailLedgerCubit>();
@@ -176,7 +192,9 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
 
   String _lastError(DetailLedgerCubit cubit) {
     final state = cubit.state;
-    if (state is DetailLedgerLoaded && state.errorMessage != null) return state.errorMessage!;
+    if (state is DetailLedgerLoaded && state.errorMessage != null) {
+      return state.errorMessage!;
+    }
     return 'خطا در ذخیره‌سازی';
   }
 
@@ -186,7 +204,9 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
     required List<_SheetField> fields,
     required Future<String?> Function(List<String> values) onSubmit,
   }) {
-    final controllers = fields.map((f) => TextEditingController(text: f.initial)).toList();
+    final controllers = fields
+        .map((f) => TextEditingController(text: f.initial))
+        .toList();
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -210,11 +230,14 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
                       TextField(
                         controller: controllers[i],
                         decoration: InputDecoration(
-                          labelText: fields[i].label + (fields[i].isRequired ? ' *' : ''),
+                          labelText:
+                              fields[i].label +
+                              (fields[i].isRequired ? ' *' : ''),
                           hintText: fields[i].hint,
                         ),
-                        textInputAction:
-                            i == fields.length - 1 ? TextInputAction.done : TextInputAction.next,
+                        textInputAction: i == fields.length - 1
+                            ? TextInputAction.done
+                            : TextInputAction.next,
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -223,14 +246,18 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
                           submitError!,
-                          style: AppTypography.bodySmall.copyWith(color: Colors.red),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.red,
+                          ),
                         ),
                       ),
                     SizedBox(
                       height: 44,
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          final values = controllers.map((c) => c.text.trim()).toList();
+                          final values = controllers
+                              .map((c) => c.text.trim())
+                              .toList();
                           final missing = <String>[];
                           for (var i = 0; i < fields.length; i++) {
                             if (fields[i].isRequired && values[i].isEmpty) {
@@ -239,7 +266,9 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
                           }
                           if (missing.isNotEmpty) {
                             setSheetState(
-                                () => submitError = 'پر کردن ${missing.join(' و ')} الزامی است');
+                              () => submitError =
+                                  'پر کردن ${missing.join(' و ')} الزامی است',
+                            );
                             return;
                           }
                           final failure = await onSubmit(values);
@@ -347,7 +376,12 @@ class _LedgerCard extends StatelessWidget {
     );
   }
 
-  PopupMenuItem<String> _menuItem(String value, IconData icon, String label, {Color? color}) {
+  PopupMenuItem<String> _menuItem(
+    String value,
+    IconData icon,
+    String label, {
+    Color? color,
+  }) {
     return PopupMenuItem(
       value: value,
       child: Row(
@@ -388,20 +422,28 @@ class _LedgerCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(Icons.category_outlined, color: colors.receivable, size: 22),
+                    child: Icon(
+                      Icons.category_outlined,
+                      color: colors.receivable,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.ledger.title, style: AppTypography.titleMedium),
+                        Text(
+                          item.ledger.title,
+                          style: AppTypography.titleMedium,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           'کد ${TextNormalizer.auto(item.ledger.code)} • '
                           '${TextNormalizer.auto(item.values.length.toString())} مقدار',
-                          style:
-                              AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: colors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -409,18 +451,26 @@ class _LedgerCard extends StatelessWidget {
                   if (!item.ledger.isActive)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 4),
-                      child: Icon(Icons.visibility_off, size: 16, color: colors.textTertiary),
+                      child: Icon(
+                        Icons.visibility_off,
+                        size: 16,
+                        color: colors.textTertiary,
+                      ),
                     ),
                   AnimatedRotation(
                     turns: expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: Icon(Icons.keyboard_arrow_down, color: colors.textSecondary),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: colors.textSecondary,
+                    ),
                   ),
                   PopupMenuButton<String>(
                     tooltip: 'عملیات تفصیلی',
                     icon: Icon(Icons.more_vert, color: colors.textSecondary),
                     onSelected: (action) {
-                      final view = context.findAncestorStateOfType<_DetailLedgersViewState>();
+                      final view = context
+                          .findAncestorStateOfType<_DetailLedgersViewState>();
                       switch (action) {
                         case 'add_value':
                           view?._showValueSheet(context, item.ledger.id);
@@ -435,10 +485,18 @@ class _LedgerCard extends StatelessWidget {
                       }
                     },
                     itemBuilder: (menuContext) => [
-                      _menuItem('add_value', Icons.add_circle_outline, 'افزودن مقدار'),
+                      _menuItem(
+                        'add_value',
+                        Icons.add_circle_outline,
+                        'افزودن مقدار',
+                      ),
                       _menuItem('rename', Icons.edit_outlined, 'ویرایش عنوان'),
-                      _menuItem('delete', Icons.delete_outline, 'حذف تفصیلی',
-                          color: colors.expense),
+                      _menuItem(
+                        'delete',
+                        Icons.delete_outline,
+                        'حذف تفصیلی',
+                        color: colors.expense,
+                      ),
                     ],
                   ),
                 ],
@@ -452,15 +510,19 @@ class _LedgerCard extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'هنوز مقداری برای این تفصیلی ثبت نشده است',
-                  style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: colors.textSecondary,
+                  ),
                 ),
               )
             else
-              ...item.values.map((value) => _ValueTile(
-                    value: value,
-                    colors: colors,
-                    onDelete: () => _confirmDeleteValue(context, value),
-                  )),
+              ...item.values.map(
+                (value) => _ValueTile(
+                  value: value,
+                  colors: colors,
+                  onDelete: () => _confirmDeleteValue(context, value),
+                ),
+              ),
             const SizedBox(height: 8),
           ],
         ],
@@ -498,8 +560,12 @@ class _ValueTile extends StatelessWidget {
         ),
       ),
       subtitle: value.code != null && value.code!.isNotEmpty
-          ? Text('کد ${TextNormalizer.auto(value.code!)}',
-              style: AppTypography.bodySmall.copyWith(color: colors.textSecondary))
+          ? Text(
+              'کد ${TextNormalizer.auto(value.code!)}',
+              style: AppTypography.bodySmall.copyWith(
+                color: colors.textSecondary,
+              ),
+            )
           : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -509,7 +575,10 @@ class _ValueTile extends StatelessWidget {
             icon: const Icon(Icons.assessment_outlined, size: 20),
             onPressed: () => context.push(
               '/accounting/detail-ledgers/report',
-              extra: DetailReportSelection(ledgerId: value.ledgerId, valueId: value.id),
+              extra: DetailReportSelection(
+                ledgerId: value.ledgerId,
+                valueId: value.id,
+              ),
             ),
           ),
           IconButton(

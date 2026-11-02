@@ -18,10 +18,13 @@ class NotificationService {
   NotificationService({
     required this.db,
     FlutterLocalNotificationsPlugin? localNotifications,
-  }) : _localNotifications = localNotifications ?? FlutterLocalNotificationsPlugin();
+  }) : _localNotifications =
+           localNotifications ?? FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -56,8 +59,10 @@ class NotificationService {
   }
 
   Future<void> _requestAndroidPermission() async {
-    final android = _localNotifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.requestNotificationsPermission();
   }
 
@@ -80,7 +85,8 @@ class NotificationService {
     best ??= () {
       for (final name in tz.timeZoneDatabase.locations.keys) {
         try {
-          if (tz.TZDateTime.now(tz.getLocation(name)).timeZoneOffset == target) {
+          if (tz.TZDateTime.now(tz.getLocation(name)).timeZoneOffset ==
+              target) {
             return name;
           }
         } catch (_) {}
@@ -114,7 +120,9 @@ class NotificationService {
     final now = DateTime.now();
 
     // 1. Persist in database (audit + in-app notification center)
-    await db.into(db.notificationsTable).insertOnConflictUpdate(
+    await db
+        .into(db.notificationsTable)
+        .insertOnConflictUpdate(
           NotificationsTableCompanion.insert(
             id: id,
             title: title,
@@ -138,7 +146,10 @@ class NotificationService {
       priority: Priority.high,
     );
     const darwinDetails = DarwinNotificationDetails();
-    final details = NotificationDetails(android: androidDetails, iOS: darwinDetails);
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
 
     try {
       await _localNotifications.zonedSchedule(
@@ -171,7 +182,9 @@ class NotificationService {
 
   Stream<List<AppNotificationEntity>> watchNotifications() {
     final query = db.select(db.notificationsTable)
-      ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+      ]);
 
     return query.watch().map((rows) {
       return rows.map((r) {
@@ -190,22 +203,23 @@ class NotificationService {
   }
 
   Future<void> markAsRead(String id) async {
-    await (db.update(db.notificationsTable)..where((t) => t.id.equals(id))).write(
-      const NotificationsTableCompanion(isRead: Value(true)),
-    );
+    await (db.update(db.notificationsTable)..where((t) => t.id.equals(id)))
+        .write(const NotificationsTableCompanion(isRead: Value(true)));
   }
 
   /// Removes one notification row and cancels its OS reminder if pending.
   Future<void> deleteNotification(String id) async {
-    await (db.delete(db.notificationsTable)..where((t) => t.id.equals(id))).go();
+    await (db.delete(
+      db.notificationsTable,
+    )..where((t) => t.id.equals(id))).go();
     try {
       await _localNotifications.cancel(id: numericIdFor(id));
     } catch (_) {}
   }
 
   Future<void> markAllAsRead() async {
-    await db.update(db.notificationsTable).write(
-      const NotificationsTableCompanion(isRead: Value(true)),
-    );
+    await db
+        .update(db.notificationsTable)
+        .write(const NotificationsTableCompanion(isRead: Value(true)));
   }
 }

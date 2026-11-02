@@ -36,6 +36,11 @@ class SettingsState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [locale, currency, themeMode, onboardingCompleted, loaded];
+  List<Object?> get props => [
+    locale,
+    currency,
+    themeMode,
+    onboardingCompleted,
+    loaded,
+  ];
 }

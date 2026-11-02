@@ -51,9 +51,15 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
     _nameController = TextEditingController(text: asset.name);
     _quantityController = TextEditingController(text: _trimNum(asset.quantity));
     _unitController = TextEditingController(text: asset.unit);
-    _costController = TextEditingController(text: asset.costBasis.minorUnits.toString());
-    _valueController = TextEditingController(text: asset.currentValue.minorUnits.toString());
-    _customTypeController = TextEditingController(text: asset.customTypeName ?? '');
+    _costController = TextEditingController(
+      text: asset.costBasis.minorUnits.toString(),
+    );
+    _valueController = TextEditingController(
+      text: asset.currentValue.minorUnits.toString(),
+    );
+    _customTypeController = TextEditingController(
+      text: asset.customTypeName ?? '',
+    );
     _notesController = TextEditingController(text: asset.notes ?? '');
     _category = asset.category;
     _purchaseDate = asset.purchaseDate;
@@ -93,14 +99,21 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
     final l10n = context.l10n;
     if (_saving) return;
     final name = _nameController.text.trim();
-    final qty = double.tryParse(normalizeDecimalInput(_quantityController.text)) ?? 0;
-    final costMinor = int.tryParse(normalizeNumericInput(_costController.text)) ?? 0;
-    final valueMinor = int.tryParse(normalizeNumericInput(_valueController.text)) ?? 0;
+    final qty =
+        double.tryParse(normalizeDecimalInput(_quantityController.text)) ?? 0;
+    final costMinor =
+        int.tryParse(normalizeNumericInput(_costController.text)) ?? 0;
+    final valueMinor =
+        int.tryParse(normalizeNumericInput(_valueController.text)) ?? 0;
 
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'نام دارایی را وارد کنید.' : 'Enter the asset name.'),
+          content: Text(
+            l10n.isPersian
+                ? 'نام دارایی را وارد کنید.'
+                : 'Enter the asset name.',
+          ),
         ),
       );
       return;
@@ -109,7 +122,9 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n.isPersian ? 'بهای تمام‌شده را درست وارد کنید.' : 'Enter a valid cost basis.',
+            l10n.isPersian
+                ? 'بهای تمام‌شده را درست وارد کنید.'
+                : 'Enter a valid cost basis.',
           ),
         ),
       );
@@ -118,7 +133,11 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
     if (qty <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'مقدار را درست وارد کنید.' : 'Enter a valid quantity.'),
+          content: Text(
+            l10n.isPersian
+                ? 'مقدار را درست وارد کنید.'
+                : 'Enter a valid quantity.',
+          ),
         ),
       );
       return;
@@ -157,9 +176,8 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -214,7 +232,9 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
                 controller: _nameController,
                 maxLength: 60,
                 decoration: InputDecoration(
-                  labelText: isFa ? 'نام دارایی (مثلاً سکه امامی)' : 'Asset name',
+                  labelText: isFa
+                      ? 'نام دارایی (مثلاً سکه امامی)'
+                      : 'Asset name',
                   prefixIcon: const Icon(Icons.label_outline_rounded),
                   counterText: '',
                 ),
@@ -278,10 +298,15 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
                 onTap: _pickDate,
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -296,7 +321,10 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
                         ],
                       ),
                       Text(
-                        AppDateFormatter.formatShort(_purchaseDate, locale: context.l10n.localeName),
+                        AppDateFormatter.formatShort(
+                          _purchaseDate,
+                          locale: context.l10n.localeName,
+                        ),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.income,

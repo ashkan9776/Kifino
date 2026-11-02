@@ -19,16 +19,24 @@ void main() {
     accountRepo = AccountRepositoryImpl(db);
     txRepo = TransactionRepositoryImpl(db);
 
-    await accountRepo.createAccount(AccountEntity(
-      id: 'acc-bloc',
-      name: 'Bank',
-      type: AccountType.bankCard,
-      currency: Currency.toman,
-      initialBalance: const Money(minorUnits: 1000000, currency: Currency.toman),
-      currentBalance: const Money(minorUnits: 1000000, currency: Currency.toman),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
+    await accountRepo.createAccount(
+      AccountEntity(
+        id: 'acc-bloc',
+        name: 'Bank',
+        type: AccountType.bankCard,
+        currency: Currency.toman,
+        initialBalance: const Money(
+          minorUnits: 1000000,
+          currency: Currency.toman,
+        ),
+        currentBalance: const Money(
+          minorUnits: 1000000,
+          currency: Currency.toman,
+        ),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
   });
 
   tearDown(() async {
@@ -42,7 +50,11 @@ void main() {
       act: (bloc) => bloc.add(const WatchTransactionsStarted()),
       expect: () => [
         isA<TransactionLoading>(),
-        isA<TransactionLoaded>().having((s) => s.transactions.length, 'length', equals(0)),
+        isA<TransactionLoaded>().having(
+          (s) => s.transactions.length,
+          'length',
+          equals(0),
+        ),
       ],
     );
 
@@ -53,24 +65,40 @@ void main() {
         bloc.add(const WatchTransactionsStarted());
         await pumpEventQueue();
 
-        bloc.add(TransactionCreateSubmitted(TransactionEntity(
-          id: 'tx-1',
-          accountId: 'acc-bloc',
-          amount: const Money(minorUnits: 200000, currency: Currency.toman),
-          type: TransactionType.expense,
-          date: DateTime.now(),
-          description: 'Groceries',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        )));
+        bloc.add(
+          TransactionCreateSubmitted(
+            TransactionEntity(
+              id: 'tx-1',
+              accountId: 'acc-bloc',
+              amount: const Money(minorUnits: 200000, currency: Currency.toman),
+              type: TransactionType.expense,
+              date: DateTime.now(),
+              description: 'Groceries',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ),
+        );
       },
       expect: () => [
         isA<TransactionLoading>(),
-        isA<TransactionLoaded>().having((s) => s.transactions.length, 'empty', equals(0)),
+        isA<TransactionLoaded>().having(
+          (s) => s.transactions.length,
+          'empty',
+          equals(0),
+        ),
         isA<TransactionOperationSuccess>(),
         isA<TransactionLoaded>()
-            .having((s) => s.totalExpense.minorUnits, 'totalExpense', equals(200000))
-            .having((s) => s.netCashFlow.minorUnits, 'netCashFlow', equals(-200000)),
+            .having(
+              (s) => s.totalExpense.minorUnits,
+              'totalExpense',
+              equals(200000),
+            )
+            .having(
+              (s) => s.netCashFlow.minorUnits,
+              'netCashFlow',
+              equals(-200000),
+            ),
       ],
     );
   });

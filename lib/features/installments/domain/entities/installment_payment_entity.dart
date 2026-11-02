@@ -24,7 +24,12 @@ class InstallmentPaymentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, installmentId, amountMinor, installmentIndex,
-        ledgerTransactionId, notes, paidAt,
-      ];
+    id,
+    installmentId,
+    amountMinor,
+    installmentIndex,
+    ledgerTransactionId,
+    notes,
+    paidAt,
+  ];
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import '../../domain/entities/business_metrics_entity.dart';
 import '../../domain/entities/contact_entity.dart';

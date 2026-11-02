@@ -35,7 +35,8 @@ class AccountingDocumentsTable extends Table {
   TextColumn get title => text()();
   TextColumn get status => text()(); // 'draft', 'approved', 'posted'
   BoolColumn get isManual => boolean().withDefault(const Constant(true))();
-  TextColumn get referenceType => text().nullable()(); // 'invoice', 'cheque', 'payment', 'transfer'
+  TextColumn get referenceType =>
+      text().nullable()(); // 'invoice', 'cheque', 'payment', 'transfer'
   TextColumn get referenceId => text().nullable()();
   TextColumn get fiscalYearId => text().nullable()();
   IntColumn get approvedAt => integer().nullable()();
@@ -95,7 +96,6 @@ class FiscalYearsTable extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
-
 
 @DataClassName('AccountingAuditLogData')
 class AccountingAuditLogsTable extends Table {

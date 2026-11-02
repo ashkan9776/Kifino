@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum GoalStatus {
@@ -93,17 +94,17 @@ class GoalEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        targetAmount,
-        currentAmount,
-        status,
-        targetDate,
-        notes,
-        createdAt,
-        updatedAt,
-        deletedAt,
-        syncStatus,
-        version,
-      ];
+    id,
+    name,
+    targetAmount,
+    currentAmount,
+    status,
+    targetDate,
+    notes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncStatus,
+    version,
+  ];
 }

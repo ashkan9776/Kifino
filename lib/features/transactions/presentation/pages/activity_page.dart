@@ -47,113 +47,141 @@ class _ActivityPageState extends State<ActivityPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navActivity),
-      ),
-      body: BlocConsumer<TransactionBloc, TransactionState>(
-        listener: (context, state) {
-          if (state is TransactionOperationSuccess && state.deletedTransactionId != null) {
-            final deletedId = state.deletedTransactionId!;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.isPersian ? 'تراکنش حذف شد' : 'Transaction deleted'),
-                action: SnackBarAction(
-                  label: l10n.undo,
-                  onPressed: () {
-                    context.read<TransactionBloc>().add(TransactionRestoreSubmitted(deletedId));
-                  },
-                ),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is TransactionLoading) {
-            return const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  AppSkeleton(height: 50),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 80),
-                  SizedBox(height: AppSpacing.sm),
-                  AppSkeleton(height: 80),
-                ],
-              ),
-            );
-          }
-
-          if (state is TransactionLoaded) {
-            final allTransactions = state.transactions;
-
-            final filtered = _searchQuery.isEmpty
-                ? allTransactions
-                : allTransactions.where((tx) {
-                    final normalizedQuery = TextNormalizer.normalizeForSearch(_searchQuery);
-                    final desc = TextNormalizer.normalizeForSearch(tx.description);
-                    final cat = TextNormalizer.normalizeForSearch(tx.categoryName ?? '');
-                    final acc = TextNormalizer.normalizeForSearch(tx.accountName ?? '');
-                    return desc.contains(normalizedQuery) ||
-                        cat.contains(normalizedQuery) ||
-                        acc.contains(normalizedQuery);
-                  }).toList();
-
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.search,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded),
-                              onPressed: () => _searchController.clear(),
-                            )
-                          : null,
+          appBar: AppBar(title: Text(l10n.navActivity)),
+          body: BlocConsumer<TransactionBloc, TransactionState>(
+            listener: (context, state) {
+              if (state is TransactionOperationSuccess &&
+                  state.deletedTransactionId != null) {
+                final deletedId = state.deletedTransactionId!;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.isPersian ? 'تراکنش حذف شد' : 'Transaction deleted',
+                    ),
+                    action: SnackBarAction(
+                      label: l10n.undo,
+                      onPressed: () {
+                        context.read<TransactionBloc>().add(
+                          TransactionRestoreSubmitted(deletedId),
+                        );
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? AppEmptyState(
-                          icon: Icons.receipt_long_outlined,
-                          title: _searchQuery.isEmpty ? l10n.noTransactionsYet : 'موردی یافت نشد',
-                          description: _searchQuery.isEmpty
-                              ? l10n.noTransactionsDesc
-                              : 'هیچ تراکنشی مطابق با عبارت جستجو پیدا نشد.',
-                          actionLabel: _searchQuery.isEmpty ? l10n.addTransaction : null,
-                          onAction: _searchQuery.isEmpty ? () => context.push('/transaction/new') : null,
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
-                          itemBuilder: (context, index) {
-                            final tx = filtered[index];
-                            return AppCard(
-                              padding: EdgeInsets.zero,
-                              child: AppTransactionTile(
-                                transaction: tx,
-                                onTap: () => context.push('/transaction/new', extra: tx),
-                                onDelete: () {
-                                  context.read<TransactionBloc>().add(TransactionDeleteSubmitted(tx.id));
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            );
-          }
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state is TransactionLoading) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      AppSkeleton(height: 50),
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(height: 80),
+                      SizedBox(height: AppSpacing.sm),
+                      AppSkeleton(height: 80),
+                    ],
+                  ),
+                );
+              }
 
-          return const SizedBox.shrink();
-        },
-      ),
+              if (state is TransactionLoaded) {
+                final allTransactions = state.transactions;
+
+                final filtered = _searchQuery.isEmpty
+                    ? allTransactions
+                    : allTransactions.where((tx) {
+                        final normalizedQuery =
+                            TextNormalizer.normalizeForSearch(_searchQuery);
+                        final desc = TextNormalizer.normalizeForSearch(
+                          tx.description,
+                        );
+                        final cat = TextNormalizer.normalizeForSearch(
+                          tx.categoryName ?? '',
+                        );
+                        final acc = TextNormalizer.normalizeForSearch(
+                          tx.accountName ?? '',
+                        );
+                        return desc.contains(normalizedQuery) ||
+                            cat.contains(normalizedQuery) ||
+                            acc.contains(normalizedQuery);
+                      }).toList();
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: l10n.search,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded),
+                                  onPressed: () => _searchController.clear(),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? AppEmptyState(
+                              icon: Icons.receipt_long_outlined,
+                              title: _searchQuery.isEmpty
+                                  ? l10n.noTransactionsYet
+                                  : 'موردی یافت نشد',
+                              description: _searchQuery.isEmpty
+                                  ? l10n.noTransactionsDesc
+                                  : 'هیچ تراکنشی مطابق با عبارت جستجو پیدا نشد.',
+                              actionLabel: _searchQuery.isEmpty
+                                  ? l10n.addTransaction
+                                  : null,
+                              onAction: _searchQuery.isEmpty
+                                  ? () => context.push('/transaction/new')
+                                  : null,
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.sm,
+                              ),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: AppSpacing.xs),
+                              itemBuilder: (context, index) {
+                                final tx = filtered[index];
+                                return AppCard(
+                                  padding: EdgeInsets.zero,
+                                  child: AppTransactionTile(
+                                    transaction: tx,
+                                    onTap: () => context.push(
+                                      '/transaction/new',
+                                      extra: tx,
+                                    ),
+                                    onDelete: () {
+                                      context.read<TransactionBloc>().add(
+                                        TransactionDeleteSubmitted(tx.id),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
     );

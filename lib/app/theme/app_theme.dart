@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'app_colors.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
@@ -70,9 +71,17 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlueLight,
           foregroundColor: Colors.white,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppSpacing.borderRadiusMd,
+          ),
           elevation: 0,
           textStyle: AppTypography.labelLarge,
         ),
@@ -80,9 +89,17 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.lightTextPrimary,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppSpacing.borderRadiusMd,
+          ),
           side: const BorderSide(color: AppColors.lightBorder),
           textStyle: AppTypography.labelLarge,
         ),
@@ -90,15 +107,24 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primaryBlueLight,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           textStyle: AppTypography.labelLarge,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.lightSurfaceVariant,
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
           borderSide: BorderSide.none,
@@ -109,13 +135,18 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
-          borderSide: const BorderSide(color: AppColors.primaryBlueLight, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.primaryBlueLight,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
           borderSide: const BorderSide(color: AppColors.expenseLight, width: 1),
         ),
-        hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.lightTextTertiary),
+        hintStyle: AppTypography.bodyMedium.copyWith(
+          color: AppColors.lightTextTertiary,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.lightSurface,
@@ -196,9 +227,17 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlueDark,
           foregroundColor: AppColors.darkBackground,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppSpacing.borderRadiusMd,
+          ),
           elevation: 0,
           textStyle: AppTypography.labelLarge,
         ),
@@ -206,9 +245,17 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.darkTextPrimary,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppSpacing.borderRadiusMd,
+          ),
           side: const BorderSide(color: AppColors.darkBorder),
           textStyle: AppTypography.labelLarge,
         ),
@@ -216,15 +263,24 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primaryBlueDark,
-          minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          minimumSize: const Size(
+            AppSpacing.minTouchTarget,
+            AppSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           textStyle: AppTypography.labelLarge,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.darkSurfaceVariant,
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
           borderSide: BorderSide.none,
@@ -235,13 +291,18 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
-          borderSide: const BorderSide(color: AppColors.primaryBlueDark, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.primaryBlueDark,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppSpacing.borderRadiusMd,
           borderSide: const BorderSide(color: AppColors.expenseDark, width: 1),
         ),
-        hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.darkTextTertiary),
+        hintStyle: AppTypography.bodyMedium.copyWith(
+          color: AppColors.darkTextTertiary,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,

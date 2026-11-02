@@ -38,10 +38,7 @@ class _CategoriesView extends StatelessWidget {
   // ----------------------------------------------------
   // CREATE / EDIT SHEET
   // ----------------------------------------------------
-  void _showCategorySheet(
-    BuildContext context, {
-    CategoryEntity? existing,
-  }) {
+  void _showCategorySheet(BuildContext context, {CategoryEntity? existing}) {
     final cubit = context.read<CategoryCubit>();
     final l10n = context.l10n;
     final isFa = l10n.isPersian;
@@ -49,13 +46,15 @@ class _CategoriesView extends StatelessWidget {
     final type = existing?.type ?? cubit.state.selectedType;
 
     final nameController = TextEditingController(text: existing?.name ?? '');
-    int selectedCodePoint = existing?.iconCodePoint ??
+    int selectedCodePoint =
+        existing?.iconCodePoint ??
         (type == CategoryType.expense
             ? Icons.shopping_bag_rounded.codePoint
             : Icons.payments_rounded.codePoint);
 
-    final existingHex =
-        existing != null ? CategoryIconAssets.normalizeHex(existing.colorHex) : null;
+    final existingHex = existing != null
+        ? CategoryIconAssets.normalizeHex(existing.colorHex)
+        : null;
     String selectedHex = CategoryIconAssets.presetHexes.contains(existingHex)
         ? existingHex!
         : (type == CategoryType.expense ? 'FF5C6C' : '25C997');
@@ -208,18 +207,19 @@ class _CategoriesView extends StatelessWidget {
     final l10n = context.l10n;
     final isFa = l10n.isPersian;
 
-    final count =
-        await sl<CategoryRepository>().countTransactionsUsing(category.id);
+    final count = await sl<CategoryRepository>().countTransactionsUsing(
+      category.id,
+    );
     if (!context.mounted) return;
 
     final countText = TextNormalizer.auto('$count');
     final content = count > 0
         ? (isFa
-            ? '$countText تراکنش با این دسته ثبت شده؛ پس از حذف، بدون دسته می‌شوند.'
-            : '$count transactions use this category; they become uncategorized after deletion.')
+              ? '$countText تراکنش با این دسته ثبت شده؛ پس از حذف، بدون دسته می‌شوند.'
+              : '$count transactions use this category; they become uncategorized after deletion.')
         : (isFa
-            ? 'هیچ تراکنشی با این دسته ثبت نشده است.'
-            : 'No transactions use this category.');
+              ? 'هیچ تراکنشی با این دسته ثبت نشده است.'
+              : 'No transactions use this category.');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -252,10 +252,7 @@ class _CategoriesView extends StatelessWidget {
   // ----------------------------------------------------
   // CATEGORY ROW
   // ----------------------------------------------------
-  Widget _buildCategoryRow(
-    BuildContext context,
-    CategoryEntity category,
-  ) {
+  Widget _buildCategoryRow(BuildContext context, CategoryEntity category) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final color = CategoryIconAssets.colorFromHex(category.colorHex);
@@ -288,8 +285,9 @@ class _CategoriesView extends StatelessWidget {
                 category.name,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color:
-                      isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -328,9 +326,10 @@ class _CategoriesView extends StatelessWidget {
           final message = switch (state.successOp) {
             'create' => isFa ? 'دسته جدید ساخته شد' : 'Category created',
             'update' => isFa ? 'تغییرات ذخیره شد' : 'Changes saved',
-            'delete' => isFa
-                ? 'دسته حذف شد؛ تراکنش‌هایش بدون دسته شدند'
-                : 'Category deleted; its transactions are uncategorized',
+            'delete' =>
+              isFa
+                  ? 'دسته حذف شد؛ تراکنش‌هایش بدون دسته شدند'
+                  : 'Category deleted; its transactions are uncategorized',
             _ => isFa ? 'انجام شد' : 'Done',
           };
           ScaffoldMessenger.of(context)
@@ -408,9 +407,9 @@ class _CategoriesView extends StatelessWidget {
                         ],
                         selected: {state.selectedType},
                         onSelectionChanged: (selection) {
-                          context
-                              .read<CategoryCubit>()
-                              .selectType(selection.first);
+                          context.read<CategoryCubit>().selectType(
+                            selection.first,
+                          );
                           HapticFeedback.selectionClick();
                         },
                         showSelectedIcon: false,
@@ -435,8 +434,10 @@ class _CategoriesView extends StatelessWidget {
                                 AppSpacing.xxl,
                               ),
                               children: categories
-                                  .map((category) =>
-                                      _buildCategoryRow(context, category))
+                                  .map(
+                                    (category) =>
+                                        _buildCategoryRow(context, category),
+                                  )
                                   .toList(),
                             ),
                     ),

@@ -29,7 +29,9 @@ class AssetRepositoryImpl implements AssetRepository {
       notes: data.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
@@ -93,12 +95,15 @@ class AssetRepositoryImpl implements AssetRepository {
 
         await _db.into(_db.assetsTable).insert(companion);
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'assets',
                 entityId: aId,
                 operation: 'INSERT',
-                payloadJson: '{"id":"$aId","name":"${asset.name}","value":${asset.currentValue.minorUnits}}',
+                payloadJson:
+                    '{"id":"$aId","name":"${asset.name}","value":${asset.currentValue.minorUnits}}',
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -115,7 +120,9 @@ class AssetRepositoryImpl implements AssetRepository {
   Future<Result<void>> updateAsset(AssetEntity asset) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.assetsTable)..where((tbl) => tbl.id.equals(asset.id))).write(
+      await (_db.update(
+        _db.assetsTable,
+      )..where((tbl) => tbl.id.equals(asset.id))).write(
         AssetsTableCompanion(
           name: Value(asset.name),
           category: Value(asset.category.code),
@@ -130,7 +137,9 @@ class AssetRepositoryImpl implements AssetRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'assets',
               entityId: asset.id,
@@ -149,7 +158,10 @@ class AssetRepositoryImpl implements AssetRepository {
   }
 
   @override
-  Future<Result<void>> updateAssetValuation(String id, Money currentValue) async {
+  Future<Result<void>> updateAssetValuation(
+    String id,
+    Money currentValue,
+  ) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       await (_db.update(_db.assetsTable)..where((t) => t.id.equals(id))).write(
@@ -159,12 +171,15 @@ class AssetRepositoryImpl implements AssetRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'assets',
               entityId: id,
               operation: 'UPDATE',
-              payloadJson: '{"id":"$id","currentValue":${currentValue.minorUnits}}',
+              payloadJson:
+                  '{"id":"$id","currentValue":${currentValue.minorUnits}}',
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),
@@ -181,10 +196,7 @@ class AssetRepositoryImpl implements AssetRepository {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       await (_db.update(_db.assetsTable)..where((t) => t.id.equals(id))).write(
-        AssetsTableCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+        AssetsTableCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
       return const Success(null);
     } catch (e) {

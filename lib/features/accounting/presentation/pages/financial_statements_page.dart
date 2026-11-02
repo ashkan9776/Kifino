@@ -10,7 +10,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
 
-import '../../../../core/widgets/app_date_picker.dart';import '../../data/services/accounting_export_service.dart';
+import '../../../../core/widgets/app_date_picker.dart';
+import '../../data/services/accounting_export_service.dart';
 import '../../domain/entities/financial_statement_report.dart';
 import '../bloc/financial_statements_bloc.dart';
 import '../services/accounting_export_actions.dart';
@@ -19,7 +20,8 @@ class FinancialStatementsPage extends StatefulWidget {
   const FinancialStatementsPage({super.key});
 
   @override
-  State<FinancialStatementsPage> createState() => _FinancialStatementsPageState();
+  State<FinancialStatementsPage> createState() =>
+      _FinancialStatementsPageState();
 }
 
 class _FinancialStatementsPageState extends State<FinancialStatementsPage>
@@ -36,11 +38,8 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
   void _loadStatements() {
     final startOfYear = DateTime(_asOfDate.year, 1, 1);
     context.read<FinancialStatementsBloc>().add(
-          LoadFinancialStatements(
-            asOfDate: _asOfDate,
-            startDate: startOfYear,
-          ),
-        );
+      LoadFinancialStatements(asOfDate: _asOfDate, startDate: startOfYear),
+    );
   }
 
   @override
@@ -53,13 +52,16 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         title: const Text('صورت‌های مالی استاندارد'),
         centerTitle: true,
         actions: [
-          buildExportAction(() => _selectedTab == 0
-              ? getIt<AccountingExportService>()
-                  .exportBalanceSheet(asOfDate: _asOfDate)
-              : getIt<AccountingExportService>().exportIncomeStatement(
-                  startDate: DateTime(_asOfDate.year, 1, 1),
-                  endDate: _asOfDate,
-                )),
+          buildExportAction(
+            () => _selectedTab == 0
+                ? getIt<AccountingExportService>().exportBalanceSheet(
+                    asOfDate: _asOfDate,
+                  )
+                : getIt<AccountingExportService>().exportIncomeStatement(
+                    startDate: DateTime(_asOfDate.year, 1, 1),
+                    endDate: _asOfDate,
+                  ),
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_month),
             onPressed: () => _pickDate(context),
@@ -100,7 +102,9 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
                 const SizedBox(height: 8),
                 Text(
                   'مبنای گزارش: تا تاریخ ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
-                  style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: colors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -109,25 +113,29 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
 
           // Content
           Expanded(
-            child: BlocBuilder<FinancialStatementsBloc, FinancialStatementsState>(
-              builder: (context, state) {
-                if (state is FinancialStatementsLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            child:
+                BlocBuilder<FinancialStatementsBloc, FinancialStatementsState>(
+                  builder: (context, state) {
+                    if (state is FinancialStatementsLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                if (state is FinancialStatementsLoaded) {
-                  return _selectedTab == 0
-                      ? _buildBalanceSheetView(state.balanceSheet, colors)
-                      : _buildIncomeStatementView(state.incomeStatement, colors);
-                }
+                    if (state is FinancialStatementsLoaded) {
+                      return _selectedTab == 0
+                          ? _buildBalanceSheetView(state.balanceSheet, colors)
+                          : _buildIncomeStatementView(
+                              state.incomeStatement,
+                              colors,
+                            );
+                    }
 
-                if (state is FinancialStatementsError) {
-                  return Center(child: Text(state.message));
-                }
+                    if (state is FinancialStatementsError) {
+                      return Center(child: Text(state.message));
+                    }
 
-                return const SizedBox.shrink();
-              },
-            ),
+                    return const SizedBox.shrink();
+                  },
+                ),
           ),
         ],
       ),
@@ -136,7 +144,10 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
 
   // ─── Balance Sheet View ───
 
-  Widget _buildBalanceSheetView(BalanceSheetReport bs, KifinoColorsExtension colors) {
+  Widget _buildBalanceSheetView(
+    BalanceSheetReport bs,
+    KifinoColorsExtension colors,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -157,7 +168,9 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
           child: Row(
             children: [
               Icon(
-                bs.isBalanced ? Icons.check_circle : Icons.warning_amber_rounded,
+                bs.isBalanced
+                    ? Icons.check_circle
+                    : Icons.warning_amber_rounded,
                 color: bs.isBalanced ? colors.income : colors.expense,
                 size: 20,
               ),
@@ -209,7 +222,11 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
           colors: colors,
         ),
         const SizedBox(height: 8),
-        _buildTotalRow('جمع کل بدهی‌ها:', bs.totalLiabilities, Colors.deepOrange),
+        _buildTotalRow(
+          'جمع کل بدهی‌ها:',
+          bs.totalLiabilities,
+          Colors.deepOrange,
+        ),
         const Divider(height: 28),
 
         // 3. Equity (حقوق صاحبان سهام و سرمایه)
@@ -226,7 +243,9 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
                   bs.netIncomeForPeriod,
                   colors: colors,
                   isBold: true,
-                  color: bs.netIncomeForPeriod.isNegative ? colors.expense : colors.income,
+                  color: bs.netIncomeForPeriod.isNegative
+                      ? colors.expense
+                      : colors.income,
                 ),
                 const Divider(height: 16),
                 _buildSubtotalRow('جمع حقوق صاحبان سهام:', bs.totalEquity),
@@ -249,7 +268,10 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
 
   // ─── Income Statement View ───
 
-  Widget _buildIncomeStatementView(IncomeStatementReport inc, KifinoColorsExtension colors) {
+  Widget _buildIncomeStatementView(
+    IncomeStatementReport inc,
+    KifinoColorsExtension colors,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -298,7 +320,11 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
           isDeduction: true,
         ),
         const SizedBox(height: 8),
-        _buildTotalRow('سود (زیان) عملیاتی:', inc.operatingProfit, Colors.purple),
+        _buildTotalRow(
+          'سود (زیان) عملیاتی:',
+          inc.operatingProfit,
+          Colors.purple,
+        ),
         const Divider(height: 24),
 
         // Other Incomes and Expenses
@@ -331,13 +357,17 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
             children: [
               Text(
                 'سود (زیان) خالص دوره مالی:',
-                style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               AppMoneyText(
                 money: inc.netProfit,
                 style: AppTypography.titleLarge.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: inc.netProfit.isPositive ? colors.income : colors.expense,
+                  color: inc.netProfit.isPositive
+                      ? colors.income
+                      : colors.expense,
                 ),
               ),
             ],
@@ -360,7 +390,12 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
           ),
         ),
         const SizedBox(width: 8),
-        Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: AppTypography.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -378,21 +413,27 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: AppTypography.titleSmall.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const Divider(height: 16),
             if (items.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text('بدون گردش', style: AppTypography.bodySmall.copyWith(color: colors.textSecondary)),
+                child: Text(
+                  'بدون گردش',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
               )
             else
               ...items.map((item) => _buildItemRow(item, colors)),
             const SizedBox(height: 4),
-            _buildSubtotalRow(
-              'جمع $title:',
-              total,
-              isDeduction: isDeduction,
-            ),
+            _buildSubtotalRow('جمع $title:', total, isDeduction: isDeduction),
           ],
         ),
       ),
@@ -406,25 +447,30 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(item.title, style: AppTypography.bodyMedium),
-          AppMoneyText(
-            money: item.amount,
-            style: AppTypography.bodyMedium,
-          ),
+          AppMoneyText(money: item.amount, style: AppTypography.bodyMedium),
         ],
       ),
     );
   }
 
-  Widget _buildRow(String title, Money amount,
-      {required KifinoColorsExtension colors, bool isBold = false, Color? color}) {
+  Widget _buildRow(
+    String title,
+    Money amount, {
+    required KifinoColorsExtension colors,
+    bool isBold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            title,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           AppMoneyText(
             money: amount,
             style: AppTypography.bodyMedium.copyWith(
@@ -437,11 +483,18 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
     );
   }
 
-  Widget _buildSubtotalRow(String title, Money total, {bool isDeduction = false}) {
+  Widget _buildSubtotalRow(
+    String title,
+    Money total, {
+    bool isDeduction = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
         AppMoneyText(
           money: total,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -461,10 +514,21 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: color,
+            ),
+          ),
           AppMoneyText(
             money: total,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: color),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: color,
+            ),
           ),
         ],
       ),

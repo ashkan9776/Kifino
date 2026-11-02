@@ -25,8 +25,14 @@ void main() {
         name: 'Test Bank',
         type: AccountType.bankCard,
         currency: Currency.toman,
-        initialBalance: const Money(minorUnits: 1000000, currency: Currency.toman),
-        currentBalance: const Money(minorUnits: 1000000, currency: Currency.toman),
+        initialBalance: const Money(
+          minorUnits: 1000000,
+          currency: Currency.toman,
+        ),
+        currentBalance: const Money(
+          minorUnits: 1000000,
+          currency: Currency.toman,
+        ),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -38,7 +44,10 @@ void main() {
       expect(accounts.isSuccess, isTrue);
       expect(accounts.dataOrNull!.length, equals(1));
       expect(accounts.dataOrNull!.first.name, equals('Test Bank'));
-      expect(accounts.dataOrNull!.first.currentBalance.minorUnits, equals(1000000));
+      expect(
+        accounts.dataOrNull!.first.currentBalance.minorUnits,
+        equals(1000000),
+      );
     });
 
     test('Archives and soft deletes accounts', () async {
@@ -57,7 +66,9 @@ void main() {
 
       // Archive
       await repository.archiveAccount('acc-to-archive', true);
-      final activeAccounts = await repository.getAccounts(includeArchived: false);
+      final activeAccounts = await repository.getAccounts(
+        includeArchived: false,
+      );
       expect(activeAccounts.dataOrNull!.isEmpty, isTrue);
 
       final allAccounts = await repository.getAccounts(includeArchived: true);

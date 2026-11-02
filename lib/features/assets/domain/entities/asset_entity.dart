@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum AssetCategory {
@@ -37,7 +38,10 @@ class AssetEntity extends Equatable {
   final DateTime updatedAt;
   final DateTime? deletedAt;
 
-  String get displayType => category == AssetCategory.other && (customTypeName?.isNotEmpty ?? false) ? customTypeName! : category.titleFa;
+  String get displayType =>
+      category == AssetCategory.other && (customTypeName?.isNotEmpty ?? false)
+      ? customTypeName!
+      : category.titleFa;
 
   const AssetEntity({
     required this.id,
@@ -102,17 +106,17 @@ class AssetEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        quantity,
-        unit,
-        costBasis,
-        currentValue,
-        purchaseDate,
-        notes,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    name,
+    category,
+    quantity,
+    unit,
+    costBasis,
+    currentValue,
+    purchaseDate,
+    notes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

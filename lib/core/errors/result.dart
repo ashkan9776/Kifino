@@ -7,14 +7,14 @@ sealed class Result<T> {
   bool get isFailure => this is FailureResult<T>;
 
   T? get dataOrNull => switch (this) {
-        Success<T>(data: final data) => data,
-        FailureResult<T>() => null,
-      };
+    Success<T>(data: final data) => data,
+    FailureResult<T>() => null,
+  };
 
   Failure? get failureOrNull => switch (this) {
-        Success<T>() => null,
-        FailureResult<T>(failure: final failure) => failure,
-      };
+    Success<T>() => null,
+    FailureResult<T>(failure: final failure) => failure,
+  };
 
   R fold<R>({
     required R Function(T data) onSuccess,
@@ -41,7 +41,9 @@ final class Success<T> extends Result<T> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Success<T> && runtimeType == other.runtimeType && data == other.data;
+      other is Success<T> &&
+          runtimeType == other.runtimeType &&
+          data == other.data;
 
   @override
   int get hashCode => data.hashCode;

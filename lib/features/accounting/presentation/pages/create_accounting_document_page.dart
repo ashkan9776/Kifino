@@ -12,7 +12,8 @@ import '../../../../core/utils/persian_input.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_money_text.dart';
 
-import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/accounting_audit_entity.dart';
+import '../../../../core/widgets/app_date_picker.dart';
+import '../../domain/entities/accounting_audit_entity.dart';
 import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/accounting_transaction_entity.dart';
@@ -68,10 +69,12 @@ class _CreateAccountingDocumentPageState
       setState(() {
         _detailLedgers = ledgers
             .where((l) => l.ledger.isActive)
-            .map((l) => DetailLedgerWithValues(
-                  ledger: l.ledger,
-                  values: l.values.where((v) => v.isActive).toList(),
-                ))
+            .map(
+              (l) => DetailLedgerWithValues(
+                ledger: l.ledger,
+                values: l.values.where((v) => v.isActive).toList(),
+              ),
+            )
             .toList();
       });
     } catch (_) {
@@ -136,100 +139,111 @@ class _CreateAccountingDocumentPageState
               },
               child: Column(
                 children: [
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      // Header Card: Title and Date
-                      Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                              color: Colors.grey.withValues(alpha: 0.2)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                controller: _titleController,
-                                decoration: const InputDecoration(
-                                  labelText: 'شرح کلی سند',
-                                  hintText:
-                                      'مثال: پرداخت هزینه اجاره و شارژ دفتر',
-                                  prefixIcon: Icon(Icons.description_outlined),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              InkWell(
-                                onTap: () => _pickDate(context),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.grey
-                                            .withValues(alpha: 0.3)),
-                                    borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        // Header Card: Title and Date
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextField(
+                                  controller: _titleController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'شرح کلی سند',
+                                    hintText:
+                                        'مثال: پرداخت هزینه اجاره و شارژ دفتر',
+                                    prefixIcon: Icon(
+                                      Icons.description_outlined,
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.calendar_month,
-                                          size: 20),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'تاریخ سند: ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
-                                        style: AppTypography.bodyMedium,
+                                ),
+                                const SizedBox(height: 12),
+                                InkWell(
+                                  onTap: () => _pickDate(context),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey.withValues(
+                                          alpha: 0.3,
+                                        ),
                                       ),
-                                    ],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.calendar_month,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'تاریخ سند: ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
+                                          style: AppTypography.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('سطرهای سند (آرتیکل‌ها):',
-                              style: AppTypography.titleSmall),
-                          TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _rows.add(_VoucherRowItem());
-                              });
-                            },
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('افزودن سطر'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Rows List
-                      ...List.generate(_rows.length, (index) {
-                        return _buildRowCard(index, colors);
-                      }),
-
-                      // Optional تفصیلی شناور tagging
-                      if (_detailLedgers.isNotEmpty) ...[
                         const SizedBox(height: 16),
-                        _buildDetailTagsSection(colors),
-                      ],
-                      const SizedBox(height: 80),
-                    ],
-                  ),
-                ),
 
-                // Sticky Bottom Balance & Save Bar
-                _buildStickyBottomBar(colors),
-              ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'سطرهای سند (آرتیکل‌ها):',
+                              style: AppTypography.titleSmall,
+                            ),
+                            TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _rows.add(_VoucherRowItem());
+                                });
+                              },
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('افزودن سطر'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Rows List
+                        ...List.generate(_rows.length, (index) {
+                          return _buildRowCard(index, colors);
+                        }),
+
+                        // Optional تفصیلی شناور tagging
+                        if (_detailLedgers.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _buildDetailTagsSection(colors),
+                        ],
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+                  ),
+
+                  // Sticky Bottom Balance & Save Bar
+                  _buildStickyBottomBar(colors),
+                ],
               ),
             ),
     );
@@ -256,9 +270,10 @@ class _CreateAccountingDocumentPageState
                   child: Text(
                     '${index + 1}',
                     style: TextStyle(
-                        fontSize: 11,
-                        color: colors.primary,
-                        fontWeight: FontWeight.bold),
+                      fontSize: 11,
+                      color: colors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -268,7 +283,9 @@ class _CreateAccountingDocumentPageState
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
@@ -302,8 +319,11 @@ class _CreateAccountingDocumentPageState
                 ),
                 if (_rows.length > 2)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        color: Colors.red, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 20,
+                    ),
                     onPressed: () {
                       setState(() {
                         _rows[index].dispose();
@@ -322,12 +342,16 @@ class _CreateAccountingDocumentPageState
                     decoration: const InputDecoration(
                       labelText: 'بدهکار',
                       hintText: '۰',
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                     ),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
-                      PersianThousandsSeparatorTextInputFormatter(enabled: true),
+                      PersianThousandsSeparatorTextInputFormatter(
+                        enabled: true,
+                      ),
                     ],
                     onChanged: (val) {
                       if (val.isNotEmpty) {
@@ -344,12 +368,16 @@ class _CreateAccountingDocumentPageState
                     decoration: const InputDecoration(
                       labelText: 'بستانکار',
                       hintText: '۰',
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                     ),
                     keyboardType: TextInputType.number,
                     inputFormatters: [
-                      PersianThousandsSeparatorTextInputFormatter(enabled: true),
+                      PersianThousandsSeparatorTextInputFormatter(
+                        enabled: true,
+                      ),
                     ],
                     onChanged: (val) {
                       if (val.isNotEmpty) {
@@ -367,8 +395,10 @@ class _CreateAccountingDocumentPageState
               decoration: const InputDecoration(
                 labelText: 'شرح سطر آرتیکل',
                 hintText: 'شرح اختیاری برای این سطر',
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
               ),
             ),
           ],
@@ -393,13 +423,17 @@ class _CreateAccountingDocumentPageState
               children: [
                 Icon(Icons.category_outlined, size: 18, color: colors.primary),
                 const SizedBox(width: 8),
-                Expanded(child: Text('تفصیلی شناور', style: AppTypography.titleSmall)),
+                Expanded(
+                  child: Text('تفصیلی شناور', style: AppTypography.titleSmall),
+                ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               'برچسب تحلیلی سند برای گزارش‌گیری به تفکیک مشتری، پروژه و... (اختیاری)',
-              style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: colors.textSecondary,
+              ),
             ),
             const SizedBox(height: 10),
             ..._detailLedgers.map((l) {
@@ -410,8 +444,10 @@ class _CreateAccountingDocumentPageState
                   isExpanded: true,
                   decoration: InputDecoration(
                     labelText: '${l.ledger.title} (اختیاری)',
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                   ),
                   items: [
                     const DropdownMenuItem<String>(
@@ -426,7 +462,9 @@ class _CreateAccountingDocumentPageState
                     ),
                   ],
                   onChanged: (valueId) {
-                    setState(() => _selectedDetailValues[l.ledger.id] = valueId);
+                    setState(
+                      () => _selectedDetailValues[l.ledger.id] = valueId,
+                    );
                   },
                 ),
               );
@@ -463,8 +501,9 @@ class _CreateAccountingDocumentPageState
                     Text('جمع بدهکار: ', style: AppTypography.bodySmall),
                     AppMoneyText(
                       money: Money.fromMinor(_totalDebitMinor),
-                      style: AppTypography.titleSmall
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -473,8 +512,9 @@ class _CreateAccountingDocumentPageState
                     Text('جمع بستانکار: ', style: AppTypography.bodySmall),
                     AppMoneyText(
                       money: Money.fromMinor(_totalCreditMinor),
-                      style: AppTypography.titleSmall
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -547,17 +587,22 @@ class _CreateAccountingDocumentPageState
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Text('انتخاب سرفصل حسابداری',
-                          style: AppTypography.titleMedium),
+                      Text(
+                        'انتخاب سرفصل حسابداری',
+                        style: AppTypography.titleMedium,
+                      ),
                       const SizedBox(height: 10),
                       TextField(
                         decoration: InputDecoration(
                           hintText: 'جستجوی سرفصل (نام یا کد)...',
                           prefixIcon: const Icon(Icons.search),
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         onChanged: (val) {
                           setModalState(() => query = val);
@@ -572,11 +617,15 @@ class _CreateAccountingDocumentPageState
                             final sub = filtered[i];
                             return ListTile(
                               dense: true,
-                              title: Text(sub.formattedName,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600)),
+                              title: Text(
+                                sub.formattedName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               subtitle: Text(
-                                  '${sub.level.titleFa} • ${sub.type.titleFa}'),
+                                '${sub.level.titleFa} • ${sub.type.titleFa}',
+                              ),
                               onTap: () {
                                 setState(() {
                                   _rows[rowIndex].selectedSubject = sub;
@@ -675,9 +724,9 @@ class _CreateAccountingDocumentPageState
       detailTags.add(DocumentDetailTag(ledgerId: entry.key, valueId: valueId));
     }
 
-    context
-        .read<AccountingDocumentBloc>()
-        .add(CreateAccountingDocumentSubmitted(doc, details: detailTags));
+    context.read<AccountingDocumentBloc>().add(
+      CreateAccountingDocumentSubmitted(doc, details: detailTags),
+    );
   }
 }
 

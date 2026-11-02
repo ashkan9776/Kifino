@@ -19,7 +19,8 @@ class AccountingDocumentsPage extends StatefulWidget {
   const AccountingDocumentsPage({super.key});
 
   @override
-  State<AccountingDocumentsPage> createState() => _AccountingDocumentsPageState();
+  State<AccountingDocumentsPage> createState() =>
+      _AccountingDocumentsPageState();
 }
 
 class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
@@ -77,11 +78,23 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
               children: [
                 _buildStatusFilterChip('همه اسناد', null, colors),
                 const SizedBox(width: 8),
-                _buildStatusFilterChip('تأیید شده', DocumentStatus.approved, colors),
+                _buildStatusFilterChip(
+                  'تأیید شده',
+                  DocumentStatus.approved,
+                  colors,
+                ),
                 const SizedBox(width: 8),
-                _buildStatusFilterChip('پیش‌نویس / موقت', DocumentStatus.draft, colors),
+                _buildStatusFilterChip(
+                  'پیش‌نویس / موقت',
+                  DocumentStatus.draft,
+                  colors,
+                ),
                 const SizedBox(width: 8),
-                _buildStatusFilterChip('ثبت قطعی', DocumentStatus.posted, colors),
+                _buildStatusFilterChip(
+                  'ثبت قطعی',
+                  DocumentStatus.posted,
+                  colors,
+                ),
               ],
             ),
           ),
@@ -89,60 +102,72 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
 
           // Documents List
           Expanded(
-            child: BlocConsumer<AccountingDocumentBloc, AccountingDocumentState>(
-              listener: (context, state) {
-                if (state is AccountingDocumentOperationSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message)),
-                  );
-                } else if (state is AccountingDocumentError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: colors.expense,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state is AccountingDocumentLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            child:
+                BlocConsumer<AccountingDocumentBloc, AccountingDocumentState>(
+                  listener: (context, state) {
+                    if (state is AccountingDocumentOperationSuccess) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(state.message)));
+                    } else if (state is AccountingDocumentError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: colors.expense,
+                        ),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    if (state is AccountingDocumentLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                if (state is AccountingDocumentLoaded) {
-                  final docs = state.documents;
-                  if (docs.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.receipt_long_outlined, size: 56, color: colors.textSecondary),
-                          const SizedBox(height: 12),
-                          Text('سند حسابداری یافت نشد', style: AppTypography.titleMedium),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () => context.push('/accounting/documents/create'),
-                            icon: const Icon(Icons.add),
-                            label: const Text('ثبت سند جدید'),
+                    if (state is AccountingDocumentLoaded) {
+                      final docs = state.documents;
+                      if (docs.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 56,
+                                color: colors.textSecondary,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'سند حسابداری یافت نشد',
+                                style: AppTypography.titleMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () => context.push(
+                                  '/accounting/documents/create',
+                                ),
+                                icon: const Icon(Icons.add),
+                                label: const Text('ثبت سند جدید'),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  }
+                        );
+                      }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    itemCount: docs.length,
-                    itemBuilder: (context, index) {
-                      final doc = docs[index];
-                      return _buildDocumentCard(context, doc, colors);
-                    },
-                  );
-                }
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          final doc = docs[index];
+                          return _buildDocumentCard(context, doc, colors);
+                        },
+                      );
+                    }
 
-                return const SizedBox.shrink();
-              },
-            ),
+                    return const SizedBox.shrink();
+                  },
+                ),
           ),
         ],
       ),
@@ -154,7 +179,11 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
     );
   }
 
-  Widget _buildStatusFilterChip(String label, DocumentStatus? status, KifinoColorsExtension colors) {
+  Widget _buildStatusFilterChip(
+    String label,
+    DocumentStatus? status,
+    KifinoColorsExtension colors,
+  ) {
     final isSelected = _selectedStatus == status;
     return ChoiceChip(
       label: Text(label),
@@ -162,8 +191,8 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
       onSelected: (_) {
         setState(() => _selectedStatus = status);
         context.read<AccountingDocumentBloc>().add(
-              LoadAccountingDocuments(status: status),
-            );
+          LoadAccountingDocuments(status: status),
+        );
       },
       selectedColor: colors.primary.withValues(alpha: 0.15),
       labelStyle: TextStyle(
@@ -174,7 +203,11 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
     );
   }
 
-  Widget _buildDocumentCard(BuildContext context, AccountingDocumentEntity doc, KifinoColorsExtension colors) {
+  Widget _buildDocumentCard(
+    BuildContext context,
+    AccountingDocumentEntity doc,
+    KifinoColorsExtension colors,
+  ) {
     final jalali = JalaliDate.fromDateTime(doc.date);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -191,7 +224,10 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -207,7 +243,10 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: doc.isManual
                               ? Colors.purple.withValues(alpha: 0.1)
@@ -227,7 +266,10 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: doc.isBalanced
                               ? colors.income.withValues(alpha: 0.12)
@@ -239,7 +281,9 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                             Icon(
                               doc.isBalanced ? Icons.check : Icons.close,
                               size: 12,
-                              color: doc.isBalanced ? colors.income : colors.expense,
+                              color: doc.isBalanced
+                                  ? colors.income
+                                  : colors.expense,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -247,7 +291,9 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: doc.isBalanced ? colors.income : colors.expense,
+                                color: doc.isBalanced
+                                    ? colors.income
+                                    : colors.expense,
                               ),
                             ),
                           ],
@@ -255,7 +301,10 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: doc.status == DocumentStatus.approved
                               ? colors.income.withValues(alpha: 0.15)
@@ -288,14 +337,18 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                 children: [
                   Text(
                     '${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())} • ${TextNormalizer.toPersianDigits(doc.transactions.length.toString())} آرتیکل',
-                    style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
+                    ),
                   ),
                   Row(
                     children: [
                       Text('مبلغ سند: ', style: AppTypography.bodySmall),
                       AppMoneyText(
                         money: doc.totalDebit,
-                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -314,8 +367,11 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
     );
   }
 
-
-  void _showDocumentDetails(BuildContext context, AccountingDocumentEntity doc, KifinoColorsExtension colors) {
+  void _showDocumentDetails(
+    BuildContext context,
+    AccountingDocumentEntity doc,
+    KifinoColorsExtension colors,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -349,23 +405,28 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('سند حسابداری #${TextNormalizer.toPersianDigits(doc.number.toString())}', style: AppTypography.titleLarge),
+                      Text(
+                        'سند حسابداری #${TextNormalizer.toPersianDigits(doc.number.toString())}',
+                        style: AppTypography.titleLarge,
+                      ),
                       Row(
                         children: [
                           IconButton(
                             icon: const Icon(Icons.print_outlined),
                             tooltip: 'چاپ و صدور PDF سند',
                             onPressed: () {
-                              AccountingVoucherPdfGenerator.printOrShareVoucher(document: doc);
+                              AccountingVoucherPdfGenerator.printOrShareVoucher(
+                                document: doc,
+                              );
                             },
                           ),
                           if (doc.status == DocumentStatus.draft)
                             ElevatedButton.icon(
                               onPressed: () {
                                 Navigator.pop(ctx);
-                                context
-                                    .read<AccountingDocumentBloc>()
-                                    .add(ApproveAccountingDocumentSubmitted(doc.id));
+                                context.read<AccountingDocumentBloc>().add(
+                                  ApproveAccountingDocumentSubmitted(doc.id),
+                                );
                               },
                               icon: const Icon(Icons.check, size: 16),
                               label: const Text('تأیید سند'),
@@ -382,12 +443,16 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                   Text('شرح: ${doc.title}', style: AppTypography.bodyMedium),
                   Text(
                     'تاریخ سند: ${TextNormalizer.toPersianDigits(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.toPersianDigits(jalali.year.toString())}',
-                    style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
+                    ),
                   ),
                   const Divider(height: 24),
 
-                  Text('آرتیکل‌های سند (سطرهای بدهکار و بستانکار):',
-                      style: AppTypography.titleSmall),
+                  Text(
+                    'آرتیکل‌های سند (سطرهای بدهکار و بستانکار):',
+                    style: AppTypography.titleSmall,
+                  ),
                   const SizedBox(height: 8),
 
                   ...doc.transactions.map((tx) {
@@ -396,13 +461,18 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.2),
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isDeb
                                   ? Colors.red.withValues(alpha: 0.1)
@@ -424,20 +494,28 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  tx.subject != null ? tx.subject!.formattedName : tx.subjectId,
-                                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                  tx.subject != null
+                                      ? tx.subject!.formattedName
+                                      : tx.subjectId,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 if (tx.description.isNotEmpty)
                                   Text(
                                     tx.description,
-                                    style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
                               ],
                             ),
                           ),
                           AppMoneyText(
                             money: isDeb ? tx.debit : tx.credit,
-                            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -470,7 +548,9 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            AccountingVoucherPdfGenerator.printOrShareVoucher(document: doc);
+                            AccountingVoucherPdfGenerator.printOrShareVoucher(
+                              document: doc,
+                            );
                           },
                           icon: const Icon(Icons.print_rounded, size: 18),
                           label: const Text('چاپ رسمی سند (PDF)'),
@@ -485,15 +565,24 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       OutlinedButton.icon(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          context
-                              .read<AccountingDocumentBloc>()
-                              .add(DeleteAccountingDocumentSubmitted(doc.id));
+                          context.read<AccountingDocumentBloc>().add(
+                            DeleteAccountingDocumentSubmitted(doc.id),
+                          );
                         },
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        label: const Text('حذف', style: TextStyle(color: Colors.red)),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        label: const Text(
+                          'حذف',
+                          style: TextStyle(color: Colors.red),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.red),
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -540,7 +629,10 @@ class _DetailTagsRow extends StatelessWidget {
                 final ledgerTitle = titles[tag.ledgerId] ?? 'تفصیلی';
                 final valueTitle = titles[tag.valueId] ?? '?';
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.receivable.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),

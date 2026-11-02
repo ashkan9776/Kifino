@@ -35,7 +35,13 @@ final class FiscalYearLoaded extends FiscalYearState {
   });
 
   @override
-  List<Object?> get props => [years, isBusy, message, messageIsError, messageStamp];
+  List<Object?> get props => [
+    years,
+    isBusy,
+    message,
+    messageIsError,
+    messageStamp,
+  ];
 }
 
 final class FiscalYearError extends FiscalYearState {
@@ -66,8 +72,10 @@ class FiscalYearCubit extends Cubit<FiscalYearState> {
   /// Closes the year with the full voucher flow (closing voucher, next year,
   /// opening voucher) — the repository performs everything atomically.
   Future<void> closeYear(String fiscalYearId) async {
-    await _mutate(() => _repository.closeFiscalYearWithDocuments(fiscalYearId),
-        successMessage: 'سال مالی با موفقیت بسته شد');
+    await _mutate(
+      () => _repository.closeFiscalYearWithDocuments(fiscalYearId),
+      successMessage: 'سال مالی با موفقیت بسته شد',
+    );
   }
 
   /// Defines the next fiscal year (N+1) right after the latest one — or the
@@ -82,9 +90,11 @@ class FiscalYearCubit extends Cubit<FiscalYearState> {
     if (current.years.isEmpty) {
       final jNow = JalaliDate.fromDateTime(now);
       final start = JalaliDate(jNow.year, 1, 1).toDateTime();
-      final end = JalaliDate(jNow.year + 1, 1, 1)
-          .toDateTime()
-          .subtract(const Duration(days: 1));
+      final end = JalaliDate(
+        jNow.year + 1,
+        1,
+        1,
+      ).toDateTime().subtract(const Duration(days: 1));
       next = FiscalYearEntity(
         id: const Uuid().v4(),
         title: 'سال مالی ۱',
@@ -99,8 +109,11 @@ class FiscalYearCubit extends Cubit<FiscalYearState> {
         (a, b) => a.yearNumber >= b.yearNumber ? a : b,
       );
       final start = latest.endDate.add(const Duration(days: 1));
-      final end = DateTime(start.year + 1, start.month, start.day)
-          .subtract(const Duration(days: 1));
+      final end = DateTime(
+        start.year + 1,
+        start.month,
+        start.day,
+      ).subtract(const Duration(days: 1));
       next = FiscalYearEntity(
         id: const Uuid().v4(),
         title: 'سال مالی ${latest.yearNumber + 1}',
@@ -112,8 +125,10 @@ class FiscalYearCubit extends Cubit<FiscalYearState> {
       );
     }
 
-    await _mutate(() => _repository.createFiscalYear(next),
-        successMessage: '${next.title} تعریف شد');
+    await _mutate(
+      () => _repository.createFiscalYear(next),
+      successMessage: '${next.title} تعریف شد',
+    );
   }
 
   Future<void> _mutate(
@@ -121,24 +136,30 @@ class FiscalYearCubit extends Cubit<FiscalYearState> {
     required String successMessage,
   }) async {
     final current = state;
-    final years = current is FiscalYearLoaded ? current.years : const <FiscalYearEntity>[];
+    final years = current is FiscalYearLoaded
+        ? current.years
+        : const <FiscalYearEntity>[];
     if (current is FiscalYearLoaded && current.isBusy) return;
     emit(FiscalYearLoaded(years: years, isBusy: true));
     try {
       await action();
       final fresh = await _repository.getFiscalYears();
-      emit(FiscalYearLoaded(
-        years: fresh,
-        message: successMessage,
-        messageStamp: DateTime.now().microsecondsSinceEpoch,
-      ));
+      emit(
+        FiscalYearLoaded(
+          years: fresh,
+          message: successMessage,
+          messageStamp: DateTime.now().microsecondsSinceEpoch,
+        ),
+      );
     } catch (e) {
-      emit(FiscalYearLoaded(
-        years: years,
-        message: _message(e),
-        messageIsError: true,
-        messageStamp: DateTime.now().microsecondsSinceEpoch,
-      ));
+      emit(
+        FiscalYearLoaded(
+          years: years,
+          message: _message(e),
+          messageIsError: true,
+          messageStamp: DateTime.now().microsecondsSinceEpoch,
+        ),
+      );
     }
   }
 

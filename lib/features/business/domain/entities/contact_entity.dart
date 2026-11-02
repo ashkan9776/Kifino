@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum ContactType {
@@ -17,10 +18,10 @@ enum ContactType {
   }
 
   String get titleFa => switch (this) {
-        ContactType.customer => 'مشتری',
-        ContactType.supplier => 'تأمین‌کننده',
-        ContactType.both => 'مشتری و تأمین‌کننده',
-      };
+    ContactType.customer => 'مشتری',
+    ContactType.supplier => 'تأمین‌کننده',
+    ContactType.both => 'مشتری و تأمین‌کننده',
+  };
 }
 
 class ContactEntity extends Equatable {
@@ -84,17 +85,17 @@ class ContactEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        companyName,
-        type,
-        phone,
-        email,
-        address,
-        taxNumber,
-        outstandingBalance,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    name,
+    companyName,
+    type,
+    phone,
+    email,
+    address,
+    taxNumber,
+    outstandingBalance,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

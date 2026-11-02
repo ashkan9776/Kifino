@@ -25,10 +25,7 @@ void main() {
       'emits [BudgetLoading, BudgetLoaded] on WatchBudgetsStarted',
       build: () => BudgetBloc(repository),
       act: (bloc) => bloc.add(const WatchBudgetsStarted()),
-      expect: () => [
-        isA<BudgetLoading>(),
-        isA<BudgetLoaded>(),
-      ],
+      expect: () => [isA<BudgetLoading>(), isA<BudgetLoaded>()],
     );
 
     blocTest<BudgetBloc, BudgetState>(
@@ -43,8 +40,14 @@ void main() {
             BudgetEntity(
               id: 'b-new',
               name: 'سفر',
-              amountLimit: const Money(minorUnits: 10000000, currency: Currency.irr),
-              amountSpent: const Money(minorUnits: 5000000, currency: Currency.irr),
+              amountLimit: const Money(
+                minorUnits: 10000000,
+                currency: Currency.irr,
+              ),
+              amountSpent: const Money(
+                minorUnits: 5000000,
+                currency: Currency.irr,
+              ),
               startDate: now.subtract(const Duration(days: 1)),
               endDate: now.add(const Duration(days: 30)),
               createdAt: now,

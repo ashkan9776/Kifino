@@ -15,7 +15,8 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
-import '../../../../core/widgets/app_date_picker.dart';import '../../domain/entities/debt_entity.dart';
+import '../../../../core/widgets/app_date_picker.dart';
+import '../../domain/entities/debt_entity.dart';
 import '../bloc/debt_bloc.dart';
 import '../widgets/edit_debt_sheet.dart';
 
@@ -33,7 +34,9 @@ class _DebtsPageState extends State<DebtsPage> {
     final l10n = context.l10n;
     final nameController = TextEditingController();
     final amountController = TextEditingController();
-    DebtType selectedType = _selectedFilter == 2 ? DebtType.receivable : DebtType.debt;
+    DebtType selectedType = _selectedFilter == 2
+        ? DebtType.receivable
+        : DebtType.debt;
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
 
     showModalBottomSheet(
@@ -55,21 +58,33 @@ class _DebtsPageState extends State<DebtsPage> {
                   bottom: AppSpacing.lg,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  color: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AppSheetHeader(
-                      title: l10n.isPersian ? 'ثبت بدهی یا طلب جدید' : 'New Debt or Receivable',
+                      title: l10n.isPersian
+                          ? 'ثبت بدهی یا طلب جدید'
+                          : 'New Debt or Receivable',
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SegmentedButton<DebtType>(
                       segments: [
-                        ButtonSegment(value: DebtType.debt, label: Text(l10n.payables)),
-                        ButtonSegment(value: DebtType.receivable, label: Text(l10n.receivables)),
+                        ButtonSegment(
+                          value: DebtType.debt,
+                          label: Text(l10n.payables),
+                        ),
+                        ButtonSegment(
+                          value: DebtType.receivable,
+                          label: Text(l10n.receivables),
+                        ),
                       ],
                       selected: {selectedType},
                       onSelectionChanged: (val) {
@@ -90,7 +105,9 @@ class _DebtsPageState extends State<DebtsPage> {
                       controller: amountController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                        PersianThousandsSeparatorTextInputFormatter(
+                          enabled: isFaLocale(context),
+                        ),
                       ],
                       decoration: InputDecoration(
                         labelText: l10n.amount,
@@ -114,9 +131,16 @@ class _DebtsPageState extends State<DebtsPage> {
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -124,13 +148,21 @@ class _DebtsPageState extends State<DebtsPage> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.calendar_month_rounded, size: 20),
+                                const Icon(
+                                  Icons.calendar_month_rounded,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
-                                Text(l10n.isPersian ? 'تاریخ سررسید' : 'Due date'),
+                                Text(
+                                  l10n.isPersian ? 'تاریخ سررسید' : 'Due date',
+                                ),
                               ],
                             ),
                             Text(
-                              AppDateFormatter.format(dueDate, locale: l10n.localeName),
+                              AppDateFormatter.format(
+                                dueDate,
+                                locale: l10n.localeName,
+                              ),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.income,
@@ -145,22 +177,29 @@ class _DebtsPageState extends State<DebtsPage> {
                       label: l10n.save,
                       onPressed: () {
                         final name = nameController.text.trim();
-                        final amountVal = int.tryParse(normalizeNumericInput(amountController.text)) ?? 0;
+                        final amountVal =
+                            int.tryParse(
+                              normalizeNumericInput(amountController.text),
+                            ) ??
+                            0;
                         if (name.isNotEmpty && amountVal > 0) {
                           final now = DateTime.now();
                           context.read<DebtBloc>().add(
-                                DebtCreateSubmitted(
-                                  DebtEntity(
-                                    id: '',
-                                    contactName: name,
-                                    type: selectedType,
-                                    totalAmount: Money.fromMinor(amountVal, Currency.irr),
-                                    dueDate: dueDate,
-                                    createdAt: now,
-                                    updatedAt: now,
-                                  ),
+                            DebtCreateSubmitted(
+                              DebtEntity(
+                                id: '',
+                                contactName: name,
+                                type: selectedType,
+                                totalAmount: Money.fromMinor(
+                                  amountVal,
+                                  Currency.irr,
                                 ),
-                              );
+                                dueDate: dueDate,
+                                createdAt: now,
+                                updatedAt: now,
+                              ),
+                            ),
+                          );
                           Navigator.pop(bottomSheetContext);
                         }
                       },
@@ -196,8 +235,12 @@ class _DebtsPageState extends State<DebtsPage> {
               bottom: AppSpacing.lg,
             ),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -213,7 +256,9 @@ class _DebtsPageState extends State<DebtsPage> {
                     Text('${l10n.remaining}: '),
                     AppMoneyText(
                       money: debt.remainingAmount,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -223,10 +268,14 @@ class _DebtsPageState extends State<DebtsPage> {
                   keyboardType: TextInputType.number,
                   autofocus: true,
                   inputFormatters: [
-                    PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                    PersianThousandsSeparatorTextInputFormatter(
+                      enabled: isFaLocale(context),
+                    ),
                   ],
                   decoration: InputDecoration(
-                    labelText: l10n.isPersian ? 'مبلغ پرداختی' : 'Payment Amount',
+                    labelText: l10n.isPersian
+                        ? 'مبلغ پرداختی'
+                        : 'Payment Amount',
                     prefixIcon: const Icon(Icons.payment_rounded),
                     suffixText: l10n.isPersian ? 'تومان' : '',
                   ),
@@ -235,14 +284,21 @@ class _DebtsPageState extends State<DebtsPage> {
                 AppButton(
                   label: l10n.confirm,
                   onPressed: () {
-                    final amountVal = int.tryParse(normalizeNumericInput(amountController.text)) ?? 0;
+                    final amountVal =
+                        int.tryParse(
+                          normalizeNumericInput(amountController.text),
+                        ) ??
+                        0;
                     if (amountVal > 0) {
                       context.read<DebtBloc>().add(
-                            DebtPaymentSubmitted(
-                              id: debt.id,
-                              amount: Money.fromMinor(amountVal, debt.totalAmount.currency),
-                            ),
-                          );
+                        DebtPaymentSubmitted(
+                          id: debt.id,
+                          amount: Money.fromMinor(
+                            amountVal,
+                            debt.totalAmount.currency,
+                          ),
+                        ),
+                      );
                       Navigator.pop(bottomSheetContext);
                     }
                   },
@@ -266,261 +322,330 @@ class _DebtsPageState extends State<DebtsPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.debtsAndLoans),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDebtDialog(context),
-        child: const Icon(Icons.add),
-      ),
-      body: BlocBuilder<DebtBloc, DebtState>(
-        builder: (context, state) {
-          if (state is DebtLoading) {
-            return const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  AppSkeleton(height: 120, borderRadius: AppSpacing.borderRadiusLg),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 80, borderRadius: AppSpacing.borderRadiusMd),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 80, borderRadius: AppSpacing.borderRadiusMd),
-                ],
-              ),
-            );
-          }
-
-          if (state is! DebtLoaded) {
-            return AppEmptyState(
-              icon: Icons.handshake_outlined,
-              title: l10n.debtsAndLoans,
-              description: l10n.isPersian
-                  ? 'بدهی‌ها و طلب‌های خود را ثبت کنید تا هیچ موعد پرداختی را از دست ندهید.'
-                  : 'Track your debts and receivables to stay on top of dues.',
-            );
-          }
-
-          final allDebts = state.debts;
-          final filteredDebts = allDebts.where((d) {
-            if (_selectedFilter == 1) return d.type == DebtType.debt;
-            if (_selectedFilter == 2) return d.type == DebtType.receivable;
-            return true;
-          }).toList();
-
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              // Summary Scorecard
-              AppCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.payables,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          AppMoneyText(
-                            money: state.totalDebtRemaining,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.expense,
-                            ),
-                          ),
-                        ],
+          appBar: AppBar(title: Text(l10n.debtsAndLoans)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAddDebtDialog(context),
+            child: const Icon(Icons.add),
+          ),
+          body: BlocBuilder<DebtBloc, DebtState>(
+            builder: (context, state) {
+              if (state is DebtLoading) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      AppSkeleton(
+                        height: 120,
+                        borderRadius: AppSpacing.borderRadiusLg,
                       ),
-                    ),
-                    Container(height: 36, width: 1, color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.receivables,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          AppMoneyText(
-                            money: state.totalReceivableRemaining,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.income,
-                            ),
-                          ),
-                        ],
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(
+                        height: 80,
+                        borderRadius: AppSpacing.borderRadiusMd,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Filter Segments
-              SegmentedButton<int>(
-                segments: [
-                  ButtonSegment(value: 0, label: Text(l10n.all)),
-                  ButtonSegment(value: 1, label: Text(l10n.payables)),
-                  ButtonSegment(value: 2, label: Text(l10n.receivables)),
-                ],
-                selected: {_selectedFilter},
-                onSelectionChanged: (val) {
-                  setState(() => _selectedFilter = val.first);
-                },
-                showSelectedIcon: false,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              if (filteredDebts.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                  child: AppEmptyState(
-                    icon: Icons.handshake_outlined,
-                    title: l10n.isPersian ? 'موردی یافت نشد' : 'No records found',
-                    description: l10n.isPersian
-                        ? 'موردی در این دسته‌بندی وجود ندارد.'
-                        : 'No items in this category.',
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(
+                        height: 80,
+                        borderRadius: AppSpacing.borderRadiusMd,
+                      ),
+                    ],
                   ),
-                )
-              else
-                ...filteredDebts.map((debt) {
-                  final isReceivable = debt.type == DebtType.receivable;
-                  final typeColor = isReceivable ? AppColors.income : AppColors.expense;
+                );
+              }
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: AppCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              if (state is! DebtLoaded) {
+                return AppEmptyState(
+                  icon: Icons.handshake_outlined,
+                  title: l10n.debtsAndLoans,
+                  description: l10n.isPersian
+                      ? 'بدهی‌ها و طلب‌های خود را ثبت کنید تا هیچ موعد پرداختی را از دست ندهید.'
+                      : 'Track your debts and receivables to stay on top of dues.',
+                );
+              }
+
+              final allDebts = state.debts;
+              final filteredDebts = allDebts.where((d) {
+                if (_selectedFilter == 1) return d.type == DebtType.debt;
+                if (_selectedFilter == 2) return d.type == DebtType.receivable;
+                return true;
+              }).toList();
+
+              return ListView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                children: [
+                  // Summary Scorecard
+                  AppCard(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.payables,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkSubtext
+                                      : AppColors.lightSubtext,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              AppMoneyText(
+                                money: state.totalDebtRemaining,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.expense,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 36,
+                          width: 1,
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.receivables,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkSubtext
+                                      : AppColors.lightSubtext,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              AppMoneyText(
+                                money: state.totalReceivableRemaining,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.income,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Filter Segments
+                  SegmentedButton<int>(
+                    segments: [
+                      ButtonSegment(value: 0, label: Text(l10n.all)),
+                      ButtonSegment(value: 1, label: Text(l10n.payables)),
+                      ButtonSegment(value: 2, label: Text(l10n.receivables)),
+                    ],
+                    selected: {_selectedFilter},
+                    onSelectionChanged: (val) {
+                      setState(() => _selectedFilter = val.first);
+                    },
+                    showSelectedIcon: false,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  if (filteredDebts.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xl,
+                      ),
+                      child: AppEmptyState(
+                        icon: Icons.handshake_outlined,
+                        title: l10n.isPersian
+                            ? 'موردی یافت نشد'
+                            : 'No records found',
+                        description: l10n.isPersian
+                            ? 'موردی در این دسته‌بندی وجود ندارد.'
+                            : 'No items in this category.',
+                      ),
+                    )
+                  else
+                    ...filteredDebts.map((debt) {
+                      final isReceivable = debt.type == DebtType.receivable;
+                      final typeColor = isReceivable
+                          ? AppColors.income
+                          : AppColors.expense;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: AppCard(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: typeColor.withValues(alpha: 0.12),
-                                    child: Icon(
-                                      isReceivable ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                      size: 18,
-                                      color: typeColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  Row(
                                     children: [
-                                      Text(
-                                        debt.contactName,
-                                        style: theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
+                                      CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: typeColor.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        child: Icon(
+                                          isReceivable
+                                              ? Icons.arrow_downward_rounded
+                                              : Icons.arrow_upward_rounded,
+                                          size: 18,
+                                          color: typeColor,
                                         ),
                                       ),
-                                      if (debt.dueDate != null)
-                                        Text(
-                                          '${l10n.dueDate}: ${AppDateFormatter.formatShort(debt.dueDate!, locale: l10n.localeName)}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: debt.isOverdue
-                                                ? AppColors.danger
-                                                : (isDark ? AppColors.darkSubtext : AppColors.lightSubtext),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            debt.contactName,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                          if (debt.dueDate != null)
+                                            Text(
+                                              '${l10n.dueDate}: ${AppDateFormatter.formatShort(debt.dueDate!, locale: l10n.localeName)}',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: debt.isOverdue
+                                                        ? AppColors.danger
+                                                        : (isDark
+                                                              ? AppColors
+                                                                    .darkSubtext
+                                                              : AppColors
+                                                                    .lightSubtext),
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      AppMoneyText(
+                                        money: debt.remainingAmount,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: typeColor,
+                                            ),
+                                      ),
+                                      if (debt.isSettled)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.income.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            l10n.settled,
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: AppColors.income,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
                                         ),
                                     ],
                                   ),
                                 ],
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  AppMoneyText(
-                                    money: debt.remainingAmount,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: typeColor,
+                              if (!debt.isSettled) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: (debt.progressPercent / 100.0).clamp(
+                                      0.0,
+                                      1.0,
                                     ),
-                                  ),
-                                  if (debt.isSettled)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.income.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        l10n.settled,
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: AppColors.income,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                    minHeight: 6,
+                                    backgroundColor: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      typeColor,
                                     ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (!debt.isSettled) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: (debt.progressPercent / 100.0).clamp(0.0, 1.0),
-                                minHeight: 6,
-                                backgroundColor: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                                valueColor: AlwaysStoppedAnimation<Color>(typeColor),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  TextNormalizer.auto('${debt.progressPercent.toStringAsFixed(0)}% ${l10n.settled}'),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
                                   ),
                                 ),
+                                const SizedBox(height: AppSpacing.xs),
                                 Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    IconButton(
-                                      visualDensity: VisualDensity.compact,
-                                      icon: const Icon(Icons.edit_outlined, size: 18),
-                                      tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
-                                      onPressed: () => EditDebtSheet.show(context, debt),
-                                    ),
-                                    TextButton.icon(
-                                      onPressed: () => _showPaymentDialog(context, debt),
-                                      icon: const Icon(Icons.add, size: 16),
-                                      label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
-                                      style: TextButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
+                                    Text(
+                                      TextNormalizer.auto(
+                                        '${debt.progressPercent.toStringAsFixed(0)}% ${l10n.settled}',
                                       ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? AppColors.darkSubtext
+                                                : AppColors.lightSubtext,
+                                          ),
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                          ),
+                                          tooltip: l10n.isPersian
+                                              ? 'ویرایش'
+                                              : 'Edit',
+                                          onPressed: () =>
+                                              EditDebtSheet.show(context, debt),
+                                        ),
+                                        TextButton.icon(
+                                          onPressed: () =>
+                                              _showPaymentDialog(context, debt),
+                                          icon: const Icon(Icons.add, size: 16),
+                                          label: Text(
+                                            l10n.isPersian
+                                                ? 'ثبت پرداخت'
+                                                : 'Pay',
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              const SizedBox(height: AppSpacing.xxl),
-            ],
-          );
-        },
-      ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  const SizedBox(height: AppSpacing.xxl),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

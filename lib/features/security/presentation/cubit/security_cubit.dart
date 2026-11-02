@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/services/security_service.dart';
 import 'security_state.dart';
 
@@ -9,21 +10,21 @@ class SecurityCubit extends Cubit<SecurityState> {
   /// session can be re-locked on return (spec session management).
   bool _wentToBackground = false;
 
-  SecurityCubit({
-    required this.securityService,
-  }) : super(const SecurityState());
+  SecurityCubit({required this.securityService}) : super(const SecurityState());
 
   Future<void> init() async {
     final isPinSet = await securityService.isPinSet();
     final canBio = await securityService.canCheckBiometrics();
     final isBioEnabled = await securityService.isBiometricEnabled();
 
-    emit(state.copyWith(
-      isPinSet: isPinSet,
-      canBiometric: canBio,
-      isBiometricEnabled: isBioEnabled,
-      isLocked: isPinSet, // Automatically lock if PIN is configured
-    ));
+    emit(
+      state.copyWith(
+        isPinSet: isPinSet,
+        canBiometric: canBio,
+        isBiometricEnabled: isBioEnabled,
+        isLocked: isPinSet, // Automatically lock if PIN is configured
+      ),
+    );
 
     if (isPinSet && isBioEnabled && canBio) {
       authenticateBiometric();
@@ -47,10 +48,7 @@ class SecurityCubit extends Cubit<SecurityState> {
 
     emit(state.copyWith(isAuthenticating: true));
     final authenticated = await securityService.authenticateBiometric();
-    emit(state.copyWith(
-      isAuthenticating: false,
-      isLocked: !authenticated,
-    ));
+    emit(state.copyWith(isAuthenticating: false, isLocked: !authenticated));
     return authenticated;
   }
 
@@ -61,7 +59,13 @@ class SecurityCubit extends Cubit<SecurityState> {
 
   Future<void> removePin() async {
     await securityService.removePin();
-    emit(state.copyWith(isPinSet: false, isLocked: false, isBiometricEnabled: false));
+    emit(
+      state.copyWith(
+        isPinSet: false,
+        isLocked: false,
+        isBiometricEnabled: false,
+      ),
+    );
   }
 
   Future<void> toggleBiometrics(bool enabled) async {

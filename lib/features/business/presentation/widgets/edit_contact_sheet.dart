@@ -65,7 +65,9 @@ class _EditContactSheetState extends State<EditContactSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n.isPersian ? 'نام مخاطب را وارد کنید.' : 'Enter the contact name.',
+            l10n.isPersian
+                ? 'نام مخاطب را وارد کنید.'
+                : 'Enter the contact name.',
           ),
         ),
       );
@@ -101,9 +103,8 @@ class _EditContactSheetState extends State<EditContactSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -175,7 +176,9 @@ class _EditContactSheetState extends State<EditContactSheet> {
                   labelText: isFa ? 'نوع مخاطب' : 'Contact type',
                 ),
                 items: ContactType.values
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t.titleFa)))
+                    .map(
+                      (t) => DropdownMenuItem(value: t, child: Text(t.titleFa)),
+                    )
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedType = val);

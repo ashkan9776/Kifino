@@ -15,6 +15,7 @@ class AppLocalizations {
       _AppLocalizationsDelegate();
 
   static const List<Locale> supportedLocales = [
+    Locale('fa', 'IR'),
     Locale('fa'),
     Locale('en'),
   ];
@@ -24,7 +25,8 @@ class AppLocalizations {
 
   // Common UI Strings
   String get appName => isPersian ? 'کیفینو' : 'Kifino';
-  String get appTagline => isPersian ? 'سیستم عامل مالی شما' : 'Your Financial OS';
+  String get appTagline =>
+      isPersian ? 'سیستم عامل مالی شما' : 'Your Financial OS';
   String get confirm => isPersian ? 'تایید' : 'Confirm';
   String get cancel => isPersian ? 'انصراف' : 'Cancel';
   String get save => isPersian ? 'ذخیره' : 'Save';
@@ -63,13 +65,18 @@ class AppLocalizations {
   String get aiAssistant => isPersian ? 'دستیار هوشمند' : 'AI Assistant';
 
   // Dashboard Greetings & Widgets
-  String greeting(String name) => isPersian ? 'سلام، $name 👋' : 'Hello, $name 👋';
-  String get financialHealth => isPersian ? 'وضعیت مالی شما' : 'Financial Health';
+  String greeting(String name) =>
+      isPersian ? 'سلام، $name 👋' : 'Hello, $name 👋';
+  String get financialHealth =>
+      isPersian ? 'وضعیت مالی شما' : 'Financial Health';
   String get thisMonth => isPersian ? 'این ماه' : 'This Month';
-  String get recentTransactions => isPersian ? 'تراکنش‌های اخیر' : 'Recent Transactions';
+  String get recentTransactions =>
+      isPersian ? 'تراکنش‌های اخیر' : 'Recent Transactions';
   String get cashFlow => isPersian ? 'جریان نقدی' : 'Cash Flow';
-  String get budgetAdherence => isPersian ? 'پایبندی به بودجه' : 'Budget Adherence';
-  String get noTransactionsYet => isPersian ? 'هنوز تراکنشی ثبت نشده است' : 'No transactions recorded yet';
+  String get budgetAdherence =>
+      isPersian ? 'پایبندی به بودجه' : 'Budget Adherence';
+  String get noTransactionsYet =>
+      isPersian ? 'هنوز تراکنشی ثبت نشده است' : 'No transactions recorded yet';
   String get noTransactionsDesc => isPersian
       ? 'مدیریت پول خود را با ثبت اولین تراکنش آغاز کنید.'
       : 'Start tracking your money by recording your first transaction.';
@@ -79,18 +86,25 @@ class AppLocalizations {
 
   // Transaction Entry
   String get amount => isPersian ? 'مبلغ' : 'Amount';
-  String get selectCategory => isPersian ? 'انتخاب دسته‌بندی' : 'Select Category';
+  String get selectCategory =>
+      isPersian ? 'انتخاب دسته‌بندی' : 'Select Category';
   String get selectAccount => isPersian ? 'انتخاب حساب' : 'Select Account';
-  String get destinationAccount => isPersian ? 'حساب مقصد' : 'Destination Account';
+  String get destinationAccount =>
+      isPersian ? 'حساب مقصد' : 'Destination Account';
   String get note => isPersian ? 'یادداشت' : 'Note';
-  String get notePlaceholder => isPersian ? 'بابت چی بود؟' : 'What was this for?';
+  String get notePlaceholder =>
+      isPersian ? 'بابت چی بود؟' : 'What was this for?';
   String get tags => isPersian ? 'برچسب‌ها' : 'Tags';
   String get date => isPersian ? 'تاریخ' : 'Date';
 
   // Validation
-  String get amountRequired => isPersian ? 'مبلغ باید بیشتر از صفر باشد' : 'Amount must be greater than zero';
-  String get accountRequired => isPersian ? 'لطفاً حساب را انتخاب کنید' : 'Please select an account';
-  String get categoryRequired => isPersian ? 'لطفاً دسته‌بندی را انتخاب کنید' : 'Please select a category';
+  String get amountRequired => isPersian
+      ? 'مبلغ باید بیشتر از صفر باشد'
+      : 'Amount must be greater than zero';
+  String get accountRequired =>
+      isPersian ? 'لطفاً حساب را انتخاب کنید' : 'Please select an account';
+  String get categoryRequired =>
+      isPersian ? 'لطفاً دسته‌بندی را انتخاب کنید' : 'Please select a category';
 
   // Analytics & Budgets
   String get savingsRate => isPersian ? 'نرخ پس‌انداز' : 'Savings Rate';
@@ -102,7 +116,8 @@ class AppLocalizations {
   String get overBudget => isPersian ? 'فراتر از بودجه' : 'Over Budget';
   String get nearLimit => isPersian ? 'نزدیک به سقف' : 'Near Limit';
   String get onTrack => isPersian ? 'در بودجه' : 'On Track';
-  String get categorySpending => isPersian ? 'هزینه‌ها بر اساس دسته‌بندی' : 'Spending by Category';
+  String get categorySpending =>
+      isPersian ? 'هزینه‌ها بر اساس دسته‌بندی' : 'Spending by Category';
   String get cashFlowTrend => isPersian ? 'روند جریان نقدی' : 'Cash Flow Trend';
   String get dailyAverage => isPersian ? 'میانگین روزانه' : 'Daily Average';
   String get netCashFlow => isPersian ? 'جریان نقدی خالص' : 'Net Cash Flow';
@@ -110,20 +125,25 @@ class AppLocalizations {
   String get periodLast3Months => isPersian ? '۳ ماه اخیر' : 'Last 3 Months';
   String get periodThisYear => isPersian ? 'امسال' : 'This Year';
   String get activeBudgets => isPersian ? 'بودجه‌های فعال' : 'Active Budgets';
-  String get noBudgetsYet => isPersian ? 'بودجه‌ای تعریف نشده است' : 'No active budgets';
-  String get noBudgetsDesc => isPersian ? 'برای مدیریت بهتر هزینه‌ها، سقف بودجه تعیین کنید.' : 'Set budget limits to keep your expenses in check.';
+  String get noBudgetsYet =>
+      isPersian ? 'بودجه‌ای تعریف نشده است' : 'No active budgets';
+  String get noBudgetsDesc => isPersian
+      ? 'برای مدیریت بهتر هزینه‌ها، سقف بودجه تعیین کنید.'
+      : 'Set budget limits to keep your expenses in check.';
   String get newBudget => isPersian ? 'بودجه جدید' : 'New Budget';
   String get budgetName => isPersian ? 'عنوان بودجه' : 'Budget Name';
 
   // Debts, Installments, Checks, Assets
-  String get debtsAndLoans => isPersian ? 'بدهی‌ها و مطالبات' : 'Debts & Receivables';
+  String get debtsAndLoans =>
+      isPersian ? 'بدهی‌ها و مطالبات' : 'Debts & Receivables';
   String get payables => isPersian ? 'بدهی‌های من' : 'My Payables';
   String get receivables => isPersian ? 'طلب‌های من' : 'My Receivables';
   String get personName => isPersian ? 'طرف حساب / شخص' : 'Person Name';
   String get dueDate => isPersian ? 'سررسید' : 'Due Date';
   String get settled => isPersian ? 'تسویه شده' : 'Settled';
   String get unpaid => isPersian ? 'تسویه نشده' : 'Unpaid';
-  String get checkNumber => isPersian ? 'شماره چک / صیادی' : 'Check / Sayadi Number';
+  String get checkNumber =>
+      isPersian ? 'شماره چک / صیادی' : 'Check / Sayadi Number';
   String get bankName => isPersian ? 'نام بانک' : 'Bank Name';
   String get assetType => isPersian ? 'نوع دارایی' : 'Asset Type';
   String get currentValuation => isPersian ? 'ارزش روز' : 'Current Value';
@@ -131,9 +151,11 @@ class AppLocalizations {
   String get profitLoss => isPersian ? 'سود / زیان' : 'Profit / Loss';
 
   // Small Business & Invoicing
-  String get businessOverview => isPersian ? 'نمای کلی کسب‌وکار' : 'Business Overview';
+  String get businessOverview =>
+      isPersian ? 'نمای کلی کسب‌وکار' : 'Business Overview';
   String get salesInvoices => isPersian ? 'فاکتورهای فروش' : 'Sales Invoices';
-  String get purchaseInvoices => isPersian ? 'فاکتورهای خرید' : 'Purchase Invoices';
+  String get purchaseInvoices =>
+      isPersian ? 'فاکتورهای خرید' : 'Purchase Invoices';
   String get inventoryStock => isPersian ? 'موجودی انبار' : 'Inventory Stock';
   String get newInvoice => isPersian ? 'صدور فاکتور جدید' : 'New Invoice';
   String get newCustomer => isPersian ? 'مشتری جدید' : 'New Customer';

@@ -36,17 +36,16 @@ class _FiscalYearsView extends StatelessWidget {
     final colors = context.customColors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('سال‌های مالی'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('سال‌های مالی'), centerTitle: true),
       body: BlocConsumer<FiscalYearCubit, FiscalYearState>(
         listener: (context, state) {
           if (state is FiscalYearLoaded && state.message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message!),
-                backgroundColor: state.messageIsError ? colors.expense : colors.income,
+                backgroundColor: state.messageIsError
+                    ? colors.expense
+                    : colors.income,
               ),
             );
           }
@@ -80,20 +79,24 @@ class _FiscalYearsView extends StatelessWidget {
               return AppEmptyState(
                 icon: Icons.calendar_month_outlined,
                 title: 'سال مالی تعریف نشده است',
-                description:
-                    'برای شروع ثبت اسناد حسابداری، اولین سال مالی را با دکمه پایین صفحه تعریف کنید.',
+                description: 'برای شروع ثبت اسناد حسابداری، اولین سال مالی را با دکمه پایین صفحه تعریف کنید.',
                 actionLabel: 'تعریف اولین سال مالی',
-                onAction: () => context.read<FiscalYearCubit>().createNextYear(),
+                onAction: () =>
+                    context.read<FiscalYearCubit>().createNextYear(),
               );
             }
 
-            final sorted = [...state.years]..sort((a, b) => b.yearNumber.compareTo(a.yearNumber));
+            final sorted = [...state.years]
+              ..sort((a, b) => b.yearNumber.compareTo(a.yearNumber));
             final latestNumber = sorted.first.yearNumber;
 
             return RefreshIndicator(
               onRefresh: () async => context.read<FiscalYearCubit>().load(),
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: sorted.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
@@ -156,7 +159,9 @@ class _YearCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.customColors;
     final isBusy = context.select<FiscalYearCubit, bool>(
-      (cubit) => cubit.state is FiscalYearLoaded && (cubit.state as FiscalYearLoaded).isBusy,
+      (cubit) =>
+          cubit.state is FiscalYearLoaded &&
+          (cubit.state as FiscalYearLoaded).isBusy,
     );
     final startJ = JalaliDate.fromDateTime(year.startDate);
     final endJ = JalaliDate.fromDateTime(year.endDate);
@@ -193,7 +198,9 @@ class _YearCard extends StatelessWidget {
                     Text(
                       'سال شماره ${TextNormalizer.auto(year.yearNumber.toString())} • '
                       '${startJ.formatFull()} تا ${endJ.formatFull()}',
-                      style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -201,26 +208,23 @@ class _YearCard extends StatelessWidget {
               AppStatusBadge(
                 label: year.isClosed ? 'بسته‌شده' : 'فعال',
                 icon: year.isClosed ? Icons.lock : Icons.check_circle,
-                tone: year.isClosed ? AppStatusTone.neutral : AppStatusTone.success,
+                tone: year.isClosed
+                    ? AppStatusTone.neutral
+                    : AppStatusTone.success,
               ),
             ],
           ),
-          if (year.openingDocumentId != null || year.closingDocumentId != null) ...[
+          if (year.openingDocumentId != null ||
+              year.closingDocumentId != null) ...[
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 6,
               children: [
                 if (year.openingDocumentId != null)
-                  _VoucherBadge(
-                    label: 'سند افتتاحیه ✓',
-                    color: colors.info,
-                  ),
+                  _VoucherBadge(label: 'سند افتتاحیه ✓', color: colors.info),
                 if (year.closingDocumentId != null)
-                  _VoucherBadge(
-                    label: 'سند اختتامیه ✓',
-                    color: colors.warning,
-                  ),
+                  _VoucherBadge(label: 'سند اختتامیه ✓', color: colors.warning),
               ],
             ),
           ],
@@ -248,7 +252,9 @@ class _YearCard extends StatelessWidget {
                       variant: AppButtonVariant.secondary,
                       onPressed: isBusy
                           ? null
-                          : () => context.read<FiscalYearCubit>().createNextYear(),
+                          : () => context
+                                .read<FiscalYearCubit>()
+                                .createNextYear(),
                     ),
                   ),
                 ],
@@ -277,7 +283,10 @@ class _VoucherBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTypography.labelSmall.copyWith(color: color, fontWeight: FontWeight.bold),
+        style: AppTypography.labelSmall.copyWith(
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

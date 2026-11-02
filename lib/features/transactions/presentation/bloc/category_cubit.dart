@@ -48,12 +48,12 @@ final class CategoryState extends Equatable {
 
   @override
   List<Object?> get props => [
-        selectedType,
-        categories,
-        isLoading,
-        successOp,
-        error,
-      ];
+    selectedType,
+    categories,
+    isLoading,
+    successOp,
+    error,
+  ];
 }
 
 /// Watches categories per selected type and exposes create/update/delete.
@@ -70,10 +70,11 @@ class CategoryCubit extends Cubit<CategoryState> {
   void _watch(CategoryType type) {
     _subscription?.cancel();
     emit(state.copyWith(categories: const [], isLoading: true));
-    _subscription = _repository.watchCategories(type: type).listen(
-          (categories) => emit(
-            state.copyWith(categories: categories, isLoading: false),
-          ),
+    _subscription = _repository
+        .watchCategories(type: type)
+        .listen(
+          (categories) =>
+              emit(state.copyWith(categories: categories, isLoading: false)),
         );
   }
 
@@ -83,9 +84,8 @@ class CategoryCubit extends Cubit<CategoryState> {
     _watch(type);
   }
 
-  void clearNotifications() => emit(
-        state.copyWith(clearSuccessOp: true, clearError: true),
-      );
+  void clearNotifications() =>
+      emit(state.copyWith(clearSuccessOp: true, clearError: true));
 
   Future<void> createCategory({
     required String name,
@@ -116,10 +116,7 @@ class CategoryCubit extends Cubit<CategoryState> {
       ),
     );
     result.fold(
-      onSuccess: (_) => emit(state.copyWith(
-        successOp: 'create',
-        error: null,
-      )),
+      onSuccess: (_) => emit(state.copyWith(successOp: 'create', error: null)),
       onFailure: (failure) => emit(state.copyWith(error: failure.message)),
     );
   }
@@ -157,10 +154,7 @@ class CategoryCubit extends Cubit<CategoryState> {
       ),
     );
     result.fold(
-      onSuccess: (_) => emit(state.copyWith(
-        successOp: 'update',
-        error: null,
-      )),
+      onSuccess: (_) => emit(state.copyWith(successOp: 'update', error: null)),
       onFailure: (failure) => emit(state.copyWith(error: failure.message)),
     );
   }
@@ -168,25 +162,20 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> deleteCategory(String id) async {
     final result = await _repository.deleteCategory(id);
     result.fold(
-      onSuccess: (_) => emit(state.copyWith(
-        successOp: 'delete',
-        error: null,
-      )),
+      onSuccess: (_) => emit(state.copyWith(successOp: 'delete', error: null)),
       onFailure: (failure) => emit(state.copyWith(error: failure.message)),
     );
   }
 
   bool _nameTaken(String name, {String? excludeId}) {
-    return state.categories
-        .any((c) => c.id != excludeId && c.name.trim() == name);
+    return state.categories.any(
+      (c) => c.id != excludeId && c.name.trim() == name,
+    );
   }
 
   int _nextSortOrder() {
     if (state.categories.isEmpty) return 0;
-    return state.categories
-            .map((c) => c.sortOrder)
-            .reduce(math.max) +
-        1;
+    return state.categories.map((c) => c.sortOrder).reduce(math.max) + 1;
   }
 
   @override

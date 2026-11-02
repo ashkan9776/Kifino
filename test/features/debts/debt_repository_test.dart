@@ -26,7 +26,10 @@ void main() {
         id: 'debt-1',
         contactName: 'رضا علوی',
         type: DebtType.debt,
-        totalAmount: const Money(minorUnits: 10000000, currency: Currency.irr), // 10M
+        totalAmount: const Money(
+          minorUnits: 10000000,
+          currency: Currency.irr,
+        ), // 10M
         dueDate: now.add(const Duration(days: 30)),
         createdAt: now,
         updatedAt: now,
@@ -36,7 +39,10 @@ void main() {
       expect(createRes.isSuccess, isTrue);
 
       // Record partial payment of 4M
-      await repository.addPayment('debt-1', const Money(minorUnits: 4000000, currency: Currency.irr));
+      await repository.addPayment(
+        'debt-1',
+        const Money(minorUnits: 4000000, currency: Currency.irr),
+      );
 
       final debts = await repository.getDebts();
       expect(debts.isSuccess, isTrue);
@@ -46,7 +52,10 @@ void main() {
       expect(updated.isSettled, isFalse);
 
       // Pay remaining 6M
-      await repository.addPayment('debt-1', const Money(minorUnits: 6000000, currency: Currency.irr));
+      await repository.addPayment(
+        'debt-1',
+        const Money(minorUnits: 6000000, currency: Currency.irr),
+      );
       final debtsAfter = await repository.getDebts();
       final settled = debtsAfter.dataOrNull!.first;
       expect(settled.isSettled, isTrue);

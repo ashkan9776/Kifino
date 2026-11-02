@@ -23,23 +23,30 @@ class SettingsCubit extends Cubit<SettingsState> {
     final themeIndex = _service.loadThemeModeIndex();
     final onboarded = _service.loadOnboardingCompleted();
 
-    TextNormalizer.setPersianDigitsEnabled(enabled: locale.languageCode == 'fa');
+    TextNormalizer.setPersianDigitsEnabled(
+      enabled: locale.languageCode == 'fa',
+    );
     AppCurrency.set(currency);
     AppRouter.onboardingCompleted = onboarded;
 
-    emit(state.copyWith(
-      locale: locale,
-      currency: currency,
-      themeMode: ThemeMode.values[themeIndex.clamp(0, ThemeMode.values.length - 1)],
-      onboardingCompleted: onboarded,
-      loaded: true,
-    ));
+    emit(
+      state.copyWith(
+        locale: locale,
+        currency: currency,
+        themeMode:
+            ThemeMode.values[themeIndex.clamp(0, ThemeMode.values.length - 1)],
+        onboardingCompleted: onboarded,
+        loaded: true,
+      ),
+    );
     AppRouter.refresh();
   }
 
   Future<void> setLocale(Locale locale) async {
     await _service.setLanguageCode(locale.languageCode);
-    TextNormalizer.setPersianDigitsEnabled(enabled: locale.languageCode == 'fa');
+    TextNormalizer.setPersianDigitsEnabled(
+      enabled: locale.languageCode == 'fa',
+    );
     emit(state.copyWith(locale: locale));
   }
 
@@ -66,13 +73,17 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _service.setCurrencyCode(currency.code);
     await _service.setOnboardingCompleted(completed: true);
 
-    TextNormalizer.setPersianDigitsEnabled(enabled: locale.languageCode == 'fa');
+    TextNormalizer.setPersianDigitsEnabled(
+      enabled: locale.languageCode == 'fa',
+    );
     AppCurrency.set(currency);
     AppRouter.onboardingCompleted = true;
-    emit(state.copyWith(
-      locale: locale,
-      currency: currency,
-      onboardingCompleted: true,
-    ));
+    emit(
+      state.copyWith(
+        locale: locale,
+        currency: currency,
+        onboardingCompleted: true,
+      ),
+    );
   }
 }

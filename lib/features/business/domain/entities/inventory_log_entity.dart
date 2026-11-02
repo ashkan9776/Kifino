@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum InventoryMovementType {
@@ -19,12 +20,12 @@ enum InventoryMovementType {
   }
 
   String get titleFa => switch (this) {
-        InventoryMovementType.purchase => 'خرید (افزایش موجودی)',
-        InventoryMovementType.sale => 'فروش (کاهش موجودی)',
-        InventoryMovementType.adjustment => 'اصلاح دستی موجودی',
-        InventoryMovementType.returned => 'مرجوعی به انبار',
-        InventoryMovementType.loss => 'ضایعات و کسری',
-      };
+    InventoryMovementType.purchase => 'خرید (افزایش موجودی)',
+    InventoryMovementType.sale => 'فروش (کاهش موجودی)',
+    InventoryMovementType.adjustment => 'اصلاح دستی موجودی',
+    InventoryMovementType.returned => 'مرجوعی به انبار',
+    InventoryMovementType.loss => 'ضایعات و کسری',
+  };
 }
 
 class InventoryLogEntity extends Equatable {
@@ -56,16 +57,16 @@ class InventoryLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        productId,
-        productName,
-        changeQuantity,
-        movementType,
-        referenceId,
-        costPerUnit,
-        notes,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    productId,
+    productName,
+    changeQuantity,
+    movementType,
+    referenceId,
+    costPerUnit,
+    notes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

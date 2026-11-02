@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -109,9 +110,9 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     emit(GoalLoading());
     _subscription?.cancel();
     _subscription = _repository.watchGoals().listen(
-          (goals) => add(_GoalsUpdated(goals)),
-          onError: (e) => emit(GoalFailure(e.toString())),
-        );
+      (goals) => add(_GoalsUpdated(goals)),
+      onError: (e) => emit(GoalFailure(e.toString())),
+    );
   }
 
   void _onGoalsUpdated(_GoalsUpdated event, Emitter<GoalState> emit) {
@@ -134,8 +135,9 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     final totalSaved = Money.fromMinor(savedMinor, currency);
     final totalTarget = Money.fromMinor(targetMinor, currency);
 
-    final overallPercent =
-        targetMinor <= 0 ? 0.0 : ((savedMinor / targetMinor) * 100).clamp(0.0, 100.0);
+    final overallPercent = targetMinor <= 0
+        ? 0.0
+        : ((savedMinor / targetMinor) * 100).clamp(0.0, 100.0);
 
     return GoalLoaded(
       goals: goals,
@@ -145,30 +147,44 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     );
   }
 
-  Future<void> _onCreateSubmitted(GoalCreateSubmitted event, Emitter<GoalState> emit) async {
+  Future<void> _onCreateSubmitted(
+    GoalCreateSubmitted event,
+    Emitter<GoalState> emit,
+  ) async {
     final result = await _repository.createGoal(event.goal);
     result.fold(
-      onSuccess: (_) => emit(const GoalOperationSuccess('Goal created', op: 'create')),
+      onSuccess: (_) =>
+          emit(const GoalOperationSuccess('Goal created', op: 'create')),
       onFailure: (failure) => emit(GoalFailure(failure.message)),
     );
   }
 
-  Future<void> _onContributeSubmitted(GoalContributeSubmitted event, Emitter<GoalState> emit) async {
+  Future<void> _onContributeSubmitted(
+    GoalContributeSubmitted event,
+    Emitter<GoalState> emit,
+  ) async {
     final result = await _repository.contributeToGoal(event.id, event.amount);
     result.fold(
       onSuccess: (goal) => emit(
         goal.isAchieved
             ? const GoalOperationSuccess('Goal achieved', op: 'achieve')
-            : const GoalOperationSuccess('Contribution saved', op: 'contribute'),
+            : const GoalOperationSuccess(
+                'Contribution saved',
+                op: 'contribute',
+              ),
       ),
       onFailure: (failure) => emit(GoalFailure(failure.message)),
     );
   }
 
-  Future<void> _onDeleteSubmitted(GoalDeleteSubmitted event, Emitter<GoalState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    GoalDeleteSubmitted event,
+    Emitter<GoalState> emit,
+  ) async {
     final result = await _repository.deleteGoal(event.id);
     result.fold(
-      onSuccess: (_) => emit(const GoalOperationSuccess('Goal deleted', op: 'delete')),
+      onSuccess: (_) =>
+          emit(const GoalOperationSuccess('Goal deleted', op: 'delete')),
       onFailure: (failure) => emit(GoalFailure(failure.message)),
     );
   }

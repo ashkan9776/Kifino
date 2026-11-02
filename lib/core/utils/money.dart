@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
+
 import '../errors/exceptions.dart';
 import 'text_normalizer.dart';
 
@@ -33,10 +35,7 @@ class Money extends Equatable implements Comparable<Money> {
   final int minorUnits;
   final Currency currency;
 
-  const Money({
-    required this.minorUnits,
-    this.currency = Currency.toman,
-  });
+  const Money({required this.minorUnits, this.currency = Currency.toman});
 
   const Money.zero([this.currency = Currency.toman]) : minorUnits = 0;
 
@@ -113,7 +112,10 @@ class Money extends Equatable implements Comparable<Money> {
   /// Convert between Toman and Rial directly without rate:
   Money toTomanOrRial() {
     if (currency == Currency.irr) {
-      return Money(minorUnits: (minorUnits / 10).round(), currency: Currency.toman);
+      return Money(
+        minorUnits: (minorUnits / 10).round(),
+        currency: Currency.toman,
+      );
     } else if (currency == Currency.toman) {
       return Money(minorUnits: minorUnits * 10, currency: Currency.irr);
     }
@@ -126,8 +128,10 @@ class Money extends Equatable implements Comparable<Money> {
   /// sums are computed so the ledger never mixes units.
   Money normalizeTo(Currency target) {
     if (currency == target) return this;
-    final bool thisIranian = currency == Currency.irr || currency == Currency.toman;
-    final bool targetIranian = target == Currency.irr || target == Currency.toman;
+    final bool thisIranian =
+        currency == Currency.irr || currency == Currency.toman;
+    final bool targetIranian =
+        target == Currency.irr || target == Currency.toman;
     if (thisIranian && targetIranian) return toTomanOrRial();
     return this;
   }
@@ -136,8 +140,10 @@ class Money extends Equatable implements Comparable<Money> {
   /// (same currency, or convertible Iranian pair).
   bool isCompatibleWith(Currency target) {
     if (currency == target) return true;
-    final bool thisIranian = currency == Currency.irr || currency == Currency.toman;
-    final bool targetIranian = target == Currency.irr || target == Currency.toman;
+    final bool thisIranian =
+        currency == Currency.irr || currency == Currency.toman;
+    final bool targetIranian =
+        target == Currency.irr || target == Currency.toman;
     return thisIranian && targetIranian;
   }
 
@@ -166,7 +172,9 @@ class Money extends Equatable implements Comparable<Money> {
     }
 
     // RTL currencies usually place symbol after or before depending on locale
-    if (currency == Currency.toman || currency == Currency.irr || currency == Currency.aed) {
+    if (currency == Currency.toman ||
+        currency == Currency.irr ||
+        currency == Currency.aed) {
       return '$formattedNumber ${currency.symbol}';
     } else {
       return '${currency.symbol}$formattedNumber';
@@ -181,14 +189,19 @@ class Money extends Equatable implements Comparable<Money> {
     final value = toMajor().abs();
     String text;
 
-    String num(double n) =>
-        n >= 100 ? n.round().toString() : n.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
+    String num(double n) => n >= 100
+        ? n.round().toString()
+        : n.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
 
     if (currency.decimals == 0) {
       if (value >= 1000000000) {
-        text = persian ? '${num(value / 1000000000)} میلیارد' : '${num(value / 1000000000)}B';
+        text = persian
+            ? '${num(value / 1000000000)} میلیارد'
+            : '${num(value / 1000000000)}B';
       } else if (value >= 1000000) {
-        text = persian ? '${num(value / 1000000)} میلیون' : '${num(value / 1000000)}M';
+        text = persian
+            ? '${num(value / 1000000)} میلیون'
+            : '${num(value / 1000000)}M';
       } else if (value >= 10000) {
         text = persian ? '${num(value / 1000)} هزار' : '${num(value / 1000)}K';
       } else {
@@ -196,7 +209,9 @@ class Money extends Equatable implements Comparable<Money> {
       }
     } else {
       if (value >= 1000000) {
-        text = persian ? '${num(value / 1000000)} میلیون' : '${num(value / 1000000)}M';
+        text = persian
+            ? '${num(value / 1000000)} میلیون'
+            : '${num(value / 1000000)}M';
       } else if (value >= 1000) {
         text = persian ? '${num(value / 1000)} هزار' : '${num(value / 1000)}K';
       } else {

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/sync_operation_entity.dart';
 
 class SyncState extends Equatable {
@@ -44,12 +45,12 @@ class SyncState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isSyncing,
-        isOnline,
-        pendingCount,
-        failedOperations,
-        lastSyncTime,
-        lastSyncCount,
-        errorMessage,
-      ];
+    isSyncing,
+    isOnline,
+    pendingCount,
+    failedOperations,
+    lastSyncTime,
+    lastSyncCount,
+    errorMessage,
+  ];
 }

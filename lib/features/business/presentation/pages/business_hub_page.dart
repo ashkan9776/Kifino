@@ -38,7 +38,8 @@ class BusinessHubPage extends StatefulWidget {
   State<BusinessHubPage> createState() => _BusinessHubPageState();
 }
 
-class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProviderStateMixin {
+class _BusinessHubPageState extends State<BusinessHubPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -64,195 +65,276 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.isPersian ? 'مدیریت کسب‌وکار' : 'Business Hub'),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.income,
-          labelColor: AppColors.income,
-          unselectedLabelColor: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-          tabs: [
-            Tab(text: l10n.invoices, icon: const Icon(Icons.receipt_long_outlined, size: 20)),
-            Tab(text: l10n.isPersian ? 'انبار و محصولات' : 'Inventory', icon: const Icon(Icons.inventory_2_outlined, size: 20)),
-            Tab(text: l10n.customers, icon: const Icon(Icons.people_outline, size: 20)),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          if (_tabController.index == 0) {
-            _showAddInvoiceSheet(context);
-          } else if (_tabController.index == 1) {
-            _showAddProductSheet(context);
-          } else {
-            _showAddContactSheet(context);
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: Text(_getFabLabel(l10n)),
-      ),
-      body: BlocBuilder<BusinessBloc, BusinessState>(
-        builder: (context, state) {
-          if (state is BusinessLoading) {
-            return const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  AppSkeleton(height: 110, borderRadius: AppSpacing.borderRadiusLg),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 70, borderRadius: AppSpacing.borderRadiusMd),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 70, borderRadius: AppSpacing.borderRadiusMd),
-                ],
-              ),
-            );
-          }
-
-          if (state is! BusinessLoaded) {
-            return AppEmptyState(
-              icon: Icons.storefront_outlined,
-              title: l10n.isPersian ? 'کسب‌وکار شما آماده راه‌اندازی است' : 'Business OS Ready',
-              description: l10n.isPersian
-                  ? 'فاکتورها، موجودی انبار و مشتریان خود را با نظم حرفه‌ای ثبت و مدیریت کنید.'
-                  : 'Track invoices, inventory stock, and customer relationships in one place.',
-              actionLabel: l10n.isPersian ? 'ثبت اولین مشتری' : 'Add your first customer',
-              onAction: () {
+          appBar: AppBar(
+            title: Text(l10n.isPersian ? 'مدیریت کسب‌وکار' : 'Business Hub'),
+            bottom: TabBar(
+              controller: _tabController,
+              indicatorColor: AppColors.income,
+              labelColor: AppColors.income,
+              unselectedLabelColor: isDark
+                  ? AppColors.darkSubtext
+                  : AppColors.lightSubtext,
+              tabs: [
+                Tab(
+                  text: l10n.invoices,
+                  icon: const Icon(Icons.receipt_long_outlined, size: 20),
+                ),
+                Tab(
+                  text: l10n.isPersian ? 'انبار و محصولات' : 'Inventory',
+                  icon: const Icon(Icons.inventory_2_outlined, size: 20),
+                ),
+                Tab(
+                  text: l10n.customers,
+                  icon: const Icon(Icons.people_outline, size: 20),
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              if (_tabController.index == 0) {
+                _showAddInvoiceSheet(context);
+              } else if (_tabController.index == 1) {
+                _showAddProductSheet(context);
+              } else {
                 _showAddContactSheet(context);
-              },
-            );
-          }
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: Text(_getFabLabel(l10n)),
+          ),
+          body: BlocBuilder<BusinessBloc, BusinessState>(
+            builder: (context, state) {
+              if (state is BusinessLoading) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      AppSkeleton(
+                        height: 110,
+                        borderRadius: AppSpacing.borderRadiusLg,
+                      ),
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(
+                        height: 70,
+                        borderRadius: AppSpacing.borderRadiusMd,
+                      ),
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(
+                        height: 70,
+                        borderRadius: AppSpacing.borderRadiusMd,
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-          final metrics = state.metrics;
+              if (state is! BusinessLoaded) {
+                return AppEmptyState(
+                  icon: Icons.storefront_outlined,
+                  title: l10n.isPersian
+                      ? 'کسب‌وکار شما آماده راه‌اندازی است'
+                      : 'Business OS Ready',
+                  description: l10n.isPersian
+                      ? 'فاکتورها، موجودی انبار و مشتریان خود را با نظم حرفه‌ای ثبت و مدیریت کنید.'
+                      : 'Track invoices, inventory stock, and customer relationships in one place.',
+                  actionLabel: l10n.isPersian
+                      ? 'ثبت اولین مشتری'
+                      : 'Add your first customer',
+                  onAction: () {
+                    _showAddContactSheet(context);
+                  },
+                );
+              }
 
-          return NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      children: [
-                        // KPI Cards
-                        Row(
+              final metrics = state.metrics;
+
+              return NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) {
+                  return [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: AppCard(
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.trending_up, color: AppColors.income, size: 18),
-                                        const SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          l10n.isPersian ? 'مجموع فروش' : 'Total Sales',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    AppMoneyText(
-                                      money: metrics.totalSales,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.income,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: AppCard(
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.pending_actions_outlined, color: AppColors.warning, size: 18),
-                                        const SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          l10n.isPersian ? 'مطالبات فاکتور' : 'Unpaid Invoices',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    AppMoneyText(
-                                      money: metrics.unpaidReceivables,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.warning,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Low stock alert banner
-                        if (metrics.lowStockCount > 0) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.danger.withValues(alpha: 0.1),
-                              borderRadius: AppSpacing.borderRadiusMd,
-                              border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
+                            // KPI Cards
+                            Row(
                               children: [
-                                const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20),
+                                Expanded(
+                                  child: AppCard(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.trending_up,
+                                              color: AppColors.income,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.xs,
+                                            ),
+                                            Text(
+                                              l10n.isPersian
+                                                  ? 'مجموع فروش'
+                                                  : 'Total Sales',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: isDark
+                                                        ? AppColors.darkSubtext
+                                                        : AppColors
+                                                              .lightSubtext,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: AppSpacing.xs),
+                                        AppMoneyText(
+                                          money: metrics.totalSales,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.income,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(width: AppSpacing.sm),
                                 Expanded(
-                                  child: Text(
-                                    l10n.isPersian
-                                        ? TextNormalizer.auto('${metrics.lowStockCount} کالا به حداقل موجودی انبار رسیده‌اند!')
-                                        : '${metrics.lowStockCount} items have reached low stock limit!',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.danger,
-                                      fontWeight: FontWeight.bold,
+                                  child: AppCard(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.pending_actions_outlined,
+                                              color: AppColors.warning,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.xs,
+                                            ),
+                                            Text(
+                                              l10n.isPersian
+                                                  ? 'مطالبات فاکتور'
+                                                  : 'Unpaid Invoices',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: isDark
+                                                        ? AppColors.darkSubtext
+                                                        : AppColors
+                                                              .lightSubtext,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: AppSpacing.xs),
+                                        AppMoneyText(
+                                          money: metrics.unpaidReceivables,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.warning,
+                                              ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ],
+
+                            // Low stock alert banner
+                            if (metrics.lowStockCount > 0) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.danger.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: AppSpacing.borderRadiusMd,
+                                  border: Border.all(
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: AppColors.danger,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        l10n.isPersian
+                                            ? TextNormalizer.auto(
+                                                '${metrics.lowStockCount} کالا به حداقل موجودی انبار رسیده‌اند!',
+                                              )
+                                            : '${metrics.lowStockCount} items have reached low stock limit!',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.danger,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ];
+                },
+                body: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildInvoicesTab(
+                      context,
+                      state.invoices,
+                      state.contacts,
+                      state.products,
+                    ),
+                    _buildProductsTab(context, state.products),
+                    _buildContactsTab(context, state.contacts),
+                  ],
                 ),
-              ];
+              );
             },
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildInvoicesTab(context, state.invoices, state.contacts, state.products),
-                _buildProductsTab(context, state.products),
-                _buildContactsTab(context, state.contacts),
-              ],
-            ),
-          );
-        },
-      ),
+          ),
         ),
       ),
     );
   }
 
   String _getFabLabel(AppLocalizations l10n) {
-    if (_tabController.index == 0) return l10n.isPersian ? 'فاکتور جدید' : 'New Invoice';
-    if (_tabController.index == 1) return l10n.isPersian ? 'کالای جدید' : 'New Product';
+    if (_tabController.index == 0) {
+      return l10n.isPersian ? 'فاکتور جدید' : 'New Invoice';
+    }
+    if (_tabController.index == 1) {
+      return l10n.isPersian ? 'کالای جدید' : 'New Product';
+    }
     return l10n.isPersian ? 'مخاطب جدید' : 'New Contact';
   }
 
@@ -280,11 +362,16 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: invoices.length,
       itemBuilder: (context, index) {
         final invoice = invoices[index];
-        final contact = contacts.where((c) => c.id == invoice.contactId).firstOrNull;
+        final contact = contacts
+            .where((c) => c.id == invoice.contactId)
+            .firstOrNull;
 
         final isPaid = invoice.status == InvoiceStatus.paid;
         final isCancelled = invoice.status == InvoiceStatus.cancelled;
@@ -310,7 +397,11 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         CircleAvatar(
                           radius: 18,
                           backgroundColor: statusColor.withValues(alpha: 0.12),
-                          child: Icon(Icons.receipt_outlined, size: 18, color: statusColor),
+                          child: Icon(
+                            Icons.receipt_outlined,
+                            size: 18,
+                            color: statusColor,
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Column(
@@ -318,12 +409,18 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           children: [
                             Text(
                               invoice.invoiceNumber,
-                              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
-                              contact?.name ?? invoice.contactName ?? (l10n.isPersian ? 'مشتری آزاد' : 'Guest'),
+                              contact?.name ??
+                                  invoice.contactName ??
+                                  (l10n.isPersian ? 'مشتری آزاد' : 'Guest'),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                                color: isDark
+                                    ? AppColors.darkSubtext
+                                    : AppColors.lightSubtext,
                               ),
                             ),
                           ],
@@ -335,10 +432,15 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                       children: [
                         AppMoneyText(
                           money: invoice.total,
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(4),
@@ -362,7 +464,11 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     Text(
                       '${l10n.dueDate}: ${AppDateFormatter.formatShort(invoice.dueDate, locale: l10n.localeName)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: invoice.isOverdue ? AppColors.danger : (isDark ? AppColors.darkSubtext : AppColors.lightSubtext),
+                        color: invoice.isOverdue
+                            ? AppColors.danger
+                            : (isDark
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext),
                       ),
                     ),
                     Row(
@@ -371,7 +477,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         if (canEdit)
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 18),
-                            tooltip: l10n.isPersian ? 'اصلاح فاکتور' : 'Edit invoice',
+                            tooltip: l10n.isPersian
+                                ? 'اصلاح فاکتور'
+                                : 'Edit invoice',
                             onPressed: () => EditInvoiceSheet.show(
                               context,
                               invoice,
@@ -382,7 +490,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         // PDF Preview & Print button
                         IconButton(
                           icon: const Icon(Icons.print_outlined, size: 20),
-                          tooltip: l10n.isPersian ? 'چاپ یا اشتراک PDF' : 'Print PDF',
+                          tooltip: l10n.isPersian
+                              ? 'چاپ یا اشتراک PDF'
+                              : 'Print PDF',
                           onPressed: () {
                             InvoicePdfGenerator.printOrShareInvoice(
                               invoice: invoice,
@@ -395,13 +505,20 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           TextButton.icon(
                             icon: const Icon(Icons.payment_outlined, size: 16),
                             label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
-                            onPressed: () => _showPaymentSheet(context, invoice),
+                            onPressed: () =>
+                                _showPaymentSheet(context, invoice),
                           ),
                         if (invoice.type == InvoiceType.sale && !isPaid)
                           TextButton.icon(
-                            icon: const Icon(Icons.handshake_outlined, size: 16),
-                            label: Text(l10n.isPersian ? 'تبدیل به طلب' : 'To receivable'),
-                            onPressed: () => _convertInvoiceToReceivable(context, invoice),
+                            icon: const Icon(
+                              Icons.handshake_outlined,
+                              size: 16,
+                            ),
+                            label: Text(
+                              l10n.isPersian ? 'تبدیل به طلب' : 'To receivable',
+                            ),
+                            onPressed: () =>
+                                _convertInvoiceToReceivable(context, invoice),
                           ),
                       ],
                     ),
@@ -434,7 +551,10 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
@@ -459,7 +579,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           child: Icon(
                             Icons.layers_outlined,
                             size: 18,
-                            color: product.isLowStock ? AppColors.danger : AppColors.income,
+                            color: product.isLowStock
+                                ? AppColors.danger
+                                : AppColors.income,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -468,13 +590,17 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           children: [
                             Text(
                               product.name,
-                              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             if (product.sku != null)
                               Text(
                                 'SKU: ${product.sku}',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                                  color: isDark
+                                      ? AppColors.darkSubtext
+                                      : AppColors.lightSubtext,
                                 ),
                               ),
                           ],
@@ -494,7 +620,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         Text(
                           '${l10n.isPersian ? "سود:" : "Margin:"} ${TextNormalizer.auto(product.marginPercentage.toStringAsFixed(0))}%',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                            color: isDark
+                                ? AppColors.darkSubtext
+                                : AppColors.lightSubtext,
                           ),
                         ),
                       ],
@@ -508,17 +636,24 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: product.isLowStock
                                 ? AppColors.danger.withValues(alpha: 0.12)
-                                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                : (isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${TextNormalizer.auto(product.currentStock.toStringAsFixed(0))} ${product.unit}',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: product.isLowStock ? AppColors.danger : null,
+                              color: product.isLowStock
+                                  ? AppColors.danger
+                                  : null,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -527,7 +662,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           const SizedBox(width: AppSpacing.xs),
                           Text(
                             l10n.isPersian ? 'موجودی اندک' : 'Low stock',
-                            style: theme.textTheme.labelSmall?.copyWith(color: AppColors.danger),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.danger,
+                            ),
                           ),
                         ],
                       ],
@@ -537,18 +674,27 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 18),
                           tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
-                          onPressed: () => EditProductSheet.show(context, product),
+                          onPressed: () =>
+                              EditProductSheet.show(context, product),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                          icon: const Icon(
+                            Icons.receipt_long_outlined,
+                            size: 18,
+                          ),
                           tooltip: l10n.isPersian ? 'کاردکس' : 'Stock card',
-                          onPressed: () =>
-                              context.push('/business/products/card', extra: product.id),
+                          onPressed: () => context.push(
+                            '/business/products/card',
+                            extra: product.id,
+                          ),
                         ),
                         TextButton.icon(
                           icon: const Icon(Icons.swap_vert_outlined, size: 16),
-                          label: Text(l10n.isPersian ? 'تغییر موجودی' : 'Adjust Stock'),
-                          onPressed: () => _showAdjustStockSheet(context, product),
+                          label: Text(
+                            l10n.isPersian ? 'تغییر موجودی' : 'Adjust Stock',
+                          ),
+                          onPressed: () =>
+                              _showAdjustStockSheet(context, product),
                         ),
                       ],
                     ),
@@ -581,7 +727,10 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: contacts.length,
       itemBuilder: (context, index) {
         final contact = contacts[index];
@@ -597,10 +746,15 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                      backgroundColor: AppColors.primary.withValues(
+                        alpha: 0.12,
+                      ),
                       child: Text(
                         contact.name.isNotEmpty ? contact.name[0] : '?',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -609,20 +763,26 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                       children: [
                         Text(
                           contact.name,
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         if (contact.companyName != null)
                           Text(
                             contact.companyName!,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                              color: isDark
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext,
                             ),
                           ),
                         if (contact.phone != null)
                           Text(
                             contact.phone!,
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                              color: isDark
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext,
                             ),
                           ),
                       ],
@@ -636,7 +796,10 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
@@ -654,7 +817,8 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(Icons.edit_outlined, size: 18),
                           tooltip: l10n.isPersian ? 'ویرایش' : 'Edit',
-                          onPressed: () => EditContactSheet.show(context, contact),
+                          onPressed: () =>
+                              EditContactSheet.show(context, contact),
                         ),
                       ],
                     ),
@@ -707,12 +871,18 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                 const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'نام کالا یا خدمت', prefixIcon: Icon(Icons.shopping_bag_outlined)),
+                  decoration: const InputDecoration(
+                    labelText: 'نام کالا یا خدمت',
+                    prefixIcon: Icon(Icons.shopping_bag_outlined),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: skuController,
-                  decoration: const InputDecoration(labelText: 'کد کالا (SKU)', prefixIcon: Icon(Icons.qr_code_outlined)),
+                  decoration: const InputDecoration(
+                    labelText: 'کد کالا (SKU)',
+                    prefixIcon: Icon(Icons.qr_code_outlined),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -722,9 +892,13 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         controller: purchasePriceController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                          PersianThousandsSeparatorTextInputFormatter(
+                            enabled: isFaLocale(context),
+                          ),
                         ],
-                        decoration: const InputDecoration(labelText: 'قیمت خرید (ریال)'),
+                        decoration: const InputDecoration(
+                          labelText: 'قیمت خرید (ریال)',
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -733,9 +907,13 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                         controller: sellingPriceController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                          PersianThousandsSeparatorTextInputFormatter(
+                            enabled: isFaLocale(context),
+                          ),
                         ],
-                        decoration: const InputDecoration(labelText: 'قیمت فروش (ریال)'),
+                        decoration: const InputDecoration(
+                          labelText: 'قیمت فروش (ریال)',
+                        ),
                       ),
                     ),
                   ],
@@ -745,37 +923,57 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                   controller: stockController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
-                    PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                    PersianDigitsTextInputFormatter(
+                      enabled: isFaLocale(context),
+                    ),
                   ],
-                  decoration: const InputDecoration(labelText: 'موجودی اولیه انبار'),
+                  decoration: const InputDecoration(
+                    labelText: 'موجودی اولیه انبار',
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppButton(
                   label: 'ذخیره کالا',
                   onPressed: () {
                     final name = nameController.text.trim();
-                    final pPrice = int.tryParse(normalizeNumericInput(purchasePriceController.text)) ?? 0;
-                    final sPrice = int.tryParse(normalizeNumericInput(sellingPriceController.text)) ?? 0;
-                    final stock = double.tryParse(normalizeDecimalInput(stockController.text)) ?? 0.0;
+                    final pPrice =
+                        int.tryParse(
+                          normalizeNumericInput(purchasePriceController.text),
+                        ) ??
+                        0;
+                    final sPrice =
+                        int.tryParse(
+                          normalizeNumericInput(sellingPriceController.text),
+                        ) ??
+                        0;
+                    final stock =
+                        double.tryParse(
+                          normalizeDecimalInput(stockController.text),
+                        ) ??
+                        0.0;
 
                     if (name.isNotEmpty && sPrice > 0) {
-                      final cur = Currency.fromCode(AppConstants.defaultCurrencyCode);
+                      final cur = Currency.fromCode(
+                        AppConstants.defaultCurrencyCode,
+                      );
                       final now = DateTime.now();
 
                       context.read<BusinessBloc>().add(
-                            BusinessProductCreateSubmitted(
-                              ProductEntity(
-                                id: '',
-                                name: name,
-                                sku: skuController.text.trim().isNotEmpty ? skuController.text.trim() : null,
-                                purchasePrice: Money.fromMinor(pPrice, cur),
-                                sellingPrice: Money.fromMinor(sPrice, cur),
-                                currentStock: stock,
-                                createdAt: now,
-                                updatedAt: now,
-                              ),
-                            ),
-                          );
+                        BusinessProductCreateSubmitted(
+                          ProductEntity(
+                            id: '',
+                            name: name,
+                            sku: skuController.text.trim().isNotEmpty
+                                ? skuController.text.trim()
+                                : null,
+                            purchasePrice: Money.fromMinor(pPrice, cur),
+                            sellingPrice: Money.fromMinor(sPrice, cur),
+                            currentStock: stock,
+                            createdAt: now,
+                            updatedAt: now,
+                          ),
+                        ),
+                      );
                       Navigator.pop(ctx);
                     }
                   },
@@ -816,31 +1014,47 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(labelText: 'نام و نام خانوادگی', prefixIcon: Icon(Icons.person_outline)),
+                      decoration: const InputDecoration(
+                        labelText: 'نام و نام خانوادگی',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: companyController,
-                      decoration: const InputDecoration(labelText: 'نام شرکت یا فروشگاه (اختیاری)', prefixIcon: Icon(Icons.business_outlined)),
+                      decoration: const InputDecoration(
+                        labelText: 'نام شرکت یا فروشگاه (اختیاری)',
+                        prefixIcon: Icon(Icons.business_outlined),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
-                        PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                        PersianDigitsTextInputFormatter(
+                          enabled: isFaLocale(context),
+                        ),
                       ],
-                      decoration: const InputDecoration(labelText: 'شماره تماس', prefixIcon: Icon(Icons.phone_outlined)),
+                      decoration: const InputDecoration(
+                        labelText: 'شماره تماس',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     DropdownButtonFormField<ContactType>(
                       initialValue: selectedType,
                       decoration: const InputDecoration(labelText: 'نوع مخاطب'),
                       items: ContactType.values.map((t) {
-                        return DropdownMenuItem(value: t, child: Text(t.titleFa));
+                        return DropdownMenuItem(
+                          value: t,
+                          child: Text(t.titleFa),
+                        );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setModalState(() => selectedType = val);
+                        if (val != null) {
+                          setModalState(() => selectedType = val);
+                        }
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -849,23 +1063,30 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                       onPressed: () {
                         final name = nameController.text.trim();
                         if (name.isNotEmpty) {
-                          final cur = Currency.fromCode(AppConstants.defaultCurrencyCode);
+                          final cur = Currency.fromCode(
+                            AppConstants.defaultCurrencyCode,
+                          );
                           final now = DateTime.now();
 
                           context.read<BusinessBloc>().add(
-                                BusinessContactCreateSubmitted(
-                                  ContactEntity(
-                                    id: '',
-                                    name: name,
-                                    companyName: companyController.text.trim().isNotEmpty ? companyController.text.trim() : null,
-                                    phone: phoneController.text.trim().isNotEmpty ? phoneController.text.trim() : null,
-                                    type: selectedType,
-                                    outstandingBalance: Money.zero(cur),
-                                    createdAt: now,
-                                    updatedAt: now,
-                                  ),
-                                ),
-                              );
+                            BusinessContactCreateSubmitted(
+                              ContactEntity(
+                                id: '',
+                                name: name,
+                                companyName:
+                                    companyController.text.trim().isNotEmpty
+                                    ? companyController.text.trim()
+                                    : null,
+                                phone: phoneController.text.trim().isNotEmpty
+                                    ? phoneController.text.trim()
+                                    : null,
+                                type: selectedType,
+                                outstandingBalance: Money.zero(cur),
+                                createdAt: now,
+                                updatedAt: now,
+                              ),
+                            ),
+                          );
                           Navigator.pop(ctx);
                         }
                       },
@@ -902,46 +1123,70 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    AppSheetHeader(title: 'اصلاح موجودی انبار: ${product.name}'),
+                    AppSheetHeader(
+                      title: 'اصلاح موجودی انبار: ${product.name}',
+                    ),
                     const SizedBox(height: AppSpacing.sm),
-                    Text('موجودی فعلی: ${TextNormalizer.auto(product.currentStock.toStringAsFixed(0))} ${product.unit}'),
+                    Text(
+                      'موجودی فعلی: ${TextNormalizer.auto(product.currentStock.toStringAsFixed(0))} ${product.unit}',
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     DropdownButtonFormField<InventoryMovementType>(
                       initialValue: selectedType,
-                      decoration: const InputDecoration(labelText: 'نوع تغییر موجودی'),
+                      decoration: const InputDecoration(
+                        labelText: 'نوع تغییر موجودی',
+                      ),
                       items: InventoryMovementType.values.map((t) {
-                        return DropdownMenuItem(value: t, child: Text(t.titleFa));
+                        return DropdownMenuItem(
+                          value: t,
+                          child: Text(t.titleFa),
+                        );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setModalState(() => selectedType = val);
+                        if (val != null) {
+                          setModalState(() => selectedType = val);
+                        }
                       },
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: qtyController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                        PersianDigitsTextInputFormatter(
+                          enabled: isFaLocale(context),
+                        ),
                       ],
-                      decoration: const InputDecoration(labelText: 'مقدار تغییر (تعداد)', prefixIcon: Icon(Icons.numbers_outlined)),
+                      decoration: const InputDecoration(
+                        labelText: 'مقدار تغییر (تعداد)',
+                        prefixIcon: Icon(Icons.numbers_outlined),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     AppButton(
                       label: 'ثبت در کارتکس انبار',
                       onPressed: () {
-                        final rawQty = double.tryParse(normalizeDecimalInput(qtyController.text)) ?? 0.0;
+                        final rawQty =
+                            double.tryParse(
+                              normalizeDecimalInput(qtyController.text),
+                            ) ??
+                            0.0;
                         if (rawQty > 0) {
-                          final change = (selectedType == InventoryMovementType.sale || selectedType == InventoryMovementType.loss)
+                          final change =
+                              (selectedType == InventoryMovementType.sale ||
+                                  selectedType == InventoryMovementType.loss)
                               ? -rawQty
                               : rawQty;
 
                           context.read<BusinessBloc>().add(
-                                BusinessStockAdjustSubmitted(
-                                  productId: product.id,
-                                  changeQuantity: change,
-                                  type: selectedType,
-                                ),
-                              );
+                            BusinessStockAdjustSubmitted(
+                              productId: product.id,
+                              changeQuantity: change,
+                              type: selectedType,
+                            ),
+                          );
                           Navigator.pop(ctx);
                         }
                       },
@@ -960,12 +1205,16 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
     final state = context.read<BusinessBloc>().state;
     if (state is! BusinessLoaded || state.contacts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ابتدا حداقل یک مخاطب یا مشتری ثبت کنید.')),
+        const SnackBar(
+          content: Text('ابتدا حداقل یک مخاطب یا مشتری ثبت کنید.'),
+        ),
       );
       return;
     }
 
-    final invoiceNumberController = TextEditingController(text: 'INV-${DateTime.now().millisecondsSinceEpoch % 100000}');
+    final invoiceNumberController = TextEditingController(
+      text: 'INV-${DateTime.now().millisecondsSinceEpoch % 100000}',
+    );
     final descController = TextEditingController(text: 'کالای فروش');
     final priceController = TextEditingController(text: '5000000');
     final qtyController = TextEditingController(text: '1');
@@ -993,23 +1242,34 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: invoiceNumberController,
-                      decoration: const InputDecoration(labelText: 'شماره فاکتور'),
+                      decoration: const InputDecoration(
+                        labelText: 'شماره فاکتور',
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     DropdownButtonFormField<String>(
                       initialValue: selectedContactId,
-                      decoration: const InputDecoration(labelText: 'مشتری / طرف حساب'),
+                      decoration: const InputDecoration(
+                        labelText: 'مشتری / طرف حساب',
+                      ),
                       items: state.contacts.map((c) {
-                        return DropdownMenuItem(value: c.id, child: Text(c.name));
+                        return DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setModalState(() => selectedContactId = val);
+                        if (val != null) {
+                          setModalState(() => selectedContactId = val);
+                        }
                       },
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: descController,
-                      decoration: const InputDecoration(labelText: 'شرح کالا یا خدمات'),
+                      decoration: const InputDecoration(
+                        labelText: 'شرح کالا یا خدمات',
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Row(
@@ -1019,9 +1279,13 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                             controller: qtyController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                              PersianDigitsTextInputFormatter(
+                                enabled: isFaLocale(context),
+                              ),
                             ],
-                            decoration: const InputDecoration(labelText: 'تعداد'),
+                            decoration: const InputDecoration(
+                              labelText: 'تعداد',
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -1030,9 +1294,13 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                             controller: priceController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                              PersianThousandsSeparatorTextInputFormatter(
+                                enabled: isFaLocale(context),
+                              ),
                             ],
-                            decoration: const InputDecoration(labelText: 'قیمت واحد (ریال)'),
+                            decoration: const InputDecoration(
+                              labelText: 'قیمت واحد (ریال)',
+                            ),
                           ),
                         ),
                       ],
@@ -1041,9 +1309,19 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                     AppButton(
                       label: 'صدور و ثبت فاکتور',
                       onPressed: () {
-                        final price = int.tryParse(normalizeNumericInput(priceController.text)) ?? 0;
-                        final qty = double.tryParse(normalizeDecimalInput(qtyController.text)) ?? 1.0;
-                        final cur = Currency.fromCode(AppConstants.defaultCurrencyCode);
+                        final price =
+                            int.tryParse(
+                              normalizeNumericInput(priceController.text),
+                            ) ??
+                            0;
+                        final qty =
+                            double.tryParse(
+                              normalizeDecimalInput(qtyController.text),
+                            ) ??
+                            1.0;
+                        final cur = Currency.fromCode(
+                          AppConstants.defaultCurrencyCode,
+                        );
                         final now = DateTime.now();
 
                         final item = InvoiceItemEntity.calculate(
@@ -1073,7 +1351,9 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
                           updatedAt: now,
                         );
 
-                        context.read<BusinessBloc>().add(BusinessInvoiceCreateSubmitted(invoice));
+                        context.read<BusinessBloc>().add(
+                          BusinessInvoiceCreateSubmitted(invoice),
+                        );
                         Navigator.pop(ctx);
                       },
                     ),
@@ -1090,34 +1370,53 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
   /// Links an unpaid sale invoice into the debts module as a receivable
   /// (Phase 2 payment-status integration). Notes marker 'INV:{id}' makes the
   /// link detectable and prevents duplicates.
-  void _convertInvoiceToReceivable(BuildContext context, InvoiceEntity invoice) {
+  void _convertInvoiceToReceivable(
+    BuildContext context,
+    InvoiceEntity invoice,
+  ) {
     final debtBloc = context.read<DebtBloc>();
-    final already = debtBloc.state is DebtLoaded &&
-        (debtBloc.state as DebtLoaded)
-            .debts
-            .any((d) => d.notes == 'INV:${invoice.id}');
+    final already =
+        debtBloc.state is DebtLoaded &&
+        (debtBloc.state as DebtLoaded).debts.any(
+          (d) => d.notes == 'INV:${invoice.id}',
+        );
     final l10n = context.l10n;
     if (already) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.isPersian ? 'این فاکتور قبلاً به طلب تبدیل شده است.' : 'Already converted to a receivable.')),
+        SnackBar(
+          content: Text(
+            l10n.isPersian
+                ? 'این فاکتور قبلاً به طلب تبدیل شده است.'
+                : 'Already converted to a receivable.',
+          ),
+        ),
       );
       return;
     }
-    debtBloc.add(DebtCreateSubmitted(
-      DebtEntity(
-        id: const Uuid().v4(),
-        contactName: invoice.contactName ?? (l10n.isPersian ? 'مشتری' : 'Customer'),
-        type: DebtType.receivable,
-        totalAmount: invoice.remainingBalance,
-        paidAmount: Money.fromMinor(0, invoice.remainingBalance.currency),
-        status: DebtStatus.active,
-        notes: 'INV:${invoice.id}',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+    debtBloc.add(
+      DebtCreateSubmitted(
+        DebtEntity(
+          id: const Uuid().v4(),
+          contactName:
+              invoice.contactName ?? (l10n.isPersian ? 'مشتری' : 'Customer'),
+          type: DebtType.receivable,
+          totalAmount: invoice.remainingBalance,
+          paidAmount: Money.fromMinor(0, invoice.remainingBalance.currency),
+          status: DebtStatus.active,
+          notes: 'INV:${invoice.id}',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
       ),
-    ));
+    );
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.isPersian ? 'طلب در ماژول بدهی و طلب ثبت شد.' : 'Receivable created in the debts module.')),
+      SnackBar(
+        content: Text(
+          l10n.isPersian
+              ? 'طلب در ماژول بدهی و طلب ثبت شد.'
+              : 'Receivable created in the debts module.',
+        ),
+      ),
     );
   }
 
@@ -1147,28 +1446,42 @@ class _BusinessHubPageState extends State<BusinessHubPage> with SingleTickerProv
               children: [
                 AppSheetHeader(title: 'ثبت تسویه / دریافت وجه فاکتور'),
                 const SizedBox(height: AppSpacing.xs),
-                Text('فاکتور: ${invoice.invoiceNumber} | مانده: ${invoice.remainingBalance.formatted}'),
+                Text(
+                  'فاکتور: ${invoice.invoiceNumber} | مانده: ${invoice.remainingBalance.formatted}',
+                ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: payController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
-                    PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                    PersianThousandsSeparatorTextInputFormatter(
+                      enabled: isFaLocale(context),
+                    ),
                   ],
-                  decoration: const InputDecoration(labelText: 'مبلغ پرداختی (ریال)', prefixIcon: Icon(Icons.payments_outlined)),
+                  decoration: const InputDecoration(
+                    labelText: 'مبلغ پرداختی (ریال)',
+                    prefixIcon: Icon(Icons.payments_outlined),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppButton(
                   label: 'ثبت تسویه',
                   onPressed: () {
-                    final amount = int.tryParse(normalizeNumericInput(payController.text)) ?? 0;
+                    final amount =
+                        int.tryParse(
+                          normalizeNumericInput(payController.text),
+                        ) ??
+                        0;
                     if (amount > 0) {
                       context.read<BusinessBloc>().add(
-                            BusinessInvoicePaymentSubmitted(
-                              invoiceId: invoice.id,
-                              paymentAmount: Money.fromMinor(amount, invoice.total.currency),
-                            ),
-                          );
+                        BusinessInvoicePaymentSubmitted(
+                          invoiceId: invoice.id,
+                          paymentAmount: Money.fromMinor(
+                            amount,
+                            invoice.total.currency,
+                          ),
+                        ),
+                      );
                       Navigator.pop(ctx);
                     }
                   },

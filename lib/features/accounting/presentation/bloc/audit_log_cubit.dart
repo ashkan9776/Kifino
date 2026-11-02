@@ -48,7 +48,9 @@ class AuditLogCubit extends Cubit<AuditLogState> {
     _subscription?.cancel();
     if (state is! AuditLogLoaded) emit(AuditLogLoading());
     try {
-      _subscription = _repository.watchAuditLogs(limit: limit).listen(
+      _subscription = _repository
+          .watchAuditLogs(limit: limit)
+          .listen(
             (logs) => emit(AuditLogLoaded(logs)),
             onError: (e) => emit(AuditLogError(_message(e))),
           );

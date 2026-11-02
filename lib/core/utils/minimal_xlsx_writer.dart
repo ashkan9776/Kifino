@@ -66,39 +66,50 @@ abstract final class MinimalXlsxWriter {
       workbookRels.write(
         '<Relationship Id="rId$n" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet$n.xml"/>',
       );
-      worksheetFiles.add(ArchiveFile.bytes(
-        'xl/worksheets/sheet$n.xml',
-        utf8.encode(_sheetXml(sheets[i].rows)),
-      ));
+      worksheetFiles.add(
+        ArchiveFile.bytes(
+          'xl/worksheets/sheet$n.xml',
+          utf8.encode(_sheetXml(sheets[i].rows)),
+        ),
+      );
     }
 
     final archive = Archive()
-      ..addFile(ArchiveFile.bytes(
-        '[Content_Types].xml',
-        utf8.encode(
-          _contentTypesTemplate.replaceFirst('{SHEETS}', contentTypesSheets.toString()),
+      ..addFile(
+        ArchiveFile.bytes(
+          '[Content_Types].xml',
+          utf8.encode(
+            _contentTypesTemplate.replaceFirst(
+              '{SHEETS}',
+              contentTypesSheets.toString(),
+            ),
+          ),
         ),
-      ))
+      )
       ..addFile(ArchiveFile.bytes('_rels/.rels', utf8.encode(_rels)))
-      ..addFile(ArchiveFile.bytes(
-        'xl/workbook.xml',
-        utf8.encode(
-          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-          '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-          'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-          '<sheets>${workbookSheets.toString()}</sheets></workbook>',
+      ..addFile(
+        ArchiveFile.bytes(
+          'xl/workbook.xml',
+          utf8.encode(
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets>${workbookSheets.toString()}</sheets></workbook>',
+          ),
         ),
-      ))
-      ..addFile(ArchiveFile.bytes(
-        'xl/_rels/workbook.xml.rels',
-        utf8.encode(
-          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-          '${workbookRels.toString()}'
-          '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-          '</Relationships>',
+      )
+      ..addFile(
+        ArchiveFile.bytes(
+          'xl/_rels/workbook.xml.rels',
+          utf8.encode(
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '${workbookRels.toString()}'
+            '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            '</Relationships>',
+          ),
         ),
-      ))
+      )
       ..addFile(ArchiveFile.bytes('xl/styles.xml', utf8.encode(_styles)));
     for (final f in worksheetFiles) {
       archive.addFile(f);
@@ -111,8 +122,12 @@ abstract final class MinimalXlsxWriter {
   static String _sheetXml(List<List<Object>> rows) {
     final sb = StringBuffer();
     sb.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    sb.write('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
-    sb.write('<sheetViews><sheetView rightToLeft="1" workbookViewId="0"/></sheetViews>');
+    sb.write(
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
+    );
+    sb.write(
+      '<sheetViews><sheetView rightToLeft="1" workbookViewId="0"/></sheetViews>',
+    );
     sb.write('<sheetData>');
     for (var r = 0; r < rows.length; r++) {
       sb.write('<row r="${r + 1}">');
@@ -123,7 +138,9 @@ abstract final class MinimalXlsxWriter {
         if (value is num) {
           sb.write('<c r="$ref"><v>$value</v></c>');
         } else if (value.toString().isNotEmpty) {
-          sb.write('<c r="$ref" t="inlineStr"><is><t>${_escape(value.toString())}</t></is></c>');
+          sb.write(
+            '<c r="$ref" t="inlineStr"><is><t>${_escape(value.toString())}</t></is></c>',
+          );
         }
       }
       sb.write('</row>');

@@ -30,7 +30,9 @@ class AccountRepositoryImpl implements AccountRepository {
       isArchived: data.isArchived,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
       syncStatus: data.syncStatus,
       version: data.version,
     );
@@ -44,19 +46,26 @@ class AccountRepositoryImpl implements AccountRepository {
         if (includeArchived) return notDeleted;
         return notDeleted & tbl.isArchived.equals(false);
       })
-      ..orderBy([(tbl) => OrderingTerm(expression: tbl.name, mode: OrderingMode.asc)]);
+      ..orderBy([
+        (tbl) => OrderingTerm(expression: tbl.name, mode: OrderingMode.asc),
+      ]);
 
     return query.watch().map((rows) => rows.map(_toEntity).toList());
   }
 
   @override
   Stream<AccountEntity?> watchAccountById(String id) {
-    final query = _db.select(_db.accountsTable)..where((tbl) => tbl.id.equals(id));
-    return query.watchSingleOrNull().map((row) => row != null ? _toEntity(row) : null);
+    final query = _db.select(_db.accountsTable)
+      ..where((tbl) => tbl.id.equals(id));
+    return query.watchSingleOrNull().map(
+      (row) => row != null ? _toEntity(row) : null,
+    );
   }
 
   @override
-  Future<Result<List<AccountEntity>>> getAccounts({bool includeArchived = false}) async {
+  Future<Result<List<AccountEntity>>> getAccounts({
+    bool includeArchived = false,
+  }) async {
     try {
       final query = _db.select(_db.accountsTable)
         ..where((tbl) {
@@ -92,7 +101,9 @@ class AccountRepositoryImpl implements AccountRepository {
       );
 
       await _db.into(_db.accountsTable).insert(companion);
-      final created = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(companion.id.value))).getSingle();
+      final created = await (_db.select(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(companion.id.value))).getSingle();
       return Success(_toEntity(created));
     } catch (e) {
       return DatabaseFailure('ساخت حساب انجام نشد.').asFailure();
@@ -103,7 +114,9 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Result<AccountEntity>> updateAccount(AccountEntity account) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.accountsTable)..where((t) => t.id.equals(account.id))).write(
+      await (_db.update(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(account.id))).write(
         AccountsTableCompanion(
           name: Value(account.name),
           type: Value(account.type.code),
@@ -117,7 +130,9 @@ class AccountRepositoryImpl implements AccountRepository {
         ),
       );
 
-      final updated = await (_db.select(_db.accountsTable)..where((t) => t.id.equals(account.id))).getSingle();
+      final updated = await (_db.select(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(account.id))).getSingle();
       return Success(_toEntity(updated));
     } catch (e) {
       return DatabaseFailure('ویرایش حساب انجام نشد.').asFailure();
@@ -128,7 +143,9 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Result<void>> archiveAccount(String id, bool archive) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.accountsTable)..where((t) => t.id.equals(id))).write(
+      await (_db.update(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(id))).write(
         AccountsTableCompanion(
           isArchived: Value(archive),
           updatedAt: Value(now),
@@ -144,16 +161,14 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Result<void>> deleteAccount(String id) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.accountsTable)..where((t) => t.id.equals(id))).write(
-        AccountsTableCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+      await (_db.update(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(id))).write(
+        AccountsTableCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('حذف حساب انجام نشد.').asFailure();
     }
   }
-
 }

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -49,7 +50,9 @@ class AccountingVoucherPdfGenerator {
                 padding: const pw.EdgeInsets.all(12),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: primaryColor, width: 1.5),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(6),
+                  ),
                   color: lightBg,
                 ),
                 child: pw.Row(
@@ -60,12 +63,20 @@ class AccountingVoucherPdfGenerator {
                       children: [
                         pw.Text(
                           organizationName,
-                          style: pw.TextStyle(font: fontBold, fontSize: 13, color: primaryColor),
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 13,
+                            color: primaryColor,
+                          ),
                         ),
                         pw.SizedBox(height: 4),
                         pw.Text(
                           'برگه سند حسابداری دوبل (Accounting Voucher)',
-                          style: pw.TextStyle(font: fontBold, fontSize: 11, color: darkText),
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 11,
+                            color: darkText,
+                          ),
                         ),
                       ],
                     ),
@@ -74,17 +85,29 @@ class AccountingVoucherPdfGenerator {
                       children: [
                         pw.Text(
                           'شماره سند: #${TextNormalizer.toPersianDigits(document.number.toString())}',
-                          style: pw.TextStyle(font: fontBold, fontSize: 11, color: darkText),
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 11,
+                            color: darkText,
+                          ),
                         ),
                         pw.SizedBox(height: 3),
                         pw.Text(
                           'تاریخ سند: $jalaliDateStr',
-                          style: pw.TextStyle(font: font, fontSize: 10, color: grayText),
+                          style: pw.TextStyle(
+                            font: font,
+                            fontSize: 10,
+                            color: grayText,
+                          ),
                         ),
                         pw.SizedBox(height: 3),
                         pw.Text(
                           'وضعیت: ${document.status.titleFa} (${document.isManual ? 'ثبت دستی' : 'ثبت خودکار سیستمی'})',
-                          style: pw.TextStyle(font: font, fontSize: 9, color: grayText),
+                          style: pw.TextStyle(
+                            font: font,
+                            fontSize: 9,
+                            color: grayText,
+                          ),
                         ),
                       ],
                     ),
@@ -96,10 +119,15 @@ class AccountingVoucherPdfGenerator {
               // 2. Voucher Description / Subject
               pw.Container(
                 width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: pw.BoxDecoration(
                   color: lightBg,
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                   border: pw.Border.all(color: borderGray, width: 0.8),
                 ),
                 child: pw.RichText(
@@ -107,11 +135,19 @@ class AccountingVoucherPdfGenerator {
                     children: [
                       pw.TextSpan(
                         text: 'شرح کلی سند: ',
-                        style: pw.TextStyle(font: fontBold, fontSize: 10, color: primaryColor),
+                        style: pw.TextStyle(
+                          font: fontBold,
+                          fontSize: 10,
+                          color: primaryColor,
+                        ),
                       ),
                       pw.TextSpan(
                         text: document.title,
-                        style: pw.TextStyle(font: font, fontSize: 10, color: darkText),
+                        style: pw.TextStyle(
+                          font: font,
+                          fontSize: 10,
+                          color: darkText,
+                        ),
                       ),
                     ],
                   ),
@@ -148,25 +184,57 @@ class AccountingVoucherPdfGenerator {
                     final index = entry.key + 1;
                     final tx = entry.value;
                     final isDeb = tx.debit.minorUnits > 0;
-                    final rowBg = entry.key % 2 == 0 ? PdfColors.white : lightBg;
+                    final rowBg = entry.key % 2 == 0
+                        ? PdfColors.white
+                        : lightBg;
 
-                    final subjectCode = tx.subject != null ? tx.subject!.formattedCode : '-';
-                    final subjectName = tx.subject != null ? tx.subject!.name : tx.subjectId;
+                    final subjectCode = tx.subject != null
+                        ? tx.subject!.formattedCode
+                        : '-';
+                    final subjectName = tx.subject != null
+                        ? tx.subject!.name
+                        : tx.subjectId;
 
                     return pw.TableRow(
                       decoration: pw.BoxDecoration(color: rowBg),
                       children: [
-                        _buildCell(TextNormalizer.toPersianDigits(index.toString()), font, align: pw.TextAlign.center),
-                        _buildCell(subjectCode, font, align: pw.TextAlign.center),
-                        _buildCell(subjectName, font, align: pw.TextAlign.right),
-                        _buildCell(tx.description.isNotEmpty ? tx.description : '-', font, align: pw.TextAlign.right),
                         _buildCell(
-                          isDeb ? tx.debit.format(includeSymbol: false, usePersianDigits: true) : '-',
+                          TextNormalizer.toPersianDigits(index.toString()),
+                          font,
+                          align: pw.TextAlign.center,
+                        ),
+                        _buildCell(
+                          subjectCode,
+                          font,
+                          align: pw.TextAlign.center,
+                        ),
+                        _buildCell(
+                          subjectName,
+                          font,
+                          align: pw.TextAlign.right,
+                        ),
+                        _buildCell(
+                          tx.description.isNotEmpty ? tx.description : '-',
+                          font,
+                          align: pw.TextAlign.right,
+                        ),
+                        _buildCell(
+                          isDeb
+                              ? tx.debit.format(
+                                  includeSymbol: false,
+                                  usePersianDigits: true,
+                                )
+                              : '-',
                           font,
                           align: pw.TextAlign.left,
                         ),
                         _buildCell(
-                          !isDeb ? tx.credit.format(includeSymbol: false, usePersianDigits: true) : '-',
+                          !isDeb
+                              ? tx.credit.format(
+                                  includeSymbol: false,
+                                  usePersianDigits: true,
+                                )
+                              : '-',
                           font,
                           align: pw.TextAlign.left,
                         ),
@@ -179,19 +247,31 @@ class AccountingVoucherPdfGenerator {
                     children: [
                       _buildCell('', fontBold),
                       _buildCell('', fontBold),
-                      _buildCell('جمع کل سند:', fontBold, align: pw.TextAlign.right),
                       _buildCell(
-                        document.isBalanced ? 'سند کاملاً تراز است' : 'اختلاف تراز!',
+                        'جمع کل سند:',
+                        fontBold,
+                        align: pw.TextAlign.right,
+                      ),
+                      _buildCell(
+                        document.isBalanced
+                            ? 'سند کاملاً تراز است'
+                            : 'اختلاف تراز!',
                         fontBold,
                         align: pw.TextAlign.center,
                       ),
                       _buildCell(
-                        document.totalDebit.format(includeSymbol: false, usePersianDigits: true),
+                        document.totalDebit.format(
+                          includeSymbol: false,
+                          usePersianDigits: true,
+                        ),
                         fontBold,
                         align: pw.TextAlign.left,
                       ),
                       _buildCell(
-                        document.totalCredit.format(includeSymbol: false, usePersianDigits: true),
+                        document.totalCredit.format(
+                          includeSymbol: false,
+                          usePersianDigits: true,
+                        ),
                         fontBold,
                         align: pw.TextAlign.left,
                       ),
@@ -208,7 +288,9 @@ class AccountingVoucherPdfGenerator {
                 padding: const pw.EdgeInsets.all(10),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: borderGray, width: 0.8),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(6),
+                  ),
                 ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
@@ -257,17 +339,39 @@ class AccountingVoucherPdfGenerator {
       child: pw.Text(
         text,
         textAlign: align,
-        style: pw.TextStyle(font: font, fontSize: 8.5, color: PdfColor.fromHex('#1F2937')),
+        style: pw.TextStyle(
+          font: font,
+          fontSize: 8.5,
+          color: PdfColor.fromHex('#1F2937'),
+        ),
       ),
     );
   }
 
-  static pw.Widget _buildSignatureBox(String title, pw.Font fontBold, pw.Font font) {
+  static pw.Widget _buildSignatureBox(
+    String title,
+    pw.Font fontBold,
+    pw.Font font,
+  ) {
     return pw.Column(
       children: [
-        pw.Text(title, style: pw.TextStyle(font: fontBold, fontSize: 9, color: PdfColor.fromHex('#374151'))),
+        pw.Text(
+          title,
+          style: pw.TextStyle(
+            font: fontBold,
+            fontSize: 9,
+            color: PdfColor.fromHex('#374151'),
+          ),
+        ),
         pw.SizedBox(height: 28),
-        pw.Text('امضاء / تاریخ', style: pw.TextStyle(font: font, fontSize: 7, color: PdfColor.fromHex('#9CA3AF'))),
+        pw.Text(
+          'امضاء / تاریخ',
+          style: pw.TextStyle(
+            font: font,
+            fontSize: 7,
+            color: PdfColor.fromHex('#9CA3AF'),
+          ),
+        ),
       ],
     );
   }

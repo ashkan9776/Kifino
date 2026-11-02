@@ -4,12 +4,15 @@ import 'package:kifino/core/utils/money.dart';
 
 void main() {
   group('Money Value Object Tests', () {
-    test('Correctly calculates major and minor units for decimal currencies', () {
-      final usd = Money.fromMajor(125.75, Currency.usd);
-      expect(usd.minorUnits, equals(12575));
-      expect(usd.toMajor(), equals(125.75));
-      expect(usd.format(), equals(r'$125.75'));
-    });
+    test(
+      'Correctly calculates major and minor units for decimal currencies',
+      () {
+        final usd = Money.fromMajor(125.75, Currency.usd);
+        expect(usd.minorUnits, equals(12575));
+        expect(usd.toMajor(), equals(125.75));
+        expect(usd.format(), equals(r'$125.75'));
+      },
+    );
 
     test('Correctly calculates major and minor units for zero-decimal currencies (Toman/Rial)', () {
       final toman = Money.fromMinor(450000, Currency.toman);

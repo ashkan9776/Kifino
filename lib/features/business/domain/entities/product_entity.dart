@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 class ProductEntity extends Equatable {
@@ -46,7 +47,9 @@ class ProductEntity extends Equatable {
 
   double get marginPercentage {
     if (purchasePrice.minorUnits == 0) return 100.0;
-    return ((sellingPrice.minorUnits - purchasePrice.minorUnits) / purchasePrice.minorUnits) * 100.0;
+    return ((sellingPrice.minorUnits - purchasePrice.minorUnits) /
+            purchasePrice.minorUnits) *
+        100.0;
   }
 
   ProductEntity copyWith({
@@ -88,20 +91,20 @@ class ProductEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        sku,
-        barcode,
-        description,
-        unit,
-        purchasePrice,
-        sellingPrice,
-        currentStock,
-        lowStockThreshold,
-        supplierId,
-        supplierName,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    name,
+    sku,
+    barcode,
+    description,
+    unit,
+    purchasePrice,
+    sellingPrice,
+    currentStock,
+    lowStockThreshold,
+    supplierId,
+    supplierName,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

@@ -38,7 +38,10 @@ void main() {
 
       await registry.removeCompany(company.id);
       expect((await registry.getCompanies()).length, equals(1));
-      expect(registry.activeCompanyId, equals(CompanyRegistry.defaultCompanyId));
+      expect(
+        registry.activeCompanyId,
+        equals(CompanyRegistry.defaultCompanyId),
+      );
     });
 
     test('persists the active company across registry instances', () async {
@@ -66,16 +69,18 @@ void main() {
       // Company A database
       final dbA = AppDatabase(NativeDatabase.memory(), 'company-a');
       final repoA = AccountRepositoryImpl(dbA);
-      await repoA.createAccount(AccountEntity(
-        id: 'acc-A',
-        name: 'حساب شرکت الف',
-        type: AccountType.bankCard,
-        currency: Currency.toman,
-        initialBalance: Money.fromMinor(1000000, Currency.toman),
-        currentBalance: Money.fromMinor(1000000, Currency.toman),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
+      await repoA.createAccount(
+        AccountEntity(
+          id: 'acc-A',
+          name: 'حساب شرکت الف',
+          type: AccountType.bankCard,
+          currency: Currency.toman,
+          initialBalance: Money.fromMinor(1000000, Currency.toman),
+          currentBalance: Money.fromMinor(1000000, Currency.toman),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
 
       // Company B database (separate file in production, separate memory here)
       final dbB = AppDatabase(NativeDatabase.memory(), 'company-b');

@@ -68,12 +68,15 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
     final l10n = context.l10n;
     if (_saving) return;
     final name = _nameController.text.trim();
-    final amountMinor = int.tryParse(normalizeNumericInput(_amountController.text)) ?? 0;
+    final amountMinor =
+        int.tryParse(normalizeNumericInput(_amountController.text)) ?? 0;
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n.isPersian ? 'نام طرف حساب را وارد کنید.' : 'Enter the counterparty name.',
+            l10n.isPersian
+                ? 'نام طرف حساب را وارد کنید.'
+                : 'Enter the counterparty name.',
           ),
         ),
       );
@@ -83,7 +86,9 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n.isPersian ? 'مبلغ را درست وارد کنید.' : 'Enter a valid amount.',
+            l10n.isPersian
+                ? 'مبلغ را درست وارد کنید.'
+                : 'Enter a valid amount.',
           ),
         ),
       );
@@ -128,9 +133,8 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -156,8 +160,12 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
             children: [
               AppSheetHeader(
                 title: isFa
-                    ? (debt.type == DebtType.receivable ? 'ویرایش طلب' : 'ویرایش بدهی')
-                    : (debt.type == DebtType.receivable ? 'Edit Receivable' : 'Edit Debt'),
+                    ? (debt.type == DebtType.receivable
+                          ? 'ویرایش طلب'
+                          : 'ویرایش بدهی')
+                    : (debt.type == DebtType.receivable
+                          ? 'Edit Receivable'
+                          : 'Edit Debt'),
               ),
               const SizedBox(height: AppSpacing.md),
               TextField(
@@ -228,10 +236,15 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -249,7 +262,10 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
                         children: [
                           Text(
                             _dueDate != null
-                                ? AppDateFormatter.formatShort(_dueDate!, locale: context.l10n.localeName)
+                                ? AppDateFormatter.formatShort(
+                                    _dueDate!,
+                                    locale: context.l10n.localeName,
+                                  )
                                 : (isFa ? 'بدون سررسید' : 'No due date'),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,

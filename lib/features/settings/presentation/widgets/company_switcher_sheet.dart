@@ -140,7 +140,10 @@ class _CompanySwitcherSheetState extends State<_CompanySwitcherSheet> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -150,7 +153,8 @@ class _CompanySwitcherSheetState extends State<_CompanySwitcherSheet> {
               Text(
                 'هر شرکت یک دفتر حسابداری مستقل با دیتابیس جداگانه دارد. تغییر شرکت، کل اپ را با داده‌های همان شرکت بازسازی می‌کند.',
                 style: AppTypography.bodySmall.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.65),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -172,18 +176,26 @@ class _CompanySwitcherSheetState extends State<_CompanySwitcherSheet> {
                           shape: RoundedRectangleBorder(
                             borderRadius: AppSpacing.borderRadiusMd,
                           ),
-                          title: Text(company.name, style: AppTypography.bodyLarge),
+                          title: Text(
+                            company.name,
+                            style: AppTypography.bodyLarge,
+                          ),
                           leading: Icon(
                             company.id == activeId
                                 ? Icons.radio_button_checked_rounded
                                 : Icons.radio_button_off_rounded,
                             color: company.id == activeId
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
                           ),
-                          trailing: company.id != CompanyRegistry.defaultCompanyId
+                          trailing:
+                              company.id != CompanyRegistry.defaultCompanyId
                               ? IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 20,
+                                  ),
                                   tooltip: 'حذف شرکت',
                                   onPressed: _switching
                                       ? null

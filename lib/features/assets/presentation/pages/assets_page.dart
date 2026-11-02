@@ -56,8 +56,12 @@ class _AssetsPageState extends State<AssetsPage> {
                   bottom: AppSpacing.lg,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  color: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -101,7 +105,9 @@ class _AssetsPageState extends State<AssetsPage> {
                       TextField(
                         controller: nameController,
                         decoration: InputDecoration(
-                          labelText: l10n.isPersian ? 'نام دارایی (مثلاً سکه امامی)' : 'Asset Name',
+                          labelText: l10n.isPersian
+                              ? 'نام دارایی (مثلاً سکه امامی)'
+                              : 'Asset Name',
                           prefixIcon: const Icon(Icons.label_outline_rounded),
                         ),
                       ),
@@ -113,10 +119,14 @@ class _AssetsPageState extends State<AssetsPage> {
                               controller: quantityController,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                                PersianDigitsTextInputFormatter(
+                                  enabled: isFaLocale(context),
+                                ),
                               ],
                               decoration: InputDecoration(
-                                labelText: l10n.isPersian ? 'تعداد / مقدار' : 'Quantity',
+                                labelText: l10n.isPersian
+                                    ? 'تعداد / مقدار'
+                                    : 'Quantity',
                                 prefixIcon: const Icon(Icons.numbers_rounded),
                               ),
                             ),
@@ -126,8 +136,12 @@ class _AssetsPageState extends State<AssetsPage> {
                             child: TextField(
                               controller: unitController,
                               decoration: InputDecoration(
-                                labelText: l10n.isPersian ? 'واحد (گرم، عدد، سهم)' : 'Unit',
-                                prefixIcon: const Icon(Icons.straighten_rounded),
+                                labelText: l10n.isPersian
+                                    ? 'واحد (گرم، عدد، سهم)'
+                                    : 'Unit',
+                                prefixIcon: const Icon(
+                                  Icons.straighten_rounded,
+                                ),
                               ),
                             ),
                           ),
@@ -138,7 +152,9 @@ class _AssetsPageState extends State<AssetsPage> {
                         controller: costController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                          PersianThousandsSeparatorTextInputFormatter(
+                            enabled: isFaLocale(context),
+                          ),
                         ],
                         decoration: InputDecoration(
                           labelText: l10n.purchasePrice,
@@ -151,7 +167,9 @@ class _AssetsPageState extends State<AssetsPage> {
                         controller: valueController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                          PersianThousandsSeparatorTextInputFormatter(
+                            enabled: isFaLocale(context),
+                          ),
                         ],
                         decoration: InputDecoration(
                           labelText: l10n.currentValuation,
@@ -164,29 +182,47 @@ class _AssetsPageState extends State<AssetsPage> {
                         label: l10n.save,
                         onPressed: () {
                           final name = nameController.text.trim();
-                          final qty = double.tryParse(normalizeDecimalInput(quantityController.text)) ?? 1.0;
+                          final qty =
+                              double.tryParse(
+                                normalizeDecimalInput(quantityController.text),
+                              ) ??
+                              1.0;
                           final unit = unitController.text.trim();
-                          final costVal = int.tryParse(normalizeNumericInput(costController.text)) ?? 0;
-                          final curVal = int.tryParse(normalizeNumericInput(valueController.text)) ?? costVal;
+                          final costVal =
+                              int.tryParse(
+                                normalizeNumericInput(costController.text),
+                              ) ??
+                              0;
+                          final curVal =
+                              int.tryParse(
+                                normalizeNumericInput(valueController.text),
+                              ) ??
+                              costVal;
 
                           if (name.isNotEmpty && costVal > 0) {
                             final now = DateTime.now();
                             context.read<AssetBloc>().add(
-                                  AssetCreateSubmitted(
-                                    AssetEntity(
-                                      id: '',
-                                      name: name,
-                                      category: category,
-                                      quantity: qty,
-                                      unit: unit.isNotEmpty ? unit : 'واحد',
-                                      costBasis: Money.fromMinor(costVal, Currency.irr),
-                                      currentValue: Money.fromMinor(curVal, Currency.irr),
-                                      purchaseDate: now,
-                                      createdAt: now,
-                                      updatedAt: now,
-                                    ),
+                              AssetCreateSubmitted(
+                                AssetEntity(
+                                  id: '',
+                                  name: name,
+                                  category: category,
+                                  quantity: qty,
+                                  unit: unit.isNotEmpty ? unit : 'واحد',
+                                  costBasis: Money.fromMinor(
+                                    costVal,
+                                    Currency.irr,
                                   ),
-                                );
+                                  currentValue: Money.fromMinor(
+                                    curVal,
+                                    Currency.irr,
+                                  ),
+                                  purchaseDate: now,
+                                  createdAt: now,
+                                  updatedAt: now,
+                                ),
+                              ),
+                            );
                             Navigator.pop(bottomSheetContext);
                           }
                         },
@@ -228,8 +264,12 @@ class _AssetsPageState extends State<AssetsPage> {
               bottom: AppSpacing.lg,
             ),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -245,7 +285,9 @@ class _AssetsPageState extends State<AssetsPage> {
                   keyboardType: TextInputType.number,
                   autofocus: true,
                   inputFormatters: [
-                    PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                    PersianThousandsSeparatorTextInputFormatter(
+                      enabled: isFaLocale(context),
+                    ),
                   ],
                   decoration: InputDecoration(
                     labelText: l10n.currentValuation,
@@ -257,14 +299,21 @@ class _AssetsPageState extends State<AssetsPage> {
                 AppButton(
                   label: l10n.save,
                   onPressed: () {
-                    final newVal = int.tryParse(normalizeNumericInput(valueController.text)) ?? 0;
+                    final newVal =
+                        int.tryParse(
+                          normalizeNumericInput(valueController.text),
+                        ) ??
+                        0;
                     if (newVal > 0) {
                       context.read<AssetBloc>().add(
-                            AssetValuationUpdated(
-                              id: asset.id,
-                              currentValue: Money.fromMinor(newVal, asset.currentValue.currency),
-                            ),
-                          );
+                        AssetValuationUpdated(
+                          id: asset.id,
+                          currentValue: Money.fromMinor(
+                            newVal,
+                            asset.currentValue.currency,
+                          ),
+                        ),
+                      );
                       Navigator.pop(bottomSheetContext);
                     }
                   },
@@ -288,245 +337,292 @@ class _AssetsPageState extends State<AssetsPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.assets),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddAssetDialog(context),
-        child: const Icon(Icons.add),
-      ),
-      body: BlocBuilder<AssetBloc, AssetState>(
-        builder: (context, state) {
-          if (state is AssetLoading) {
-            return const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  AppSkeleton(height: 140, borderRadius: AppSpacing.borderRadiusLg),
-                  SizedBox(height: AppSpacing.md),
-                  AppSkeleton(height: 80, borderRadius: AppSpacing.borderRadiusMd),
-                ],
-              ),
-            );
-          }
-
-          if (state is! AssetLoaded) {
-            return AppEmptyState(
-              icon: Icons.savings_outlined,
-              title: l10n.assets,
-              description: l10n.isPersian
-                  ? 'ثبت دارایی‌های غیرنقدی مانند طلا، سکه، رمزارز، ملک و سهام.'
-                  : 'Track non-liquid assets like gold, real estate, and crypto.',
-            );
-          }
-
-          final assets = state.assets;
-          final isPnlPositive = state.totalProfitLoss.minorUnits >= 0;
-
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              // Portfolio Valuation Card
-              AppCard(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.isPersian ? 'ارزش روز دارایی‌ها' : 'Portfolio Valuation',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: (isPnlPositive ? AppColors.income : AppColors.expense).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            TextNormalizer.auto(
-                              '${isPnlPositive ? '+' : ''}${state.profitLossPercent.toStringAsFixed(1)}%',
-                            ),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: isPnlPositive ? AppColors.income : AppColors.expense,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    AppMoneyText(
-                      money: state.totalCurrentValuation,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+          appBar: AppBar(title: Text(l10n.assets)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAddAssetDialog(context),
+            child: const Icon(Icons.add),
+          ),
+          body: BlocBuilder<AssetBloc, AssetState>(
+            builder: (context, state) {
+              if (state is AssetLoading) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      AppSkeleton(
+                        height: 140,
+                        borderRadius: AppSpacing.borderRadiusLg,
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const Divider(),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.purchasePrice,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                                ),
-                              ),
-                              AppMoneyText(
-                                money: state.totalCostBasis,
-                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                l10n.profitLoss,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                                ),
-                              ),
-                              AppMoneyText(
-                                money: state.totalProfitLoss.abs(),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isPnlPositive ? AppColors.income : AppColors.expense,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              if (assets.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                  child: AppEmptyState(
-                    icon: Icons.savings_outlined,
-                    title: l10n.isPersian ? 'دارایی ثبت نشده است' : 'No assets found',
-                    description: l10n.isPersian
-                        ? 'طلا، ارز، خودرو یا سهام خود را با زدن دکمه + اضافه کنید.'
-                        : 'Tap + to add your gold, vehicle, stock, or crypto.',
+                      SizedBox(height: AppSpacing.md),
+                      AppSkeleton(
+                        height: 80,
+                        borderRadius: AppSpacing.borderRadiusMd,
+                      ),
+                    ],
                   ),
-                )
-              else
-                ...assets.map((asset) {
-                  final isPositive = asset.isProfitable;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: AppCard(
-                      onTap: () => _showUpdateValuationDialog(context, asset),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                            child: const Icon(
-                              Icons.savings_outlined,
-                              size: 20,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  asset.name,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  TextNormalizer.auto('${asset.quantity} ${asset.unit} · ${asset.displayType}'),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              AppMoneyText(
-                                money: asset.currentValue,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                );
+              }
+
+              if (state is! AssetLoaded) {
+                return AppEmptyState(
+                  icon: Icons.savings_outlined,
+                  title: l10n.assets,
+                  description: l10n.isPersian
+                      ? 'ثبت دارایی‌های غیرنقدی مانند طلا، سکه، رمزارز، ملک و سهام.'
+                      : 'Track non-liquid assets like gold, real estate, and crypto.',
+                );
+              }
+
+              final assets = state.assets;
+              final isPnlPositive = state.totalProfitLoss.minorUnits >= 0;
+
+              return ListView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                children: [
+                  // Portfolio Valuation Card
+                  AppCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              l10n.isPersian
+                                  ? 'ارزش روز دارایی‌ها'
+                                  : 'Portfolio Valuation',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark
+                                    ? AppColors.darkSubtext
+                                    : AppColors.lightSubtext,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    (isPnlPositive
+                                            ? AppColors.income
+                                            : AppColors.expense)
+                                        .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
                                 TextNormalizer.auto(
-                                  '${isPositive ? '+' : ''}${asset.profitLossPercent.toStringAsFixed(1)}%',
+                                  '${isPnlPositive ? '+' : ''}${state.profitLossPercent.toStringAsFixed(1)}%',
                                 ),
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isPositive ? AppColors.income : AppColors.expense,
+                                  color: isPnlPositive
+                                      ? AppColors.income
+                                      : AppColors.expense,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => EditAssetSheet.show(context, asset),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        AppMoneyText(
+                          money: state.totalCurrentValuation,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        const Divider(),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.purchasePrice,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkSubtext
+                                          : AppColors.lightSubtext,
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.edit_outlined,
-                                        size: 12,
-                                        color: AppColors.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        l10n.isPersian ? 'ویرایش' : 'Edit',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
+                                  AppMoneyText(
+                                    money: state.totalCostBasis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    l10n.profitLoss,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkSubtext
+                                          : AppColors.lightSubtext,
+                                    ),
+                                  ),
+                                  AppMoneyText(
+                                    money: state.totalProfitLoss.abs(),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: isPnlPositive
+                                          ? AppColors.income
+                                          : AppColors.expense,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  if (assets.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xl,
+                      ),
+                      child: AppEmptyState(
+                        icon: Icons.savings_outlined,
+                        title: l10n.isPersian
+                            ? 'دارایی ثبت نشده است'
+                            : 'No assets found',
+                        description: l10n.isPersian
+                            ? 'طلا، ارز، خودرو یا سهام خود را با زدن دکمه + اضافه کنید.'
+                            : 'Tap + to add your gold, vehicle, stock, or crypto.',
+                      ),
+                    )
+                  else
+                    ...assets.map((asset) {
+                      final isPositive = asset.isProfitable;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: AppCard(
+                          onTap: () =>
+                              _showUpdateValuationDialog(context, asset),
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: AppColors.primary.withValues(
+                                  alpha: 0.12,
                                 ),
+                                child: const Icon(
+                                  Icons.savings_outlined,
+                                  size: 20,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      asset.name,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      TextNormalizer.auto(
+                                        '${asset.quantity} ${asset.unit} · ${asset.displayType}',
+                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? AppColors.darkSubtext
+                                                : AppColors.lightSubtext,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  AppMoneyText(
+                                    money: asset.currentValue,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    TextNormalizer.auto(
+                                      '${isPositive ? '+' : ''}${asset.profitLossPercent.toStringAsFixed(1)}%',
+                                    ),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: isPositive
+                                          ? AppColors.income
+                                          : AppColors.expense,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () =>
+                                        EditAssetSheet.show(context, asset),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.edit_outlined,
+                                            size: 12,
+                                            color: AppColors.primary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            l10n.isPersian ? 'ویرایش' : 'Edit',
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: AppColors.primary,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              const SizedBox(height: AppSpacing.xxl),
-            ],
-          );
-        },
-      ),
+                        ),
+                      );
+                    }),
+                  const SizedBox(height: AppSpacing.xxl),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

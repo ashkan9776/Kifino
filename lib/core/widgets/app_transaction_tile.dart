@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
@@ -26,27 +27,27 @@ class AppTransactionTile extends StatelessWidget {
 
     final (iconData, iconBg, iconColor) = switch (transaction.type) {
       TransactionType.income => (
-          Icons.arrow_downward_rounded,
-          isDark ? colors.incomeBg : AppColors.incomeBgLight,
-          colors.income,
-        ),
+        Icons.arrow_downward_rounded,
+        isDark ? colors.incomeBg : AppColors.incomeBgLight,
+        colors.income,
+      ),
       TransactionType.expense => (
-          transaction.categoryIconCodePoint != null
-              ? IconUtils.getIconData(transaction.categoryIconCodePoint!)
-              : Icons.arrow_upward_rounded,
-          isDark ? colors.expenseBg : AppColors.expenseBgLight,
-          colors.expense,
-        ),
+        transaction.categoryIconCodePoint != null
+            ? IconUtils.getIconData(transaction.categoryIconCodePoint!)
+            : Icons.arrow_upward_rounded,
+        isDark ? colors.expenseBg : AppColors.expenseBgLight,
+        colors.expense,
+      ),
       TransactionType.transfer => (
-          Icons.swap_horiz_rounded,
-          isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
-          colors.transfer,
-        ),
+        Icons.swap_horiz_rounded,
+        isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
+        colors.transfer,
+      ),
       _ => (
-          Icons.receipt_rounded,
-          isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
-          Theme.of(context).colorScheme.primary,
-        ),
+        Icons.receipt_rounded,
+        isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
+        Theme.of(context).colorScheme.primary,
+      ),
     };
 
     final tile = Material(
@@ -55,7 +56,10 @@ class AppTransactionTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppSpacing.borderRadiusMd,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: [
               Container(
@@ -87,15 +91,20 @@ class AppTransactionTile extends StatelessWidget {
                           Text(
                             transaction.accountName!,
                             style: AppTypography.labelMedium.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: Theme.of(context).colorScheme.onSurface
+                                  .withValues(alpha: 0.6),
                             ),
                           ),
                           const Text(' • '),
                         ],
                         Text(
-                          AppDateFormatter.formatRelative(transaction.date, locale: 'fa'),
+                          AppDateFormatter.formatRelative(
+                            transaction.date,
+                            locale: 'fa',
+                          ),
                           style: AppTypography.labelMedium.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: Theme.of(context).colorScheme.onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -108,8 +117,8 @@ class AppTransactionTile extends StatelessWidget {
                 sign: transaction.type == TransactionType.income
                     ? MoneyDisplaySign.positiveNegative
                     : (transaction.type == TransactionType.expense
-                        ? MoneyDisplaySign.negativeOnly
-                        : MoneyDisplaySign.none),
+                          ? MoneyDisplaySign.negativeOnly
+                          : MoneyDisplaySign.none),
                 style: AppTypography.moneyTile,
                 colorCode: true,
                 usePersianDigits: true,

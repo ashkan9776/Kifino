@@ -26,23 +26,32 @@ void main() {
       expect(TextNormalizer.parseMoneyInput('-45,000'), equals(-45000));
     });
 
-    test('formatNumberWithSeparators formats correctly with Persian digits', () {
-      expect(formatNumberWithSeparators(10000000), equals('۱۰,۰۰۰,۰۰۰'));
-      expect(formatNumberWithSeparators('2500'), equals('۲,۵۰۰'));
-      expect(formatNumberWithSeparators(50), equals('۵۰'));
-      expect(formatNumberWithSeparators(''), equals(''));
-    });
+    test(
+      'formatNumberWithSeparators formats correctly with Persian digits',
+      () {
+        expect(formatNumberWithSeparators(10000000), equals('۱۰,۰۰۰,۰۰۰'));
+        expect(formatNumberWithSeparators('2500'), equals('۲,۵۰۰'));
+        expect(formatNumberWithSeparators(50), equals('۵۰'));
+        expect(formatNumberWithSeparators(''), equals(''));
+      },
+    );
 
-    test('PersianThousandsSeparatorTextInputFormatter formats input dynamically', () {
-      const formatter = PersianThousandsSeparatorTextInputFormatter(enabled: true, usePersianDigits: true);
-      const oldValue = TextEditingValue.empty;
-      const newValue = TextEditingValue(
-        text: '10000000',
-        selection: TextSelection.collapsed(offset: 8),
-      );
-      final formatted = formatter.formatEditUpdate(oldValue, newValue);
-      expect(formatted.text, equals('۱۰,۰۰۰,۰۰۰'));
-      expect(formatted.selection.baseOffset, equals(10));
-    });
+    test(
+      'PersianThousandsSeparatorTextInputFormatter formats input dynamically',
+      () {
+        const formatter = PersianThousandsSeparatorTextInputFormatter(
+          enabled: true,
+          usePersianDigits: true,
+        );
+        const oldValue = TextEditingValue.empty;
+        const newValue = TextEditingValue(
+          text: '10000000',
+          selection: TextSelection.collapsed(offset: 8),
+        );
+        final formatted = formatter.formatEditUpdate(oldValue, newValue);
+        expect(formatted.text, equals('۱۰,۰۰۰,۰۰۰'));
+        expect(formatted.selection.baseOffset, equals(10));
+      },
+    );
   });
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import 'accounting_transaction_entity.dart';
 
@@ -18,10 +19,10 @@ enum DocumentStatus {
   }
 
   String get titleFa => switch (this) {
-        DocumentStatus.draft => 'پیش‌نویس / موقت',
-        DocumentStatus.approved => 'تأیید شده',
-        DocumentStatus.posted => 'ثبت قطعی / دائم',
-      };
+    DocumentStatus.draft => 'پیش‌نویس / موقت',
+    DocumentStatus.approved => 'تأیید شده',
+    DocumentStatus.posted => 'ثبت قطعی / دائم',
+  };
 }
 
 class AccountingDocumentEntity extends Equatable {
@@ -74,7 +75,9 @@ class AccountingDocumentEntity extends Equatable {
   bool get isBalanced => totalDebit.minorUnits == totalCredit.minorUnits;
 
   Money get imbalanceDifference {
-    return Money.fromMinor((totalDebit.minorUnits - totalCredit.minorUnits).abs());
+    return Money.fromMinor(
+      (totalDebit.minorUnits - totalCredit.minorUnits).abs(),
+    );
   }
 
   AccountingDocumentEntity copyWith({
@@ -111,16 +114,16 @@ class AccountingDocumentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        number,
-        date,
-        title,
-        status,
-        isManual,
-        referenceType,
-        referenceId,
-        fiscalYearId,
-        approvedAt,
-        transactions,
-      ];
+    id,
+    number,
+    date,
+    title,
+    status,
+    isManual,
+    referenceType,
+    referenceId,
+    fiscalYearId,
+    approvedAt,
+    transactions,
+  ];
 }

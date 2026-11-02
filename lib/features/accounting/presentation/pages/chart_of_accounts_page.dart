@@ -57,7 +57,10 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -71,19 +74,39 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
           // Level Filter Chips
           BlocBuilder<ChartOfAccountsCubit, ChartOfAccountsState>(
             builder: (context, state) {
-              final selectedLevel = (state is ChartOfAccountsLoaded) ? state.selectedLevel : null;
+              final selectedLevel = (state is ChartOfAccountsLoaded)
+                  ? state.selectedLevel
+                  : null;
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: Row(
                   children: [
                     _buildFilterChip('همه سطوح', null, selectedLevel, colors),
                     const SizedBox(width: 8),
-                    _buildFilterChip('حساب‌های کل', AccountingSubjectLevel.kol, selectedLevel, colors),
+                    _buildFilterChip(
+                      'حساب‌های کل',
+                      AccountingSubjectLevel.kol,
+                      selectedLevel,
+                      colors,
+                    ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('حساب‌های معین', AccountingSubjectLevel.moein, selectedLevel, colors),
+                    _buildFilterChip(
+                      'حساب‌های معین',
+                      AccountingSubjectLevel.moein,
+                      selectedLevel,
+                      colors,
+                    ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('حساب‌های تفصیلی', AccountingSubjectLevel.tafsili, selectedLevel, colors),
+                    _buildFilterChip(
+                      'حساب‌های تفصیلی',
+                      AccountingSubjectLevel.tafsili,
+                      selectedLevel,
+                      colors,
+                    ),
                   ],
                 ),
               );
@@ -106,16 +129,26 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.account_tree_outlined, size: 48, color: colors.textSecondary),
+                          Icon(
+                            Icons.account_tree_outlined,
+                            size: 48,
+                            color: colors.textSecondary,
+                          ),
                           const SizedBox(height: 8),
-                          Text('سرفصلی یافت نشد', style: AppTypography.titleMedium),
+                          Text(
+                            'سرفصلی یافت نشد',
+                            style: AppTypography.titleMedium,
+                          ),
                         ],
                       ),
                     );
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: subjects.length,
                     itemBuilder: (context, index) {
                       final subject = subjects[index];
@@ -164,7 +197,11 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
     );
   }
 
-  Widget _buildSubjectTile(BuildContext context, AccountingSubjectEntity subject, KifinoColorsExtension colors) {
+  Widget _buildSubjectTile(
+    BuildContext context,
+    AccountingSubjectEntity subject,
+    KifinoColorsExtension colors,
+  ) {
     Color levelColor;
     switch (subject.level) {
       case AccountingSubjectLevel.group:
@@ -212,13 +249,18 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                   children: [
                     Text(
                       subject.name,
-                      style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600),
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
@@ -230,7 +272,10 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: subject.isPermanent
                                 ? Colors.blue.withValues(alpha: 0.1)
@@ -238,10 +283,14 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            subject.isPermanent ? 'دائمی (ترازنامه‌ای)' : 'موقت (سود و زیانی)',
+                            subject.isPermanent
+                                ? 'دائمی (ترازنامه‌ای)'
+                                : 'موقت (سود و زیانی)',
                             style: TextStyle(
                               fontSize: 10,
-                              color: subject.isPermanent ? Colors.blue.shade700 : Colors.amber.shade900,
+                              color: subject.isPermanent
+                                  ? Colors.blue.shade700
+                                  : Colors.amber.shade900,
                             ),
                           ),
                         ),
@@ -256,24 +305,24 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                   color: subject.type == AccountingSubjectType.debtor
                       ? Colors.red.withValues(alpha: 0.1)
                       : subject.type == AccountingSubjectType.creditor
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : Colors.grey.withValues(alpha: 0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   subject.type == AccountingSubjectType.debtor
                       ? 'بدهکار'
                       : subject.type == AccountingSubjectType.creditor
-                          ? 'بستانکار'
-                          : 'شناور',
+                      ? 'بستانکار'
+                      : 'شناور',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: subject.type == AccountingSubjectType.debtor
                         ? Colors.red
                         : subject.type == AccountingSubjectType.creditor
-                            ? Colors.green
-                            : Colors.grey.shade700,
+                        ? Colors.green
+                        : Colors.grey.shade700,
                   ),
                 ),
               ),
@@ -342,7 +391,11 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                   const SizedBox(height: 8),
                   SwitchListTile(
                     title: const Text('حساب دائمی (ترازنامه‌ای)'),
-                    subtitle: Text(isPermanent ? 'مانده به سال بعد منتقل می‌شود' : 'حساب موقت سود و زیانی'),
+                    subtitle: Text(
+                      isPermanent
+                          ? 'مانده به سال بعد منتقل می‌شود'
+                          : 'حساب موقت سود و زیانی',
+                    ),
                     value: isPermanent,
                     onChanged: (val) => setDialogState(() => isPermanent = val),
                     contentPadding: EdgeInsets.zero,

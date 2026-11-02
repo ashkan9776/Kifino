@@ -39,33 +39,40 @@ class _SearchPageState extends State<SearchPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.sm, left: AppSpacing.sm),
-          child: TextField(
-            autofocus: true,
-            onChanged: (value) => setState(() => _query = value),
-            decoration: InputDecoration(
-              hintText: isPersian
-                  ? 'جستجو در تراکنش‌ها، حساب‌ها، مشتریان…'
-                  : 'Search transactions, accounts, customers…',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _query.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () => setState(() => _query = ''),
-                    ),
-              filled: true,
-              isDense: true,
+          appBar: AppBar(
+            titleSpacing: 0,
+            title: Padding(
+              padding: const EdgeInsets.only(
+                right: AppSpacing.sm,
+                left: AppSpacing.sm,
+              ),
+              child: TextField(
+                autofocus: true,
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  hintText: isPersian
+                      ? 'جستجو در تراکنش‌ها، حساب‌ها، مشتریان…'
+                      : 'Search transactions, accounts, customers…',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          onPressed: () => setState(() => _query = ''),
+                        ),
+                  filled: true,
+                  isDense: true,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      body: _query.trim().isEmpty
-          ? _RecentTransactionsSection(isPersian: isPersian)
-          : _SearchResults(query: _query, needle: needle, isPersian: isPersian),
+          body: _query.trim().isEmpty
+              ? _RecentTransactionsSection(isPersian: isPersian)
+              : _SearchResults(
+                  query: _query,
+                  needle: needle,
+                  isPersian: isPersian,
+                ),
         ),
       ),
     );
@@ -93,44 +100,55 @@ class _SearchResults extends StatelessWidget {
 
     final transactions = transactionState is TransactionLoaded
         ? transactionState.transactions
-            .where((tx) => _matchAll(
-                  needle,
-                  [tx.description, tx.categoryName, tx.accountName],
-                ))
-            .toList()
+              .where(
+                (tx) => _matchAll(needle, [
+                  tx.description,
+                  tx.categoryName,
+                  tx.accountName,
+                ]),
+              )
+              .toList()
         : const [];
 
     final accounts = accountState is AccountsLoaded
         ? accountState.accounts
-            .where((a) => _matchAll(needle, [a.name, a.bankName]))
-            .toList()
+              .where((a) => _matchAll(needle, [a.name, a.bankName]))
+              .toList()
         : const [];
 
     final contacts = businessState is BusinessLoaded
         ? businessState.contacts
-            .where((c) => _matchAll(needle, [c.name, c.companyName, c.phone]))
-            .toList()
+              .where((c) => _matchAll(needle, [c.name, c.companyName, c.phone]))
+              .toList()
         : const [];
 
     final products = businessState is BusinessLoaded
         ? businessState.products
-            .where((p) => _matchAll(needle, [p.name, p.sku, p.barcode]))
-            .toList()
+              .where((p) => _matchAll(needle, [p.name, p.sku, p.barcode]))
+              .toList()
         : const [];
 
     final debts = debtState is DebtLoaded
         ? debtState.debts
-            .where((d) => _matchAll(needle, [d.contactName, d.notes]))
-            .toList()
+              .where((d) => _matchAll(needle, [d.contactName, d.notes]))
+              .toList()
         : const [];
 
     final checks = checkState is CheckLoaded
         ? checkState.checks
-            .where((c) => _matchAll(needle, [c.checkNumber, c.partyName, c.bankName, c.sayadiId]))
-            .toList()
+              .where(
+                (c) => _matchAll(needle, [
+                  c.checkNumber,
+                  c.partyName,
+                  c.bankName,
+                  c.sayadiId,
+                ]),
+              )
+              .toList()
         : const [];
 
-    final isEmpty = transactions.isEmpty &&
+    final isEmpty =
+        transactions.isEmpty &&
         accounts.isEmpty &&
         contacts.isEmpty &&
         products.isEmpty &&
@@ -170,21 +188,30 @@ class _SearchResults extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.account_balance_wallet_rounded),
                   title: Text(account.name),
-                  subtitle: account.bankName != null ? Text(account.bankName!) : null,
-                  trailing: AppMoneyText(money: account.currentBalance, usePersianDigits: true),
+                  subtitle: account.bankName != null
+                      ? Text(account.bankName!)
+                      : null,
+                  trailing: AppMoneyText(
+                    money: account.currentBalance,
+                    usePersianDigits: true,
+                  ),
                 ),
             ],
           ),
         if (contacts.isNotEmpty)
           _Section(
-            title: isPersian ? 'مشتریان و تأمین‌کنندگان' : 'Customers & suppliers',
+            title: isPersian
+                ? 'مشتریان و تأمین‌کنندگان'
+                : 'Customers & suppliers',
             count: contacts.length,
             children: [
               for (final contact in contacts)
                 ListTile(
                   leading: const Icon(Icons.person_outline_rounded),
                   title: Text(contact.name),
-                  subtitle: contact.companyName != null ? Text(contact.companyName!) : null,
+                  subtitle: contact.companyName != null
+                      ? Text(contact.companyName!)
+                      : null,
                 ),
             ],
           ),
@@ -198,7 +225,10 @@ class _SearchResults extends StatelessWidget {
                   leading: const Icon(Icons.inventory_2_outlined),
                   title: Text(product.name),
                   subtitle: product.sku != null ? Text(product.sku!) : null,
-                  trailing: AppMoneyText(money: product.sellingPrice, usePersianDigits: true),
+                  trailing: AppMoneyText(
+                    money: product.sellingPrice,
+                    usePersianDigits: true,
+                  ),
                 ),
             ],
           ),
@@ -211,7 +241,10 @@ class _SearchResults extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.handshake_outlined),
                   title: Text(debt.contactName),
-                  trailing: AppMoneyText(money: debt.remainingAmount, usePersianDigits: true),
+                  trailing: AppMoneyText(
+                    money: debt.remainingAmount,
+                    usePersianDigits: true,
+                  ),
                 ),
             ],
           ),
@@ -225,7 +258,10 @@ class _SearchResults extends StatelessWidget {
                   leading: const Icon(Icons.fact_check_outlined),
                   title: Text('${check.partyName} • ${check.checkNumber}'),
                   subtitle: Text(check.bankName),
-                  trailing: AppMoneyText(money: check.amount, usePersianDigits: true),
+                  trailing: AppMoneyText(
+                    money: check.amount,
+                    usePersianDigits: true,
+                  ),
                 ),
             ],
           ),
@@ -235,9 +271,9 @@ class _SearchResults extends StatelessWidget {
 
   static bool _matchAll(String needle, List<String?> fields) {
     if (needle.isEmpty) return true;
-    return fields
-        .whereType<String>()
-        .any((field) => TextNormalizer.normalizeForSearch(field).contains(needle));
+    return fields.whereType<String>().any(
+      (field) => TextNormalizer.normalizeForSearch(field).contains(needle),
+    );
   }
 }
 

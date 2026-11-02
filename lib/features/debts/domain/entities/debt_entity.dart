@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum DebtType {
@@ -66,15 +67,22 @@ class DebtEntity extends Equatable {
 
   Money get remainingAmount {
     final remainingMinor = totalAmount.minorUnits - paidAmount.minorUnits;
-    return Money.fromMinor(remainingMinor > 0 ? remainingMinor : 0, totalAmount.currency);
+    return Money.fromMinor(
+      remainingMinor > 0 ? remainingMinor : 0,
+      totalAmount.currency,
+    );
   }
 
   double get progressPercent {
     if (totalAmount.minorUnits <= 0) return 100.0;
-    return ((paidAmount.minorUnits / totalAmount.minorUnits) * 100).clamp(0.0, 100.0);
+    return ((paidAmount.minorUnits / totalAmount.minorUnits) * 100).clamp(
+      0.0,
+      100.0,
+    );
   }
 
-  bool get isSettled => status == DebtStatus.settled || paidAmount >= totalAmount;
+  bool get isSettled =>
+      status == DebtStatus.settled || paidAmount >= totalAmount;
 
   bool get isOverdue {
     if (isSettled || dueDate == null) return false;
@@ -115,17 +123,17 @@ class DebtEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        contactName,
-        contactPhone,
-        type,
-        totalAmount,
-        paidAmount,
-        dueDate,
-        status,
-        notes,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    contactName,
+    contactPhone,
+    type,
+    totalAmount,
+    paidAmount,
+    dueDate,
+    status,
+    notes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

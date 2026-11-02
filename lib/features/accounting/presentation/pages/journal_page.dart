@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
@@ -83,78 +84,97 @@ class _JournalPageState extends State<JournalPage>
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _documents.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.menu_book, size: 56, color: colors.textSecondary),
-                      const SizedBox(height: 12),
-                      Text('تراکنشی در دفتر روزنامه ثبت نشده است', style: AppTypography.titleMedium),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.menu_book, size: 56, color: colors.textSecondary),
+                  const SizedBox(height: 12),
+                  Text(
+                    'تراکنشی در دفتر روزنامه ثبت نشده است',
+                    style: AppTypography.titleMedium,
                   ),
-                )
-              : Column(
-                  children: [
-                    // Journal List
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: _documents.length,
-                        itemBuilder: (context, index) {
-                          final doc = _documents[index];
-                          return _buildJournalDocumentBlock(doc, colors);
-                        },
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                // Journal List
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _documents.length,
+                    itemBuilder: (context, index) {
+                      final doc = _documents[index];
+                      return _buildJournalDocumentBlock(doc, colors);
+                    },
+                  ),
+                ),
+
+                // Grand Total Footer
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.2),
                       ),
                     ),
-
-                    // Grand Total Footer
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        border: Border(
-                          top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            offset: const Offset(0, -2),
-                            blurRadius: 6,
-                          ),
-                        ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        offset: const Offset(0, -2),
+                        blurRadius: 6,
                       ),
-                      child: SafeArea(
-                        top: false,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'جمع کل دفتر روزنامه:',
+                          style: AppTypography.titleSmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Row(
                           children: [
-                            Text('جمع کل دفتر روزنامه:',
-                                style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold)),
-                            Row(
-                              children: [
-                                Text('بدهکار: ', style: AppTypography.bodySmall),
-                                AppMoneyText(
-                                  money: Money.fromMinor(grandTotalDebit),
-                                  style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(width: 16),
-                                Text('بستانکار: ', style: AppTypography.bodySmall),
-                                AppMoneyText(
-                                  money: Money.fromMinor(grandTotalCredit),
-                                  style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                              ],
+                            Text('بدهکار: ', style: AppTypography.bodySmall),
+                            AppMoneyText(
+                              money: Money.fromMinor(grandTotalDebit),
+                              style: AppTypography.titleSmall.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text('بستانکار: ', style: AppTypography.bodySmall),
+                            AppMoneyText(
+                              money: Money.fromMinor(grandTotalCredit),
+                              style: AppTypography.titleSmall.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
-  Widget _buildJournalDocumentBlock(AccountingDocumentEntity doc, KifinoColorsExtension colors) {
+  Widget _buildJournalDocumentBlock(
+    AccountingDocumentEntity doc,
+    KifinoColorsExtension colors,
+  ) {
     final jalali = JalaliDate.fromDateTime(doc.date);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -171,19 +191,28 @@ class _JournalPageState extends State<JournalPage>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.grey.withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(10),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    Text('سند #${TextNormalizer.toPersianDigits(doc.number.toString())}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(
+                      'سند #${TextNormalizer.toPersianDigits(doc.number.toString())}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Text('• ${doc.title}',
-                        style: TextStyle(fontSize: 12, color: colors.textPrimary),
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      '• ${doc.title}',
+                      style: TextStyle(fontSize: 12, color: colors.textPrimary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
                 Text(
@@ -207,22 +236,48 @@ class _JournalPageState extends State<JournalPage>
               children: [
                 const TableRow(
                   children: [
-                    Text('کد حساب', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('شرح آرتیکل', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('بدهکار',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.red),
-                        textAlign: TextAlign.end),
-                    Text('بستانکار',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.green),
-                        textAlign: TextAlign.end),
+                    Text(
+                      'کد حساب',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'شرح آرتیکل',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'بدهکار',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: Colors.red,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                    Text(
+                      'بستانکار',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: Colors.green,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
                   ],
                 ),
-                const TableRow(children: [
-                  Divider(height: 8),
-                  Divider(height: 8),
-                  Divider(height: 8),
-                  Divider(height: 8),
-                ]),
+                const TableRow(
+                  children: [
+                    Divider(height: 8),
+                    Divider(height: 8),
+                    Divider(height: 8),
+                    Divider(height: 8),
+                  ],
+                ),
                 ...doc.transactions.map((tx) {
                   return TableRow(
                     children: [
@@ -230,13 +285,18 @@ class _JournalPageState extends State<JournalPage>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           tx.subject?.formattedCode ?? '',
-                          style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          tx.subject != null ? '${tx.subject!.name} (${tx.description})' : tx.description,
+                          tx.subject != null
+                              ? '${tx.subject!.name} (${tx.description})'
+                              : tx.description,
                           style: const TextStyle(fontSize: 11),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -246,7 +306,10 @@ class _JournalPageState extends State<JournalPage>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           tx.debit.minorUnits > 0 ? tx.debit.formatted : '-',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                           textAlign: TextAlign.end,
                         ),
                       ),
@@ -254,7 +317,10 @@ class _JournalPageState extends State<JournalPage>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           tx.credit.minorUnits > 0 ? tx.credit.formatted : '-',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                           textAlign: TextAlign.end,
                         ),
                       ),

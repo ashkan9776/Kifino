@@ -9,8 +9,10 @@ enum AuditLogAction {
   final String code;
   const AuditLogAction(this.code);
 
-  static AuditLogAction fromCode(String code) =>
-      values.firstWhere((a) => a.code == code, orElse: () => AuditLogAction.create);
+  static AuditLogAction fromCode(String code) => values.firstWhere(
+    (a) => a.code == code,
+    orElse: () => AuditLogAction.create,
+  );
 }
 
 /// Immutable audit trail entry for accounting documents (Phase 1):
@@ -39,8 +41,15 @@ class AccountingAuditLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, entityType, entityId, action, beforeJson, afterJson, description, performedAt,
-      ];
+    id,
+    entityType,
+    entityId,
+    action,
+    beforeJson,
+    afterJson,
+    description,
+    performedAt,
+  ];
 }
 
 /// تفصیلی شناور — a named analysis dimension (customers, projects, cost
@@ -119,9 +128,15 @@ class DetailReportRow extends Equatable {
 
   @override
   List<Object?> get props => [
-        date, documentNumber, documentTitle, subjectName,
-        description, debitMinorUnits, creditMinorUnits, runningBalanceMinorUnits,
-      ];
+    date,
+    documentNumber,
+    documentTitle,
+    subjectName,
+    description,
+    debitMinorUnits,
+    creditMinorUnits,
+    runningBalanceMinorUnits,
+  ];
 }
 
 class DetailReport extends Equatable {
@@ -142,7 +157,13 @@ class DetailReport extends Equatable {
   int get netMinorUnits => totalDebitMinorUnits - totalCreditMinorUnits;
 
   @override
-  List<Object?> get props => [ledger, value, rows, totalDebitMinorUnits, totalCreditMinorUnits];
+  List<Object?> get props => [
+    ledger,
+    value,
+    rows,
+    totalDebitMinorUnits,
+    totalCreditMinorUnits,
+  ];
 }
 
 /// A detail tag applied to a document (one per ledger, max 10 ledgers).

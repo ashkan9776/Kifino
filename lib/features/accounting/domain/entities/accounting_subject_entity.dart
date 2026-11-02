@@ -18,10 +18,10 @@ enum AccountingSubjectType {
   }
 
   String get titleFa => switch (this) {
-        AccountingSubjectType.debtor => 'ماهیت بدهکار',
-        AccountingSubjectType.creditor => 'ماهیت بستانکار',
-        AccountingSubjectType.both => 'دوگانه / شناور',
-      };
+    AccountingSubjectType.debtor => 'ماهیت بدهکار',
+    AccountingSubjectType.creditor => 'ماهیت بستانکار',
+    AccountingSubjectType.both => 'دوگانه / شناور',
+  };
 }
 
 enum AccountingSubjectLevel {
@@ -49,11 +49,11 @@ enum AccountingSubjectLevel {
   }
 
   String get titleFa => switch (this) {
-        AccountingSubjectLevel.group => 'گروه حساب',
-        AccountingSubjectLevel.kol => 'حساب کل',
-        AccountingSubjectLevel.moein => 'حساب معین',
-        AccountingSubjectLevel.tafsili => 'حساب تفصیلی',
-      };
+    AccountingSubjectLevel.group => 'گروه حساب',
+    AccountingSubjectLevel.kol => 'حساب کل',
+    AccountingSubjectLevel.moein => 'حساب معین',
+    AccountingSubjectLevel.tafsili => 'حساب تفصیلی',
+  };
 }
 
 class AccountingSubjectEntity extends Equatable {
@@ -128,14 +128,14 @@ class AccountingSubjectEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        code,
-        name,
-        parentId,
-        type,
-        level,
-        isPermanent,
-        fiscalYearId,
-        description,
-      ];
+    id,
+    code,
+    name,
+    parentId,
+    type,
+    level,
+    isPermanent,
+    fiscalYearId,
+    description,
+  ];
 }

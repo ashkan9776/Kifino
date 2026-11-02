@@ -41,7 +41,8 @@ class CashFlowChart extends StatelessWidget {
       if (diffDays >= 0 && diffDays < (intervalDays * intervalsCount)) {
         final bucket = (intervalsCount - 1) - (diffDays ~/ intervalDays);
         if (bucket >= 0 && bucket < intervalsCount) {
-          final amountMajor = tx.amount.minorUnits / 1000.0; // scale for chart display
+          final amountMajor =
+              tx.amount.minorUnits / 1000.0; // scale for chart display
           if (tx.type == TransactionType.income) {
             incomeValues[bucket] += amountMajor;
             totalIncomeMinor += tx.amount.minorUnits;
@@ -126,7 +127,9 @@ class CashFlowChart extends StatelessWidget {
                   Text(
                     l10n.income,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -142,7 +145,9 @@ class CashFlowChart extends StatelessWidget {
                   Text(
                     l10n.expense,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                     ),
                   ),
                 ],
@@ -159,7 +164,9 @@ class CashFlowChart extends StatelessWidget {
                   Text(
                     l10n.income,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                     ),
                   ),
                   AppMoneyText(
@@ -177,7 +184,9 @@ class CashFlowChart extends StatelessWidget {
                   Text(
                     l10n.expense,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                      color: isDark
+                          ? AppColors.darkSubtext
+                          : AppColors.lightSubtext,
                     ),
                   ),
                   AppMoneyText(
@@ -201,10 +210,18 @@ class CashFlowChart extends StatelessWidget {
                 gridData: const FlGridData(show: false),
                 borderData: FlBorderData(show: false),
                 titlesData: const FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
               ),
             ),

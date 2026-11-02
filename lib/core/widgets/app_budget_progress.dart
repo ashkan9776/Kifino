@@ -12,11 +12,7 @@ class AppBudgetProgress extends StatelessWidget {
   final BudgetEntity budget;
   final VoidCallback? onTap;
 
-  const AppBudgetProgress({
-    super.key,
-    required this.budget,
-    this.onTap,
-  });
+  const AppBudgetProgress({super.key, required this.budget, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +66,9 @@ class AppBudgetProgress extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(
-                  TextNormalizer.auto('${percent.toStringAsFixed(0)}% · $statusLabel'),
+                  TextNormalizer.auto(
+                    '${percent.toStringAsFixed(0)}% · $statusLabel',
+                  ),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.w700,
@@ -85,7 +83,9 @@ class AppBudgetProgress extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progressValue,
               minHeight: 8,
-              backgroundColor: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              backgroundColor: isDark
+                  ? AppColors.darkBorder
+                  : AppColors.lightBorder,
               valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
           ),
@@ -100,7 +100,9 @@ class AppBudgetProgress extends StatelessWidget {
                     Text(
                       '${l10n.spent}: ',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                        color: isDark
+                            ? AppColors.darkSubtext
+                            : AppColors.lightSubtext,
                       ),
                     ),
                     Flexible(
@@ -120,11 +122,15 @@ class AppBudgetProgress extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      budget.isOverBudget ? '${l10n.overBudget}: ' : '${l10n.remaining}: ',
+                      budget.isOverBudget
+                          ? '${l10n.overBudget}: '
+                          : '${l10n.remaining}: ',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: budget.isOverBudget
                             ? AppColors.danger
-                            : (isDark ? AppColors.darkSubtext : AppColors.lightSubtext),
+                            : (isDark
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext),
                       ),
                     ),
                     Flexible(

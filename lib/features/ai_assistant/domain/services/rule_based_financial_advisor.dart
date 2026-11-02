@@ -31,7 +31,10 @@ class RuleBasedFinancialAdvisor {
     }
 
     // 2. Savings questions
-    if (lower.contains('پس‌انداز') || lower.contains('پس انداز') || lower.contains('saving') || lower.contains('سود')) {
+    if (lower.contains('پس‌انداز') ||
+        lower.contains('پس انداز') ||
+        lower.contains('saving') ||
+        lower.contains('سود')) {
       final rate = context.savingsRate.toStringAsFixed(1);
       if (isPersian) {
         if (context.savingsRate >= 20.0) {
@@ -57,8 +60,8 @@ class RuleBasedFinancialAdvisor {
         final trend = context.savingsRate >= 20.0
             ? 'پس‌انداز شما هم عالی پیش می‌رود (${context.savingsRate.toStringAsFixed(1)}٪).'
             : (context.savingsRate > 0
-                ? 'نرخ پس‌انداز فعلی شما ${context.savingsRate.toStringAsFixed(1)}٪ است.'
-                : 'اما در ۳۰ روز اخیر هزینه‌ها از درآمد پیشی گرفته است.');
+                  ? 'نرخ پس‌انداز فعلی شما ${context.savingsRate.toStringAsFixed(1)}٪ است.'
+                  : 'اما در ۳۰ روز اخیر هزینه‌ها از درآمد پیشی گرفته است.');
         return '💰 ارزش خالص دارایی نقد شما ${context.netWorth.formatted} است.\n\n'
             'در ۳۰ روز اخیر: درآمد ${context.monthlyIncome.formatted} و هزینه ${context.monthlyExpense.formatted}.\n'
             '$trend';
@@ -68,7 +71,11 @@ class RuleBasedFinancialAdvisor {
     }
 
     // 3. Top Spending questions
-    if (lower.contains('کجا') || lower.contains('خرج') || lower.contains('هزینه') || lower.contains('expense') || lower.contains('spend')) {
+    if (lower.contains('کجا') ||
+        lower.contains('خرج') ||
+        lower.contains('هزینه') ||
+        lower.contains('expense') ||
+        lower.contains('spend')) {
       if (isPersian) {
         if (context.topSpendingCategories.isEmpty) {
           return 'در ۳۰ روز اخیر هیچ هزینه‌ای ثبت نشده است.';
@@ -84,10 +91,16 @@ class RuleBasedFinancialAdvisor {
     }
 
     // 4. General Health / Overview questions
-    if (lower.contains('وضعیت') || lower.contains('چطوره') || lower.contains('سلامت') || lower.contains('health') || lower.contains('score')) {
+    if (lower.contains('وضعیت') ||
+        lower.contains('چطوره') ||
+        lower.contains('سلامت') ||
+        lower.contains('health') ||
+        lower.contains('score')) {
       final score = context.healthScore;
       if (isPersian) {
-        String level = score >= 75 ? 'عالی و باثبات' : (score >= 50 ? 'متوسط و نیازمند مدیریت' : 'هشدار و پرریسک');
+        String level = score >= 75
+            ? 'عالی و باثبات'
+            : (score >= 50 ? 'متوسط و نیازمند مدیریت' : 'هشدار و پرریسک');
         return '''
 📊 گزارش جامع سلامت مالی کیفینو:
 • امتیاز سلامت: $score از ۱۰۰ ($level)
@@ -104,7 +117,10 @@ class RuleBasedFinancialAdvisor {
     }
 
     // 5. Debt & Receivable questions
-    if (lower.contains('بدهی') || lower.contains('طلب') || lower.contains('debt') || lower.contains('receivable')) {
+    if (lower.contains('بدهی') ||
+        lower.contains('طلب') ||
+        lower.contains('debt') ||
+        lower.contains('receivable')) {
       if (isPersian) {
         return 'مجموع بدهی‌های تسویه‌نشده شما ${context.totalDebts.formatted} و مطالبات (طلب‌های) شما ${context.totalReceivables.formatted} است.';
       } else {

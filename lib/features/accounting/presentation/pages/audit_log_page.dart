@@ -76,21 +76,20 @@ class _AuditLogView extends StatelessWidget {
               return const AppEmptyState(
                 icon: Icons.history_toggle_off,
                 title: 'رخدادی ثبت نشده است',
-                description:
-                    'هر ایجاد، تأیید، ویرایش یا حذف سند حسابداری به‌صورت خودکار در همین صفحه ثبت می‌شود.',
+                description: 'هر ایجاد، تأیید، ویرایش یا حذف سند حسابداری به‌صورت خودکار در همین صفحه ثبت می‌شود.',
               );
             }
             return RefreshIndicator(
               onRefresh: () async => context.read<AuditLogCubit>().watch(),
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: state.logs.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
-                  return _AuditTile(
-                    log: state.logs[index],
-                    colors: colors,
-                  );
+                  return _AuditTile(log: state.logs[index], colors: colors);
                 },
               ),
             );
@@ -129,8 +128,9 @@ class _AuditTile extends StatelessWidget {
   }
 
   void _showJsonDialog(BuildContext context) {
-    final shortId =
-        log.entityId.length > 8 ? log.entityId.substring(0, 8) : log.entityId;
+    final shortId = log.entityId.length > 8
+        ? log.entityId.substring(0, 8)
+        : log.entityId;
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -154,19 +154,29 @@ class _AuditTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (log.description != null && log.description!.isNotEmpty) ...[
+                  if (log.description != null &&
+                      log.description!.isNotEmpty) ...[
                     Text(log.description!, style: AppTypography.bodyMedium),
                     const SizedBox(height: 12),
                   ],
-                  if (log.beforeJson != null) _jsonSection('وضعیت قبل', log.beforeJson!),
-                  if (log.afterJson != null) _jsonSection('وضعیت بعد', log.afterJson!),
+                  if (log.beforeJson != null)
+                    _jsonSection('وضعیت قبل', log.beforeJson!),
+                  if (log.afterJson != null)
+                    _jsonSection('وضعیت بعد', log.afterJson!),
                   if (log.beforeJson == null && log.afterJson == null)
                     Text(
                       'تصویری از وضعیت قبل/بعد برای این رخداد ذخیره نشده است.',
-                      style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                      ),
                     ),
                   const SizedBox(height: 12),
-                  Text(_subtitle, style: AppTypography.bodySmall.copyWith(color: colors.textSecondary)),
+                  Text(
+                    _subtitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -205,7 +215,11 @@ class _AuditTile extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: SelectableText(
               pretty,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.4),
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                height: 1.4,
+              ),
             ),
           ),
         ),
@@ -217,8 +231,9 @@ class _AuditTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, color, fallbackTitle) = _actionStyle;
-    final title =
-        (log.description != null && log.description!.isNotEmpty) ? log.description! : fallbackTitle;
+    final title = (log.description != null && log.description!.isNotEmpty)
+        ? log.description!
+        : fallbackTitle;
 
     return Card(
       elevation: 0,
@@ -247,9 +262,18 @@ class _AuditTile extends StatelessWidget {
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(_subtitle, style: AppTypography.bodySmall.copyWith(color: colors.textSecondary)),
+          child: Text(
+            _subtitle,
+            style: AppTypography.bodySmall.copyWith(
+              color: colors.textSecondary,
+            ),
+          ),
         ),
-        trailing: Icon(Icons.chevron_left, size: 20, color: colors.textSecondary),
+        trailing: Icon(
+          Icons.chevron_left,
+          size: 20,
+          color: colors.textSecondary,
+        ),
         onTap: () => _showJsonDialog(context),
       ),
     );

@@ -16,7 +16,8 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
-import '../../../../core/widgets/app_date_picker.dart';import '../../../accounts/presentation/bloc/accounts_bloc.dart';
+import '../../../../core/widgets/app_date_picker.dart';
+import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../domain/entities/check_entity.dart';
 import '../bloc/check_bloc.dart';
 import '../widgets/check_status_history_sheet.dart';
@@ -34,20 +35,15 @@ class ChecksPage extends StatefulWidget {
 
   /// (tone, icon) per status — pending=warning, cleared=success,
   /// bounced=danger, transferred=info, cancelled=neutral.
-  static (AppStatusTone, IconData) _statusStyle(CheckStatus status) =>
-      switch (status) {
-        CheckStatus.pending => (AppStatusTone.warning, Icons.schedule_rounded),
-        CheckStatus.cleared => (
-          AppStatusTone.success,
-          Icons.check_circle_rounded,
-        ),
-        CheckStatus.bounced => (AppStatusTone.danger, Icons.cancel_rounded),
-        CheckStatus.transferred => (
-          AppStatusTone.info,
-          Icons.swap_horiz_rounded,
-        ),
-        CheckStatus.cancelled => (AppStatusTone.neutral, Icons.block_rounded),
-      };
+  static (AppStatusTone, IconData) _statusStyle(
+    CheckStatus status,
+  ) => switch (status) {
+    CheckStatus.pending => (AppStatusTone.warning, Icons.schedule_rounded),
+    CheckStatus.cleared => (AppStatusTone.success, Icons.check_circle_rounded),
+    CheckStatus.bounced => (AppStatusTone.danger, Icons.cancel_rounded),
+    CheckStatus.transferred => (AppStatusTone.info, Icons.swap_horiz_rounded),
+    CheckStatus.cancelled => (AppStatusTone.neutral, Icons.block_rounded),
+  };
 
   /// Display order of the status menu; the current status is filtered out.
   static const List<CheckStatus> _statusMenuOrder = [
@@ -62,39 +58,38 @@ class ChecksPage extends StatefulWidget {
   static ({String title, String desc}) _statusMenuEntry(
     CheckStatus status,
     bool isFa,
-  ) =>
-      switch (status) {
-        CheckStatus.cleared => (
-          title: isFa ? 'وصول شد' : 'Mark as cleared',
-          desc: isFa
-              ? 'مبلغ چک واریز و سند حسابداری صادر می‌شود.'
-              : 'The amount is deposited and an accounting voucher is issued.',
-        ),
-        CheckStatus.transferred => (
-          title: isFa ? 'واگذار شد' : 'Transfer to bank',
-          desc: isFa
-              ? 'چک به بانک سپرده می‌شود و سند صادر می‌شود.'
-              : 'The check is deposited at the bank and a voucher is issued.',
-        ),
-        CheckStatus.bounced => (
-          title: isFa ? 'برگشت خورد' : 'Mark as bounced',
-          desc: isFa
-              ? 'چک به دلیل کسری موجودی برگشت می‌خورد.'
-              : 'The check bounces due to insufficient funds.',
-        ),
-        CheckStatus.cancelled => (
-          title: isFa ? 'باطل شد' : 'Cancel check',
-          desc: isFa
-              ? 'چک از جریان خارج می‌شود.'
-              : 'The check is taken out of circulation.',
-        ),
-        CheckStatus.pending => (
-          title: isFa ? 'در انتظار وصول' : 'Back to pending',
-          desc: isFa
-              ? 'چک به حالت در جریان برمی‌گردد.'
-              : 'The check returns to the pending state.',
-        ),
-      };
+  ) => switch (status) {
+    CheckStatus.cleared => (
+      title: isFa ? 'وصول شد' : 'Mark as cleared',
+      desc: isFa
+          ? 'مبلغ چک واریز و سند حسابداری صادر می‌شود.'
+          : 'The amount is deposited and an accounting voucher is issued.',
+    ),
+    CheckStatus.transferred => (
+      title: isFa ? 'واگذار شد' : 'Transfer to bank',
+      desc: isFa
+          ? 'چک به بانک سپرده می‌شود و سند صادر می‌شود.'
+          : 'The check is deposited at the bank and a voucher is issued.',
+    ),
+    CheckStatus.bounced => (
+      title: isFa ? 'برگشت خورد' : 'Mark as bounced',
+      desc: isFa
+          ? 'چک به دلیل کسری موجودی برگشت می‌خورد.'
+          : 'The check bounces due to insufficient funds.',
+    ),
+    CheckStatus.cancelled => (
+      title: isFa ? 'باطل شد' : 'Cancel check',
+      desc: isFa
+          ? 'چک از جریان خارج می‌شود.'
+          : 'The check is taken out of circulation.',
+    ),
+    CheckStatus.pending => (
+      title: isFa ? 'در انتظار وصول' : 'Back to pending',
+      desc: isFa
+          ? 'چک به حالت در جریان برمی‌گردد.'
+          : 'The check returns to the pending state.',
+    ),
+  };
 
   /// Consequence text for the confirmation dialog. [accountName] is the
   /// linked account display name (falls back to the check's bank).
@@ -102,24 +97,26 @@ class ChecksPage extends StatefulWidget {
     CheckStatus target,
     String accountName,
     bool isFa,
-  ) =>
-      switch (target) {
-        CheckStatus.cleared => isFa
-            ? 'مبلغ چک به حساب «$accountName» واریز و سند حسابداری صادر می‌شود.'
-            : 'The check amount is deposited into "$accountName" and an accounting voucher is issued.',
-        CheckStatus.transferred => isFa
-            ? 'چک به بانک سپرده می‌شود و سند صادر می‌شود.'
-            : 'The check is deposited at the bank and a voucher is issued.',
-        CheckStatus.bounced => isFa
-            ? 'اگر چک قبلاً وصول/واگذار شده بود، سند آن باطل و اثر مالی برگردانده می‌شود.'
-            : 'If the check was previously cleared or transferred, its voucher is voided and the financial effect is reverted.',
-        CheckStatus.cancelled => isFa
-            ? 'چک باطل می‌شود. اثر مالی قبلی برگردانده می‌شود.'
-            : 'The check is cancelled. Any previous financial effect is reverted.',
-        CheckStatus.pending => isFa
-            ? 'چک به حالت «در انتظار وصول» برمی‌گردد.'
-            : 'The check returns to the pending state.',
-      };
+  ) => switch (target) {
+    CheckStatus.cleared =>
+      isFa
+          ? 'مبلغ چک به حساب «$accountName» واریز و سند حسابداری صادر می‌شود.'
+          : 'The check amount is deposited into "$accountName" and an accounting voucher is issued.',
+    CheckStatus.transferred =>
+      isFa
+          ? 'چک به بانک سپرده می‌شود و سند صادر می‌شود.'
+          : 'The check is deposited at the bank and a voucher is issued.',
+    CheckStatus.bounced =>
+      isFa
+          ? 'اگر چک قبلاً وصول/واگذار شده بود، سند آن باطل و اثر مالی برگردانده می‌شود.'
+          : 'If the check was previously cleared or transferred, its voucher is voided and the financial effect is reverted.',
+    CheckStatus.cancelled =>
+      isFa ? 'چک باطل می‌شود. اثر مالی قبلی برگردانده می‌شود.' : 'The check is cancelled. Any previous financial effect is reverted.',
+    CheckStatus.pending =>
+      isFa
+          ? 'چک به حالت «در انتظار وصول» برمی‌گردد.'
+          : 'The check returns to the pending state.',
+  };
 
   /// Failures are Persian already; only the framework wrapper needs stripping.
   static String _cleanFailureMessage(String raw) {
@@ -141,7 +138,9 @@ class _ChecksPageState extends State<ChecksPage> {
     final bankController = TextEditingController();
     final partyController = TextEditingController();
     final amountController = TextEditingController();
-    CheckType selectedType = _selectedFilter == 1 ? CheckType.issued : CheckType.received;
+    CheckType selectedType = _selectedFilter == 1
+        ? CheckType.issued
+        : CheckType.received;
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
 
     showModalBottomSheet(
@@ -170,8 +169,12 @@ class _ChecksPageState extends State<ChecksPage> {
                       bottom: AppSpacing.lg,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      color: isDark
+                          ? AppColors.darkSurfaceVariant
+                          : AppColors.lightSurface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     child: SingleChildScrollView(
                       child: Column(
@@ -179,13 +182,25 @@ class _ChecksPageState extends State<ChecksPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           AppSheetHeader(
-                            title: l10n.isPersian ? 'ثبت چک صیادی جدید' : 'New Sayadi Check',
+                            title: l10n.isPersian
+                                ? 'ثبت چک صیادی جدید'
+                                : 'New Sayadi Check',
                           ),
                           const SizedBox(height: AppSpacing.md),
                           SegmentedButton<CheckType>(
                             segments: [
-                              ButtonSegment(value: CheckType.received, label: Text(l10n.isPersian ? 'دریافتی' : 'Received')),
-                              ButtonSegment(value: CheckType.issued, label: Text(l10n.isPersian ? 'صادره' : 'Issued')),
+                              ButtonSegment(
+                                value: CheckType.received,
+                                label: Text(
+                                  l10n.isPersian ? 'دریافتی' : 'Received',
+                                ),
+                              ),
+                              ButtonSegment(
+                                value: CheckType.issued,
+                                label: Text(
+                                  l10n.isPersian ? 'صادره' : 'Issued',
+                                ),
+                              ),
                             ],
                             selected: {selectedType},
                             onSelectionChanged: (val) {
@@ -198,7 +213,9 @@ class _ChecksPageState extends State<ChecksPage> {
                             controller: partyController,
                             decoration: InputDecoration(
                               labelText: l10n.personName,
-                              prefixIcon: const Icon(Icons.person_outline_rounded),
+                              prefixIcon: const Icon(
+                                Icons.person_outline_rounded,
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -206,7 +223,9 @@ class _ChecksPageState extends State<ChecksPage> {
                             controller: amountController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              PersianThousandsSeparatorTextInputFormatter(enabled: isFaLocale(context)),
+                              PersianThousandsSeparatorTextInputFormatter(
+                                enabled: isFaLocale(context),
+                              ),
                             ],
                             decoration: InputDecoration(
                               labelText: l10n.amount,
@@ -219,7 +238,9 @@ class _ChecksPageState extends State<ChecksPage> {
                             controller: bankController,
                             decoration: InputDecoration(
                               labelText: l10n.bankName,
-                              prefixIcon: const Icon(Icons.account_balance_rounded),
+                              prefixIcon: const Icon(
+                                Icons.account_balance_rounded,
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -227,11 +248,15 @@ class _ChecksPageState extends State<ChecksPage> {
                             controller: numberController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                              PersianDigitsTextInputFormatter(
+                                enabled: isFaLocale(context),
+                              ),
                             ],
                             decoration: InputDecoration(
                               labelText: l10n.checkNumber,
-                              prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                              prefixIcon: const Icon(
+                                Icons.confirmation_number_outlined,
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -239,10 +264,14 @@ class _ChecksPageState extends State<ChecksPage> {
                             controller: sayadiController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              PersianDigitsTextInputFormatter(enabled: isFaLocale(context)),
+                              PersianDigitsTextInputFormatter(
+                                enabled: isFaLocale(context),
+                              ),
                             ],
                             decoration: InputDecoration(
-                              labelText: l10n.isPersian ? 'شناسه صیادی (۱۶ رقمی)' : 'Sayadi ID (16 digits)',
+                              labelText: l10n.isPersian
+                                  ? 'شناسه صیادی (۱۶ رقمی)'
+                                  : 'Sayadi ID (16 digits)',
                               prefixIcon: const Icon(Icons.qr_code_rounded),
                             ),
                           ),
@@ -254,7 +283,9 @@ class _ChecksPageState extends State<ChecksPage> {
                               final picked = await showAppDatePicker(
                                 context: context,
                                 initialDate: dueDate,
-                                firstDate: now.subtract(const Duration(days: 365)),
+                                firstDate: now.subtract(
+                                  const Duration(days: 365),
+                                ),
                                 lastDate: now.add(const Duration(days: 3650)),
                               );
                               if (picked != null) {
@@ -263,23 +294,41 @@ class _ChecksPageState extends State<ChecksPage> {
                             },
                             borderRadius: BorderRadius.circular(10),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
-                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_month_rounded, size: 20),
+                                      const Icon(
+                                        Icons.calendar_month_rounded,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text(l10n.isPersian ? 'تاریخ سررسید چک' : 'Due date'),
+                                      Text(
+                                        l10n.isPersian
+                                            ? 'تاریخ سررسید چک'
+                                            : 'Due date',
+                                      ),
                                     ],
                                   ),
                                   Text(
-                                    AppDateFormatter.format(dueDate, locale: l10n.localeName),
+                                    AppDateFormatter.format(
+                                      dueDate,
+                                      locale: l10n.localeName,
+                                    ),
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.income,
@@ -289,22 +338,31 @@ class _ChecksPageState extends State<ChecksPage> {
                               ),
                             ),
                           ),
-                          if (accState is AccountsLoaded && accState.accounts.isNotEmpty) ...[
+                          if (accState is AccountsLoaded &&
+                              accState.accounts.isNotEmpty) ...[
                             const SizedBox(height: AppSpacing.md),
                             DropdownButtonFormField<String>(
                               initialValue: selectedAccountId,
                               decoration: InputDecoration(
-                                labelText: l10n.isPersian ? 'حساب بانکی متصل' : 'Linked Account',
-                                prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                                labelText: l10n.isPersian
+                                    ? 'حساب بانکی متصل'
+                                    : 'Linked Account',
+                                prefixIcon: const Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                ),
                               ),
                               items: accState.accounts.map((acc) {
                                 return DropdownMenuItem(
                                   value: acc.id,
-                                  child: Text('${acc.name} (${acc.bankName ?? ""})'),
+                                  child: Text(
+                                    '${acc.name} (${acc.bankName ?? ""})',
+                                  ),
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => selectedAccountId = val);
+                                if (val != null) {
+                                  setModalState(() => selectedAccountId = val);
+                                }
                               },
                             ),
                           ],
@@ -315,27 +373,45 @@ class _ChecksPageState extends State<ChecksPage> {
                               final party = partyController.text.trim();
                               final bank = bankController.text.trim();
                               final number = numberController.text.trim();
-                              final amountVal = int.tryParse(normalizeNumericInput(amountController.text)) ?? 0;
+                              final amountVal =
+                                  int.tryParse(
+                                    normalizeNumericInput(
+                                      amountController.text,
+                                    ),
+                                  ) ??
+                                  0;
 
-                              if (party.isNotEmpty && amountVal > 0 && number.isNotEmpty) {
+                              if (party.isNotEmpty &&
+                                  amountVal > 0 &&
+                                  number.isNotEmpty) {
                                 final now = DateTime.now();
                                 checkBloc.add(
-                                      CheckCreateSubmitted(
-                                        CheckEntity(
-                                          id: '',
-                                          checkNumber: number,
-                                          sayadiId: sayadiController.text.trim().isNotEmpty ? sayadiController.text.trim() : null,
-                                          bankName: bank.isNotEmpty ? bank : 'بانک ملی',
-                                          type: selectedType,
-                                          amount: Money.fromMinor(amountVal, Currency.irr),
-                                          partyName: party,
-                                          dueDate: dueDate,
-                                          accountId: selectedAccountId,
-                                          createdAt: now,
-                                          updatedAt: now,
-                                        ),
+                                  CheckCreateSubmitted(
+                                    CheckEntity(
+                                      id: '',
+                                      checkNumber: number,
+                                      sayadiId:
+                                          sayadiController.text
+                                              .trim()
+                                              .isNotEmpty
+                                          ? sayadiController.text.trim()
+                                          : null,
+                                      bankName: bank.isNotEmpty
+                                          ? bank
+                                          : 'بانک ملی',
+                                      type: selectedType,
+                                      amount: Money.fromMinor(
+                                        amountVal,
+                                        Currency.irr,
                                       ),
-                                    );
+                                      partyName: party,
+                                      dueDate: dueDate,
+                                      accountId: selectedAccountId,
+                                      createdAt: now,
+                                      updatedAt: now,
+                                    ),
+                                  ),
+                                );
                                 Navigator.pop(bottomSheetContext);
                               }
                             },
@@ -364,8 +440,9 @@ class _ChecksPageState extends State<ChecksPage> {
     final isFa = l10n.isPersian;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final targets =
-        ChecksPage._statusMenuOrder.where((s) => s != check.status).toList();
+    final targets = ChecksPage._statusMenuOrder
+        .where((s) => s != check.status)
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -379,8 +456,12 @@ class _ChecksPageState extends State<ChecksPage> {
             ),
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -394,7 +475,9 @@ class _ChecksPageState extends State<ChecksPage> {
                   '${isFa ? 'وضعیت فعلی' : 'Current status'}: ${check.status.titleFa}'
                   '${isFa ? ' — چک ' : ' — check #'}${TextNormalizer.auto(check.checkNumber)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                    color: isDark
+                        ? AppColors.darkSubtext
+                        : AppColors.lightSubtext,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -427,10 +510,11 @@ class _ChecksPageState extends State<ChecksPage> {
                             vertical: AppSpacing.sm + 2,
                           ),
                           decoration: BoxDecoration(
-                            color: (isDark
-                                    ? AppColors.darkSurface
-                                    : AppColors.lightSurfaceVariant)
-                                .withValues(alpha: 0.55),
+                            color:
+                                (isDark
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurfaceVariant)
+                                    .withValues(alpha: 0.55),
                             borderRadius: AppSpacing.borderRadiusSm,
                           ),
                           child: Row(
@@ -445,18 +529,18 @@ class _ChecksPageState extends State<ChecksPage> {
                                       entry.title,
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       entry.desc,
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
-                                        color: isDark
-                                            ? AppColors.darkSubtext
-                                            : AppColors.lightSubtext,
-                                      ),
+                                            color: isDark
+                                                ? AppColors.darkSubtext
+                                                : AppColors.lightSubtext,
+                                          ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -567,7 +651,8 @@ class _ChecksPageState extends State<ChecksPage> {
             child: Text(
               l10n.confirm,
               style: TextStyle(
-                color: (target == CheckStatus.bounced ||
+                color:
+                    (target == CheckStatus.bounced ||
                         target == CheckStatus.cancelled)
                     ? AppColors.danger
                     : AppColors.primary,
@@ -639,8 +724,9 @@ class _ChecksPageState extends State<ChecksPage> {
     Widget typeBlock(CheckType type) {
       final isReceived = type == CheckType.received;
       final typeColor = isReceived ? AppColors.income : AppColors.expense;
-      final typeChecks =
-          state.checks.where((c) => !c.isDeleted && c.type == type);
+      final typeChecks = state.checks.where(
+        (c) => !c.isDeleted && c.type == type,
+      );
       final pendingList = typeChecks.where((c) => c.isPending);
       final clearedList = typeChecks.where((c) => c.isCleared);
       final pendingSum = Money.fromMinor(
@@ -666,7 +752,9 @@ class _ChecksPageState extends State<ChecksPage> {
                     ? '$label · ${TextNormalizer.auto('$count')} فقره'
                     : '$label · $count checks',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -770,8 +858,9 @@ class _ChecksPageState extends State<ChecksPage> {
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.md),
         // Danger-tinted border for overdue pending checks — display only.
-        borderColor:
-            isOverdue ? AppColors.danger.withValues(alpha: 0.45) : null,
+        borderColor: isOverdue
+            ? AppColors.danger.withValues(alpha: 0.45)
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -868,8 +957,8 @@ class _ChecksPageState extends State<ChecksPage> {
                       color: isOverdue
                           ? AppColors.danger
                           : (isDark
-                              ? AppColors.darkSubtext
-                              : AppColors.lightSubtext),
+                                ? AppColors.darkSubtext
+                                : AppColors.lightSubtext),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -878,8 +967,8 @@ class _ChecksPageState extends State<ChecksPage> {
                         color: isOverdue
                             ? AppColors.danger
                             : (isDark
-                                ? AppColors.darkSubtext
-                                : AppColors.lightSubtext),
+                                  ? AppColors.darkSubtext
+                                  : AppColors.lightSubtext),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -932,16 +1021,17 @@ class _ChecksPageState extends State<ChecksPage> {
                   ),
                 TextButton.icon(
                   onPressed: () => _showStatusMenu(context, check),
-                  icon: const Icon(Icons.published_with_changes_rounded,
-                      size: 16),
+                  icon: const Icon(
+                    Icons.published_with_changes_rounded,
+                    size: 16,
+                  ),
                   label: Text(isFa ? 'تغییر وضعیت' : 'Change status'),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () =>
-                      CheckStatusHistorySheet.show(context, check),
+                  onPressed: () => CheckStatusHistorySheet.show(context, check),
                   icon: const Icon(Icons.history_rounded, size: 16),
                   label: Text(isFa ? 'تاریخچه وضعیت' : 'Status history'),
                   style: TextButton.styleFrom(
@@ -978,10 +1068,8 @@ class _ChecksPageState extends State<ChecksPage> {
             isFa
                 ? (isReceived ? 'دریافتی' : 'صادره')
                 : (isReceived ? 'Received' : 'Issued'),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: color, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1011,9 +1099,7 @@ class _ChecksPageState extends State<ChecksPage> {
         child: SafeArea(
           top: false,
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.checks),
-            ),
+            appBar: AppBar(title: Text(l10n.checks)),
             floatingActionButton: FloatingActionButton(
               onPressed: () => _showAddCheckDialog(context),
               child: const Icon(Icons.add),
@@ -1025,9 +1111,15 @@ class _ChecksPageState extends State<ChecksPage> {
                     padding: EdgeInsets.all(AppSpacing.md),
                     child: Column(
                       children: [
-                        AppSkeleton(height: 150, borderRadius: AppSpacing.borderRadiusLg),
+                        AppSkeleton(
+                          height: 150,
+                          borderRadius: AppSpacing.borderRadiusLg,
+                        ),
                         SizedBox(height: AppSpacing.md),
-                        AppSkeleton(height: 80, borderRadius: AppSpacing.borderRadiusMd),
+                        AppSkeleton(
+                          height: 80,
+                          borderRadius: AppSpacing.borderRadiusMd,
+                        ),
                       ],
                     ),
                   );
@@ -1060,8 +1152,14 @@ class _ChecksPageState extends State<ChecksPage> {
                     SegmentedButton<int>(
                       segments: [
                         ButtonSegment(value: 0, label: Text(l10n.all)),
-                        ButtonSegment(value: 1, label: Text(l10n.isPersian ? 'صادره' : 'Issued')),
-                        ButtonSegment(value: 2, label: Text(l10n.isPersian ? 'دریافتی' : 'Received')),
+                        ButtonSegment(
+                          value: 1,
+                          label: Text(l10n.isPersian ? 'صادره' : 'Issued'),
+                        ),
+                        ButtonSegment(
+                          value: 2,
+                          label: Text(l10n.isPersian ? 'دریافتی' : 'Received'),
+                        ),
                       ],
                       selected: {_selectedFilter},
                       onSelectionChanged: (val) {
@@ -1073,10 +1171,14 @@ class _ChecksPageState extends State<ChecksPage> {
 
                     if (filteredChecks.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xl,
+                        ),
                         child: AppEmptyState(
                           icon: Icons.fact_check_outlined,
-                          title: l10n.isPersian ? 'چکی ثبت نشده است' : 'No checks found',
+                          title: l10n.isPersian
+                              ? 'چکی ثبت نشده است'
+                              : 'No checks found',
                           description: l10n.isPersian
                               ? 'برای ثبت چک صیادی، دکمه + را لمس کنید.'
                               : 'Tap + to register a check.',
@@ -1109,16 +1211,46 @@ class _ToneIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final (color, bg) = switch ((tone, isDark)) {
-      (AppStatusTone.success, false) => (const Color(0xFF25C997), const Color(0xFFE7FAF3)),
-      (AppStatusTone.success, true) => (const Color(0xFF39E6A5), const Color(0xFF0B2E24)),
-      (AppStatusTone.warning, false) => (const Color(0xFFFFB547), const Color(0xFFFFF4E0)),
-      (AppStatusTone.warning, true) => (const Color(0xFFFFCA58), const Color(0xFF33230A)),
-      (AppStatusTone.danger, false) => (const Color(0xFFFF5C6C), const Color(0xFFFFECEE)),
-      (AppStatusTone.danger, true) => (const Color(0xFFFF7A87), const Color(0xFF3A1218)),
-      (AppStatusTone.info, false) => (const Color(0xFF4C9AFF), const Color(0xFFEAF3FF)),
-      (AppStatusTone.info, true) => (const Color(0xFF4C9AFF), const Color(0xFF0E2036)),
-      (AppStatusTone.neutral, false) => (const Color(0xFF687386), const Color(0xFFF1F5F9)),
-      (AppStatusTone.neutral, true) => (const Color(0xFF94A3B8), const Color(0xFF12243A)),
+      (AppStatusTone.success, false) => (
+        const Color(0xFF25C997),
+        const Color(0xFFE7FAF3),
+      ),
+      (AppStatusTone.success, true) => (
+        const Color(0xFF39E6A5),
+        const Color(0xFF0B2E24),
+      ),
+      (AppStatusTone.warning, false) => (
+        const Color(0xFFFFB547),
+        const Color(0xFFFFF4E0),
+      ),
+      (AppStatusTone.warning, true) => (
+        const Color(0xFFFFCA58),
+        const Color(0xFF33230A),
+      ),
+      (AppStatusTone.danger, false) => (
+        const Color(0xFFFF5C6C),
+        const Color(0xFFFFECEE),
+      ),
+      (AppStatusTone.danger, true) => (
+        const Color(0xFFFF7A87),
+        const Color(0xFF3A1218),
+      ),
+      (AppStatusTone.info, false) => (
+        const Color(0xFF4C9AFF),
+        const Color(0xFFEAF3FF),
+      ),
+      (AppStatusTone.info, true) => (
+        const Color(0xFF4C9AFF),
+        const Color(0xFF0E2036),
+      ),
+      (AppStatusTone.neutral, false) => (
+        const Color(0xFF687386),
+        const Color(0xFFF1F5F9),
+      ),
+      (AppStatusTone.neutral, true) => (
+        const Color(0xFF94A3B8),
+        const Color(0xFF12243A),
+      ),
     };
 
     return Container(

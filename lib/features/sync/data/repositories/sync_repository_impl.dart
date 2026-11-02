@@ -38,7 +38,9 @@ class SyncRepositoryImpl implements SyncRepository {
   Stream<List<SyncOperationEntity>> watchPendingOperations() {
     final query = _db.select(_db.syncQueueTable)
       ..where((tbl) => tbl.retryCount.isSmallerThanValue(3))
-      ..orderBy([(t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.asc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.asc),
+      ]);
     return query.watch().map((rows) => rows.map(_toEntity).toList());
   }
 
@@ -46,16 +48,22 @@ class SyncRepositoryImpl implements SyncRepository {
   Stream<List<SyncOperationEntity>> watchFailedOperations() {
     final query = _db.select(_db.syncQueueTable)
       ..where((tbl) => tbl.retryCount.isBiggerOrEqualValue(3))
-      ..orderBy([(t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.desc),
+      ]);
     return query.watch().map((rows) => rows.map(_toEntity).toList());
   }
 
   @override
-  Future<Result<List<SyncOperationEntity>>> getPendingOperations({int limit = 50}) async {
+  Future<Result<List<SyncOperationEntity>>> getPendingOperations({
+    int limit = 50,
+  }) async {
     try {
       final query = _db.select(_db.syncQueueTable)
         ..where((tbl) => tbl.retryCount.isSmallerThanValue(3))
-        ..orderBy([(t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.asc)])
+        ..orderBy([
+          (t) => OrderingTerm(expression: t.queuedAt, mode: OrderingMode.asc),
+        ])
         ..limit(limit);
       final rows = await query.get();
       return Success(rows.map(_toEntity).toList());
@@ -67,7 +75,9 @@ class SyncRepositoryImpl implements SyncRepository {
   @override
   Future<Result<void>> markOperationSuccess(int queueId) async {
     try {
-      await (_db.delete(_db.syncQueueTable)..where((tbl) => tbl.queueId.equals(queueId))).go();
+      await (_db.delete(
+        _db.syncQueueTable,
+      )..where((tbl) => tbl.queueId.equals(queueId))).go();
       return const Success(null);
     } catch (e) {
       return FailureResult(DatabaseFailure('خطا در حذف عملیات موفق از صف: $e'));
@@ -77,9 +87,13 @@ class SyncRepositoryImpl implements SyncRepository {
   @override
   Future<Result<void>> recordOperationFailure(int queueId, String error) async {
     try {
-      final row = await (_db.select(_db.syncQueueTable)..where((t) => t.queueId.equals(queueId))).getSingleOrNull();
+      final row = await (_db.select(
+        _db.syncQueueTable,
+      )..where((t) => t.queueId.equals(queueId))).getSingleOrNull();
       if (row != null) {
-        await (_db.update(_db.syncQueueTable)..where((t) => t.queueId.equals(queueId))).write(
+        await (_db.update(
+          _db.syncQueueTable,
+        )..where((t) => t.queueId.equals(queueId))).write(
           SyncQueueTableCompanion(
             retryCount: Value(row.retryCount + 1),
             lastError: Value(error),
@@ -88,14 +102,18 @@ class SyncRepositoryImpl implements SyncRepository {
       }
       return const Success(null);
     } catch (e) {
-      return FailureResult(DatabaseFailure('خطا در ثبت خطای عملیات همگام‌سازی: $e'));
+      return FailureResult(
+        DatabaseFailure('خطا در ثبت خطای عملیات همگام‌سازی: $e'),
+      );
     }
   }
 
   @override
   Future<Result<void>> retryAllFailed() async {
     try {
-      await (_db.update(_db.syncQueueTable)..where((t) => t.retryCount.isBiggerOrEqualValue(3))).write(
+      await (_db.update(
+        _db.syncQueueTable,
+      )..where((t) => t.retryCount.isBiggerOrEqualValue(3))).write(
         const SyncQueueTableCompanion(
           retryCount: Value(0),
           lastError: Value(null),
@@ -120,7 +138,9 @@ class SyncRepositoryImpl implements SyncRepository {
   @override
   Future<Result<void>> enqueueOperation(SyncOperationEntity operation) async {
     try {
-      await _db.into(_db.syncQueueTable).insertOnConflictUpdate(
+      await _db
+          .into(_db.syncQueueTable)
+          .insertOnConflictUpdate(
             SyncQueueTableCompanion.insert(
               syncEntityName: operation.syncEntityName,
               entityId: operation.entityId,

@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,11 +24,15 @@ class GoalRepositoryImpl implements GoalRepository {
       targetAmount: Money.fromMinor(g.targetAmountMinor, currency),
       currentAmount: Money.fromMinor(g.currentAmountMinor, currency),
       status: GoalStatus.fromCode(g.status),
-      targetDate: g.targetDate != null ? DateTime.fromMillisecondsSinceEpoch(g.targetDate!) : null,
+      targetDate: g.targetDate != null
+          ? DateTime.fromMillisecondsSinceEpoch(g.targetDate!)
+          : null,
       notes: g.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(g.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(g.updatedAt),
-      deletedAt: g.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(g.deletedAt!) : null,
+      deletedAt: g.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(g.deletedAt!)
+          : null,
       syncStatus: g.syncStatus,
       version: g.version,
     );
@@ -67,7 +72,9 @@ class GoalRepositoryImpl implements GoalRepository {
 
         // Push to Outbox Sync Queue
         final idempotencyKey = _uuid.v4();
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'financial_goals',
                 entityId: gId,
@@ -88,7 +95,9 @@ class GoalRepositoryImpl implements GoalRepository {
             );
       });
 
-      final created = await (_db.select(_db.financialGoalsTable)..where((t) => t.id.equals(gId))).getSingle();
+      final created = await (_db.select(
+        _db.financialGoalsTable,
+      )..where((t) => t.id.equals(gId))).getSingle();
       return Success(_toEntity(created));
     } catch (e) {
       return DatabaseFailure('ساخت هدف انجام نشد.').asFailure();
@@ -101,13 +110,18 @@ class GoalRepositoryImpl implements GoalRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final row = await (_db.select(_db.financialGoalsTable)..where((t) => t.id.equals(id))).getSingle();
+        final row = await (_db.select(
+          _db.financialGoalsTable,
+        )..where((t) => t.id.equals(id))).getSingle();
 
         final newCurrent = row.currentAmountMinor + amount.minorUnits;
-        final newStatus =
-            newCurrent >= row.targetAmountMinor ? GoalStatus.achieved.code : GoalStatus.active.code;
+        final newStatus = newCurrent >= row.targetAmountMinor
+            ? GoalStatus.achieved.code
+            : GoalStatus.active.code;
 
-        await (_db.update(_db.financialGoalsTable)..where((t) => t.id.equals(id))).write(
+        await (_db.update(
+          _db.financialGoalsTable,
+        )..where((t) => t.id.equals(id))).write(
           FinancialGoalsTableCompanion(
             currentAmountMinor: Value(newCurrent),
             status: Value(newStatus),
@@ -118,7 +132,9 @@ class GoalRepositoryImpl implements GoalRepository {
         );
 
         // Push to Outbox Sync Queue
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'financial_goals',
                 entityId: id,
@@ -135,10 +151,13 @@ class GoalRepositoryImpl implements GoalRepository {
             );
       });
 
-      final updated = await (_db.select(_db.financialGoalsTable)..where((t) => t.id.equals(id))).getSingle();
+      final updated = await (_db.select(
+        _db.financialGoalsTable,
+      )..where((t) => t.id.equals(id))).getSingle();
       return Success(_toEntity(updated));
     } catch (e) {
-      return DatabaseFailure('ثبت پس‌انداز انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('ثبت پس‌انداز انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -146,7 +165,9 @@ class GoalRepositoryImpl implements GoalRepository {
   Future<Result<void>> updateGoal(GoalEntity goal) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.financialGoalsTable)..where((tbl) => tbl.id.equals(goal.id))).write(
+      await (_db.update(
+        _db.financialGoalsTable,
+      )..where((tbl) => tbl.id.equals(goal.id))).write(
         FinancialGoalsTableCompanion(
           name: Value(goal.name),
           targetAmountMinor: Value(goal.targetAmount.minorUnits),
@@ -156,12 +177,15 @@ class GoalRepositoryImpl implements GoalRepository {
         ),
       );
 
-      await _db.into(_db.syncQueueTable).insert(
+      await _db
+          .into(_db.syncQueueTable)
+          .insert(
             SyncQueueTableCompanion.insert(
               syncEntityName: 'goals',
               entityId: goal.id,
               operation: 'UPDATE',
-              payloadJson: '{"id":"${goal.id}","target":${goal.targetAmount.minorUnits}}',
+              payloadJson:
+                  '{"id":"${goal.id}","target":${goal.targetAmount.minorUnits}}',
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),
@@ -179,7 +203,9 @@ class GoalRepositoryImpl implements GoalRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        await (_db.update(_db.financialGoalsTable)..where((t) => t.id.equals(id))).write(
+        await (_db.update(
+          _db.financialGoalsTable,
+        )..where((t) => t.id.equals(id))).write(
           FinancialGoalsTableCompanion(
             deletedAt: Value(now),
             updatedAt: Value(now),
@@ -188,7 +214,9 @@ class GoalRepositoryImpl implements GoalRepository {
         );
 
         // Push to Outbox Sync Queue
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'financial_goals',
                 entityId: id,

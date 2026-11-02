@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
@@ -11,11 +12,7 @@ class AppAccountCard extends StatelessWidget {
   final AccountEntity account;
   final VoidCallback? onTap;
 
-  const AppAccountCard({
-    super.key,
-    required this.account,
-    this.onTap,
-  });
+  const AppAccountCard({super.key, required this.account, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +30,13 @@ class AppAccountCard extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       width: 240,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      backgroundColor: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      backgroundColor: isDark
+          ? AppColors.darkSurfaceVariant
+          : AppColors.lightSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -45,16 +47,22 @@ class AppAccountCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.1),
                   borderRadius: AppSpacing.borderRadiusSm,
                 ),
-                child: Icon(iconData, size: 20, color: Theme.of(context).colorScheme.primary),
+                child: Icon(
+                  iconData,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               if (account.cardNumberLastFour != null)
                 Text(
                   '•••• ${TextNormalizer.auto(account.cardNumberLastFour!)}',
                   style: AppTypography.labelMedium.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: Theme.of(context).colorScheme.onSurface
+                        .withValues(alpha: 0.6),
                     fontFeatures: AppTypography.tabularFigures,
                   ),
                 ),

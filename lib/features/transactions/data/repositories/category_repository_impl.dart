@@ -27,12 +27,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
       sortOrder: data.sortOrder,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(data.updatedAt),
-      deletedAt: data.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!) : null,
+      deletedAt: data.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.deletedAt!)
+          : null,
     );
   }
 
   @override
-  Stream<List<CategoryEntity>> watchCategories({CategoryType? type, bool? isBusiness}) {
+  Stream<List<CategoryEntity>> watchCategories({
+    CategoryType? type,
+    bool? isBusiness,
+  }) {
     final query = _db.select(_db.categoriesTable)
       ..where((tbl) {
         var predicate = tbl.deletedAt.isNull();
@@ -44,13 +49,19 @@ class CategoryRepositoryImpl implements CategoryRepository {
         }
         return predicate;
       })
-      ..orderBy([(tbl) => OrderingTerm(expression: tbl.sortOrder, mode: OrderingMode.asc)]);
+      ..orderBy([
+        (tbl) =>
+            OrderingTerm(expression: tbl.sortOrder, mode: OrderingMode.asc),
+      ]);
 
     return query.watch().map((rows) => rows.map(_toEntity).toList());
   }
 
   @override
-  Future<Result<List<CategoryEntity>>> getCategories({CategoryType? type, bool? isBusiness}) async {
+  Future<Result<List<CategoryEntity>>> getCategories({
+    CategoryType? type,
+    bool? isBusiness,
+  }) async {
     try {
       final query = _db.select(_db.categoriesTable)
         ..where((tbl) {
@@ -63,7 +74,10 @@ class CategoryRepositoryImpl implements CategoryRepository {
           }
           return predicate;
         })
-        ..orderBy([(tbl) => OrderingTerm(expression: tbl.sortOrder, mode: OrderingMode.asc)]);
+        ..orderBy([
+          (tbl) =>
+              OrderingTerm(expression: tbl.sortOrder, mode: OrderingMode.asc),
+        ]);
 
       final rows = await query.get();
       return Success(rows.map(_toEntity).toList());
@@ -91,7 +105,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
 
       await _db.into(_db.categoriesTable).insert(companion);
-      final created = await (_db.select(_db.categoriesTable)..where((t) => t.id.equals(companion.id.value))).getSingle();
+      final created = await (_db.select(
+        _db.categoriesTable,
+      )..where((t) => t.id.equals(companion.id.value))).getSingle();
       return Success(_toEntity(created));
     } catch (e) {
       return DatabaseFailure('ساخت دسته انجام نشد.').asFailure();
@@ -102,7 +118,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<Result<CategoryEntity>> updateCategory(CategoryEntity category) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(_db.categoriesTable)..where((tbl) => tbl.id.equals(category.id))).write(
+      await (_db.update(
+        _db.categoriesTable,
+      )..where((tbl) => tbl.id.equals(category.id))).write(
         CategoriesTableCompanion(
           name: Value(category.name),
           iconCodePoint: Value(category.iconCodePoint),
@@ -111,7 +129,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
           syncStatus: const Value(1),
         ),
       );
-      final updated = await (_db.select(_db.categoriesTable)..where((tbl) => tbl.id.equals(category.id))).getSingle();
+      final updated = await (_db.select(
+        _db.categoriesTable,
+      )..where((tbl) => tbl.id.equals(category.id))).getSingle();
       return Success(_toEntity(updated));
     } catch (e) {
       return DatabaseFailure('ویرایش دسته انجام نشد.').asFailure();
@@ -129,7 +149,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
               ..where((tbl) => tbl.categoryId.equals(id)))
             .write(const TransactionsTableCompanion(categoryId: Value(null)));
 
-        await (_db.update(_db.categoriesTable)..where((tbl) => tbl.id.equals(id))).write(
+        await (_db.update(
+          _db.categoriesTable,
+        )..where((tbl) => tbl.id.equals(id))).write(
           CategoriesTableCompanion(
             deletedAt: Value(now),
             updatedAt: Value(now),
@@ -137,7 +159,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
           ),
         );
 
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'categories',
                 entityId: id,
@@ -156,10 +180,12 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Future<int> countTransactionsUsing(String categoryId) async {
-    final rows = await (_db.select(_db.transactionsTable)
-          ..where((tbl) =>
-              tbl.categoryId.equals(categoryId) & tbl.deletedAt.isNull()))
-        .get();
+    final rows =
+        await (_db.select(_db.transactionsTable)..where(
+              (tbl) =>
+                  tbl.categoryId.equals(categoryId) & tbl.deletedAt.isNull(),
+            ))
+            .get();
     return rows.length;
   }
 

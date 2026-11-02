@@ -35,16 +35,18 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
     required this.debtRepository,
     required this.settingsService,
     this.replyDelay = const Duration(milliseconds: 450),
-  })  : super(AiAssistantState(
-          messages: [
-            AiChatMessage(
-              id: 'init-1',
-              text: 'سلام! من دستیار هوشمند مالی کیفینو هستم. می‌توانید وضعیت مالتان را از من بپرسید، یا تراکنش‌های روزمره را با متن بنویسید تا سریعا ثبت کنم.',
-              isUser: false,
-              timestamp: DateTime(2026),
-            ),
-          ],
-        )) {
+  }) : super(
+         AiAssistantState(
+           messages: [
+             AiChatMessage(
+               id: 'init-1',
+               text: 'سلام! من دستیار هوشمند مالی کیفینو هستم. می‌توانید وضعیت مالتان را از من بپرسید، یا تراکنش‌های روزمره را با متن بنویسید تا سریعا ثبت کنم.',
+               isUser: false,
+               timestamp: DateTime(2026),
+             ),
+           ],
+         ),
+       ) {
     on<AiAssistantQuerySubmitted>(_onQuerySubmitted);
     on<AiAssistantDraftConfirmed>(_onDraftConfirmed);
     on<AiAssistantContextRefreshed>(_onContextRefreshed);
@@ -56,7 +58,9 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
 
   Future<FinancialContextSummary> _loadSummary() async {
     final accsRes = await accountRepository.getAccounts();
-    final txsRes = await transactionRepository.getRecentTransactions(limit: 200);
+    final txsRes = await transactionRepository.getRecentTransactions(
+      limit: 200,
+    );
     final budsRes = await budgetRepository.getActiveBudgets();
     final debtsRes = await debtRepository.getDebts();
 
@@ -87,10 +91,9 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
       timestamp: DateTime.now(),
     );
 
-    emit(state.copyWith(
-      messages: [...state.messages, userMsg],
-      isLoading: true,
-    ));
+    emit(
+      state.copyWith(messages: [...state.messages, userMsg], isLoading: true),
+    );
 
     final summary = await _loadSummary();
     if (replyDelay > Duration.zero) {
@@ -114,11 +117,13 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
         draftTransaction: draft,
       );
 
-      emit(state.copyWith(
-        messages: [...state.messages, botMsg],
-        isLoading: false,
-        summary: summary,
-      ));
+      emit(
+        state.copyWith(
+          messages: [...state.messages, botMsg],
+          isLoading: false,
+          summary: summary,
+        ),
+      );
       return;
     }
 
@@ -140,11 +145,13 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
       timestamp: DateTime.now(),
     );
 
-    emit(state.copyWith(
-      messages: [...state.messages, botMsg],
-      isLoading: false,
-      summary: summary,
-    ));
+    emit(
+      state.copyWith(
+        messages: [...state.messages, botMsg],
+        isLoading: false,
+        summary: summary,
+      ),
+    );
   }
 
   Future<void> _onDraftConfirmed(
@@ -172,16 +179,19 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
     if (account != null && account.currency != amount.currency) {
       final amountIsIranian =
           amount.currency == Currency.irr || amount.currency == Currency.toman;
-      final accountIsIranian = account.currency == Currency.irr ||
+      final accountIsIranian =
+          account.currency == Currency.irr ||
           account.currency == Currency.toman;
       if (amountIsIranian && accountIsIranian) {
         amount = amount.toTomanOrRial();
       } else {
-        emit(state.copyWith(
-          isLoading: false,
-          errorMessage:
-              'ارز تراکنش (${amount.currency.displayName}) با ارز حساب «${account.name}» (${account.currency.displayName}) سازگار نیست.',
-        ));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            errorMessage:
+                'ارز تراکنش (${amount.currency.displayName}) با ارز حساب «${account.name}» (${account.currency.displayName}) سازگار نیست.',
+          ),
+        );
         return;
       }
     }
@@ -211,18 +221,17 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
           timestamp: DateTime.now(),
         );
 
-        emit(state.copyWith(
-          messages: [...state.messages, successMsg],
-          isLoading: false,
-          summary: summary,
-          transactionCreatedSuccessfully: true,
-        ));
+        emit(
+          state.copyWith(
+            messages: [...state.messages, successMsg],
+            isLoading: false,
+            summary: summary,
+            transactionCreatedSuccessfully: true,
+          ),
+        );
       },
       onFailure: (failure) {
-        emit(state.copyWith(
-          errorMessage: failure.message,
-          isLoading: false,
-        ));
+        emit(state.copyWith(errorMessage: failure.message, isLoading: false));
       },
     );
   }

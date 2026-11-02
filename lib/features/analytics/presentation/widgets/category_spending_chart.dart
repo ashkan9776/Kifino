@@ -62,7 +62,8 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
     for (final tx in widget.transactions) {
       if (tx.type == TransactionType.expense && !tx.isDeleted) {
         final catId = tx.categoryId ?? 'uncategorized';
-        expenseByCategory[catId] = (expenseByCategory[catId] ?? 0) + tx.amount.minorUnits;
+        expenseByCategory[catId] =
+            (expenseByCategory[catId] ?? 0) + tx.amount.minorUnits;
         totalExpenseMinor += tx.amount.minorUnits;
       }
     }
@@ -83,12 +84,14 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
       colorIdx++;
 
       final percent = (entry.value / totalExpenseMinor) * 100;
-      items.add(CategorySpendingItem(
-        categoryName: name,
-        color: color,
-        totalAmount: Money.fromMinor(entry.value, widget.currency),
-        percentage: percent,
-      ));
+      items.add(
+        CategorySpendingItem(
+          categoryName: name,
+          color: color,
+          totalAmount: Money.fromMinor(entry.value, widget.currency),
+          percentage: percent,
+        ),
+      );
     }
 
     return items;
@@ -138,7 +141,9 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
                 child: Text(
                   l10n.noTransactionsYet,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                    color: isDark
+                        ? AppColors.darkSubtext
+                        : AppColors.lightSubtext,
                   ),
                 ),
               ),
@@ -157,7 +162,9 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
                           _touchedIndex = -1;
                           return;
                         }
-                        _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                        _touchedIndex = pieTouchResponse
+                            .touchedSection!
+                            .touchedSectionIndex;
                       });
                     },
                   ),
@@ -174,7 +181,9 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
                       color: item.color,
                       value: item.percentage,
                       title: isTouched
-                          ? TextNormalizer.auto('${item.percentage.toStringAsFixed(0)}%')
+                          ? TextNormalizer.auto(
+                              '${item.percentage.toStringAsFixed(0)}%',
+                            )
                           : '',
                       radius: radius,
                       titleStyle: const TextStyle(
@@ -219,9 +228,13 @@ class _CategorySpendingChartState extends State<CategorySpendingChart> {
                         ),
                       ),
                       Text(
-                        TextNormalizer.auto('${item.percentage.toStringAsFixed(1)}% '),
+                        TextNormalizer.auto(
+                          '${item.percentage.toStringAsFixed(1)}% ',
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

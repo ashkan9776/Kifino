@@ -16,7 +16,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
-import '../../../../core/widgets/app_transaction_tile.dart';import '../../../accounts/presentation/bloc/accounts_bloc.dart';
+import '../../../../core/widgets/app_transaction_tile.dart';
+import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../../budgets/presentation/bloc/budget_bloc.dart';
 import '../../../sync/presentation/bloc/sync_bloc.dart';
 import '../../../sync/presentation/bloc/sync_state.dart';
@@ -93,7 +94,8 @@ class _DashboardPageState extends State<DashboardPage> {
               builder: (context, accountsState) {
                 return BlocBuilder<TransactionBloc, TransactionState>(
                   builder: (context, txState) {
-                    if (accountsState is AccountsLoading || txState is TransactionLoading) {
+                    if (accountsState is AccountsLoading ||
+                        txState is TransactionLoading) {
                       return const AppSkeleton(height: 180);
                     }
 
@@ -119,7 +121,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             !tx.amount.isCompatibleWith(AppCurrency.base)) {
                           continue;
                         }
-                        final minor = tx.amount.normalizeTo(AppCurrency.base).minorUnits;
+                        final minor = tx.amount
+                            .normalizeTo(AppCurrency.base)
+                            .minorUnits;
                         final days = now.difference(tx.date).inDays;
                         if (days <= 30) {
                           last30 += minor;
@@ -144,7 +148,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         borderRadius: AppSpacing.borderRadiusLg,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryBlueLight.withValues(alpha: isDark ? 0.4 : 0.3),
+                            color: AppColors.primaryBlueLight.withValues(
+                              alpha: isDark ? 0.4 : 0.3,
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -161,7 +167,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   Text(
                                     l10n.netWorth,
                                     style: AppTypography.labelLarge.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.75),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.75,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -171,47 +179,71 @@ class _DashboardPageState extends State<DashboardPage> {
                                           ? Icons.visibility_off_rounded
                                           : Icons.visibility_rounded,
                                       size: 18,
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                                     onPressed: () {
-                                      setState(() => _hideBalances = !_hideBalances);
+                                      setState(
+                                        () => _hideBalances = !_hideBalances,
+                                      );
                                     },
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
                                     tooltip: l10n.isPersian
-                                        ? (_hideBalances ? 'نمایش مبالغ' : 'مخفی‌سازی مبالغ')
-                                        : (_hideBalances ? 'Show balances' : 'Hide balances'),
+                                        ? (_hideBalances
+                                              ? 'نمایش مبالغ'
+                                              : 'مخفی‌سازی مبالغ')
+                                        : (_hideBalances
+                                              ? 'Show balances'
+                                              : 'Hide balances'),
                                   ),
                                 ],
                               ),
                               BlocBuilder<SyncBloc, SyncState>(
                                 builder: (context, syncState) {
-                                  final (String label, Color fg) = syncState.isSyncing
+                                  final (
+                                    String label,
+                                    Color fg,
+                                  ) = syncState.isSyncing
                                       ? (
-                                          l10n.isPersian ? 'در حال همگام‌سازی…' : 'Syncing…',
+                                          l10n.isPersian
+                                              ? 'در حال همگام‌سازی…'
+                                              : 'Syncing…',
                                           Colors.white,
                                         )
                                       : !syncState.isOnline
-                                          ? (
-                                              l10n.isPersian ? 'آفلاین — همگام‌سازی خودکار' : 'Offline — auto sync',
-                                              const Color(0xFFFFD180),
-                                            )
-                                          : (
-                                              l10n.isPersian ? 'همگام‌سازی فعال' : 'Sync active',
-                                              const Color(0xFFB9F6CA),
-                                            );
+                                      ? (
+                                          l10n.isPersian
+                                              ? 'آفلاین — همگام‌سازی خودکار'
+                                              : 'Offline — auto sync',
+                                          const Color(0xFFFFD180),
+                                        )
+                                      : (
+                                          l10n.isPersian
+                                              ? 'همگام‌سازی فعال'
+                                              : 'Sync active',
+                                          const Color(0xFFB9F6CA),
+                                        );
                                   return GestureDetector(
                                     onTap: () => context.push('/sync'),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpacing.sm,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.14),
-                                        borderRadius: AppSpacing.borderRadiusPill,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.14,
+                                        ),
+                                        borderRadius:
+                                            AppSpacing.borderRadiusPill,
                                       ),
                                       child: Text(
                                         label,
-                                        style: AppTypography.labelMedium.copyWith(color: fg),
+                                        style: AppTypography.labelMedium
+                                            .copyWith(color: fg),
                                       ),
                                     ),
                                   );
@@ -231,7 +263,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           else if (totalBalance != null)
                             AppMoneyText(
                               money: totalBalance,
-                              style: AppTypography.displayLarge.copyWith(color: Colors.white),
+                              style: AppTypography.displayLarge.copyWith(
+                                color: Colors.white,
+                              ),
                               usePersianDigits: true,
                               animated: true,
                             )
@@ -276,7 +310,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                   ],
                                 ),
                               ),
-                              Container(height: 28, width: 1, color: Colors.white24),
+                              Container(
+                                height: 28,
+                                width: 1,
+                                color: Colors.white24,
+                              ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
@@ -314,36 +352,38 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             ],
                           ),
-                        if (trend != null && trend.percent != null) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Icon(
-                              trend.higher
-                                  ? Icons.trending_up_rounded
-                                  : Icons.trending_down_rounded,
-                              size: 16,
-                              color: trend.higher
-                                  ? const Color(0xFFFFD180)
-                                  : const Color(0xFFB9F6CA),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                l10n.isPersian
-                                    ? 'هزینه نسبت به ۳۰ روز قبل: ${_trendText(trend.percent!, l10n.isPersian)}'
-                                    : 'Spending vs previous 30 days: ${_trendText(trend.percent!, l10n.isPersian)}',
-                                style: AppTypography.labelMedium.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.85),
+                          if (trend != null && trend.percent != null) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                Icon(
+                                  trend.higher
+                                      ? Icons.trending_up_rounded
+                                      : Icons.trending_down_rounded,
+                                  size: 16,
+                                  color: trend.higher
+                                      ? const Color(0xFFFFD180)
+                                      : const Color(0xFFB9F6CA),
                                 ),
-                              ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    l10n.isPersian
+                                        ? 'هزینه نسبت به ۳۰ روز قبل: ${_trendText(trend.percent!, l10n.isPersian)}'
+                                        : 'Spending vs previous 30 days: ${_trendText(trend.percent!, l10n.isPersian)}',
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
-                        ),
-                      ],
-                      ],
-                    ),
-                  );
+                        ],
+                      ),
+                    );
                   },
                 );
               },
@@ -370,7 +410,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: Colors.indigo.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.account_balance, color: Colors.indigo, size: 24),
+                      child: const Icon(
+                        Icons.account_balance,
+                        color: Colors.indigo,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -378,8 +422,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.isPersian ? 'سیستم حسابداری مالی (دوبل)' : 'Financial Accounting OS',
-                            style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                            l10n.isPersian
+                                ? 'سیستم حسابداری مالی (دوبل)'
+                                : 'Financial Accounting OS',
+                            style: AppTypography.titleSmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -387,7 +435,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ? 'اسناد دوبل، کدینگ سرفصل‌ها، دفاتر قانونی و تراز آزمایشی'
                                 : 'General ledger, journal vouchers & trial balance',
                             style: AppTypography.bodySmall.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color
+                                  ?.withValues(alpha: 0.7),
                               fontSize: 11,
                             ),
                           ),
@@ -424,7 +476,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 if (state is AccountsLoaded) {
                   if (state.accounts.isEmpty) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
                       child: AppCard(
                         child: Center(
                           child: Column(
@@ -438,7 +492,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                               const SizedBox(height: AppSpacing.sm),
                               AppButton(
-                                label: l10n.isPersian ? 'ساخت حساب' : 'Create account',
+                                label: l10n.isPersian
+                                    ? 'ساخت حساب'
+                                    : 'Create account',
                                 variant: AppButtonVariant.primary,
                                 icon: const Icon(Icons.add_rounded, size: 18),
                                 onPressed: () => context.push('/accounts'),
@@ -450,10 +506,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   }
                   return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
                     scrollDirection: Axis.horizontal,
                     itemCount: state.accounts.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(width: AppSpacing.md),
                     itemBuilder: (context, index) {
                       return AppAccountCard(account: state.accounts[index]);
                     },
@@ -474,7 +533,8 @@ class _DashboardPageState extends State<DashboardPage> {
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, txState) {
                 final hasTransactions =
-                    txState is TransactionLoaded && txState.transactions.isNotEmpty;
+                    txState is TransactionLoaded &&
+                    txState.transactions.isNotEmpty;
 
                 String insight;
                 String ctaLabel;
@@ -490,8 +550,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   for (final tx in txs) {
                     if (tx.type == TransactionType.expense &&
                         now.difference(tx.date).inDays <= 30) {
-                      final cat = tx.categoryName ?? (l10n.isPersian ? 'سایر' : 'Other');
-                      catTotals[cat] = (catTotals[cat] ?? 0) + tx.amount.minorUnits;
+                      final cat =
+                          tx.categoryName ??
+                          (l10n.isPersian ? 'سایر' : 'Other');
+                      catTotals[cat] =
+                          (catTotals[cat] ?? 0) + tx.amount.minorUnits;
                     }
                   }
                   if (catTotals.isEmpty) {
@@ -499,13 +562,16 @@ class _DashboardPageState extends State<DashboardPage> {
                         ? 'در ۳۰ روز اخیر هزینه‌ای ثبت نشده است.'
                         : 'No expenses recorded in the last 30 days.';
                   } else {
-                    final topEntry =
-                        catTotals.entries.reduce((a, b) => a.value >= b.value ? a : b);
+                    final topEntry = catTotals.entries.reduce(
+                      (a, b) => a.value >= b.value ? a : b,
+                    );
                     insight = l10n.isPersian
                         ? 'بیشترین هزینه ۳۰ روز اخیر شما در دسته «${topEntry.key}» بوده است.'
                         : 'Your biggest spending category in the last 30 days is "${topEntry.key}".';
                   }
-                  ctaLabel = l10n.isPersian ? 'مشاهده تحلیل کامل' : 'View full analysis';
+                  ctaLabel = l10n.isPersian
+                      ? 'مشاهده تحلیل کامل'
+                      : 'View full analysis';
                 }
 
                 return InkWell(
@@ -515,9 +581,12 @@ class _DashboardPageState extends State<DashboardPage> {
                   borderRadius: AppSpacing.borderRadiusLg,
                   child: AppCard(
                     backgroundColor: isDark
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
-                    borderColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                        ? Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.12)
+                        : Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.06),
+                    borderColor: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.25),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -533,7 +602,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             children: [
                               Text(
                                 insight,
-                                style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
@@ -550,16 +621,19 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 );
-                  },
+              },
             ),
           ),
           // Budgets Section (if active budgets exist)
           BlocBuilder<BudgetBloc, BudgetState>(
             builder: (context, budgetState) {
-              if (budgetState is BudgetLoaded && budgetState.budgets.isNotEmpty) {
+              if (budgetState is BudgetLoaded &&
+                  budgetState.budgets.isNotEmpty) {
                 final topBudget = budgetState.budgets.first;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -623,7 +697,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   }
 
                   return AppCard(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xs,
+                    ),
                     child: ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -633,9 +709,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         final tx = state.transactions[index];
                         return AppTransactionTile(
                           transaction: tx,
-                          onTap: () => context.push('/transaction/new', extra: tx),
+                          onTap: () =>
+                              context.push('/transaction/new', extra: tx),
                           onDelete: () {
-                            context.read<TransactionBloc>().add(TransactionDeleteSubmitted(tx.id));
+                            context.read<TransactionBloc>().add(
+                              TransactionDeleteSubmitted(tx.id),
+                            );
                           },
                         );
                       },
@@ -652,7 +731,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildQuickOperations(BuildContext context, bool isDark, bool isPersian) {
+  Widget _buildQuickOperations(
+    BuildContext context,
+    bool isDark,
+    bool isPersian,
+  ) {
     final actions = [
       (
         Icons.receipt_long_rounded,
@@ -707,7 +790,9 @@ class _DashboardPageState extends State<DashboardPage> {
               Text(
                 isPersian ? 'سیستم یکپارچه' : 'Financial OS',
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
               ),
             ],
@@ -745,7 +830,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             Container(
                               padding: const EdgeInsets.all(7),
                               decoration: BoxDecoration(
-                                color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+                                color: color.withValues(
+                                  alpha: isDark ? 0.2 : 0.12,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(icon, color: color, size: 20),

@@ -10,7 +10,8 @@ class IconUtils {
     Icons.shopping_bag_rounded.codePoint: Icons.shopping_bag_rounded,
     Icons.home_rounded.codePoint: Icons.home_rounded,
     Icons.medical_services_rounded.codePoint: Icons.medical_services_rounded,
-    Icons.account_balance_wallet_rounded.codePoint: Icons.account_balance_wallet_rounded,
+    Icons.account_balance_wallet_rounded.codePoint:
+        Icons.account_balance_wallet_rounded,
     Icons.computer_rounded.codePoint: Icons.computer_rounded,
     Icons.trending_up_rounded.codePoint: Icons.trending_up_rounded,
     Icons.trending_down_rounded.codePoint: Icons.trending_down_rounded,
@@ -36,7 +37,8 @@ class IconUtils {
     Icons.payment_rounded.codePoint: Icons.payment_rounded,
     Icons.sell_rounded.codePoint: Icons.sell_rounded,
     Icons.inventory_2_rounded.codePoint: Icons.inventory_2_rounded,
-    Icons.local_grocery_store_rounded.codePoint: Icons.local_grocery_store_rounded,
+    Icons.local_grocery_store_rounded.codePoint:
+        Icons.local_grocery_store_rounded,
     Icons.local_cafe_rounded.codePoint: Icons.local_cafe_rounded,
     Icons.fastfood_rounded.codePoint: Icons.fastfood_rounded,
     Icons.health_and_safety_rounded.codePoint: Icons.health_and_safety_rounded,
@@ -50,7 +52,10 @@ class IconUtils {
 
   /// Safely resolves a constant IconData from database codePoint.
   /// Guarantees font icon tree-shaking compatibility in release builds.
-  static IconData getIconData(int codePoint, {String fontFamily = 'MaterialIcons'}) {
+  static IconData getIconData(
+    int codePoint, {
+    String fontFamily = 'MaterialIcons',
+  }) {
     return _iconRegistry[codePoint] ?? defaultIcon;
   }
 }

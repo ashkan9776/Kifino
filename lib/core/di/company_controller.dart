@@ -63,12 +63,16 @@ class CompanyController extends ChangeNotifier {
   /// Deletes a non-active company and its database file. The default
   /// company cannot be deleted (registry enforces this too).
   Future<void> deleteCompany(String companyId) async {
-    assert(companyId != CompanyRegistry.defaultCompanyId,
-        'شرکت پیش‌فرض قابل حذف نیست');
+    assert(
+      companyId != CompanyRegistry.defaultCompanyId,
+      'شرکت پیش‌فرض قابل حذف نیست',
+    );
     await registry.removeCompany(companyId);
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dir.path, CompanyRegistry.dbFileNameFor(companyId)));
+      final file = File(
+        p.join(dir.path, CompanyRegistry.dbFileNameFor(companyId)),
+      );
       if (await file.exists()) await file.delete();
     } catch (_) {
       // A locked/missing file must not break the registry cleanup.

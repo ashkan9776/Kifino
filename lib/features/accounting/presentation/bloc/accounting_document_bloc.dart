@@ -36,7 +36,10 @@ final class CreateAccountingDocumentSubmitted extends AccountingDocumentEvent {
   /// the document is saved.
   final List<DocumentDetailTag> details;
 
-  const CreateAccountingDocumentSubmitted(this.document, {this.details = const []});
+  const CreateAccountingDocumentSubmitted(
+    this.document, {
+    this.details = const [],
+  });
   @override
   List<Object?> get props => [document, details];
 }
@@ -82,7 +85,13 @@ final class AccountingDocumentLoaded extends AccountingDocumentState {
   });
 
   @override
-  List<Object?> get props => [documents, startDate, endDate, status, fiscalYearId];
+  List<Object?> get props => [
+    documents,
+    startDate,
+    endDate,
+    status,
+    fiscalYearId,
+  ];
 }
 
 final class AccountingDocumentOperationSuccess extends AccountingDocumentState {
@@ -100,10 +109,12 @@ final class AccountingDocumentError extends AccountingDocumentState {
 }
 
 // Bloc
-class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDocumentState> {
+class AccountingDocumentBloc
+    extends Bloc<AccountingDocumentEvent, AccountingDocumentState> {
   final AccountingRepository _repository;
 
-  AccountingDocumentBloc(this._repository) : super(AccountingDocumentInitial()) {
+  AccountingDocumentBloc(this._repository)
+    : super(AccountingDocumentInitial()) {
     on<LoadAccountingDocuments>(_onLoad);
     on<CreateAccountingDocumentSubmitted>(_onCreate);
     on<ApproveAccountingDocumentSubmitted>(_onApprove);
@@ -144,9 +155,16 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
     try {
       final saved = await _repository.createDocument(event.document);
       if (event.details.isNotEmpty) {
-        await _repository.setDocumentDetails(documentId: saved.id, tags: event.details);
+        await _repository.setDocumentDetails(
+          documentId: saved.id,
+          tags: event.details,
+        );
       }
-      emit(const AccountingDocumentOperationSuccess('سند حسابداری با موفقیت ثبت شد'));
+      emit(
+        const AccountingDocumentOperationSuccess(
+          'سند حسابداری با موفقیت ثبت شد',
+        ),
+      );
       add(const LoadAccountingDocuments());
     } catch (e) {
       emit(AccountingDocumentError(_cleanError(e)));
@@ -172,7 +190,11 @@ class AccountingDocumentBloc extends Bloc<AccountingDocumentEvent, AccountingDoc
   ) async {
     try {
       await _repository.deleteDocument(event.documentId);
-      emit(const AccountingDocumentOperationSuccess('سند حسابداری با موفقیت حذف شد'));
+      emit(
+        const AccountingDocumentOperationSuccess(
+          'سند حسابداری با موفقیت حذف شد',
+        ),
+      );
       add(const LoadAccountingDocuments());
     } catch (e) {
       emit(AccountingDocumentError(_cleanError(e)));

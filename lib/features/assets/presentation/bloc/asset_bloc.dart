@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -77,12 +78,12 @@ final class AssetLoaded extends AssetState {
 
   @override
   List<Object?> get props => [
-        assets,
-        totalCostBasis,
-        totalCurrentValuation,
-        totalProfitLoss,
-        profitLossPercent,
-      ];
+    assets,
+    totalCostBasis,
+    totalCurrentValuation,
+    totalProfitLoss,
+    profitLossPercent,
+  ];
 }
 
 final class AssetFailure extends AssetState {
@@ -108,10 +109,12 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
   void _onWatchStarted(WatchAssetsStarted event, Emitter<AssetState> emit) {
     emit(AssetLoading());
     _subscription?.cancel();
-    _subscription = _repository.watchAssets(category: event.category).listen(
-      (assets) => add(_AssetsUpdated(assets)),
-      onError: (e) => emit(AssetFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchAssets(category: event.category)
+        .listen(
+          (assets) => add(_AssetsUpdated(assets)),
+          onError: (e) => emit(AssetFailure(e.toString())),
+        );
   }
 
   void _onAssetsUpdated(_AssetsUpdated event, Emitter<AssetState> emit) {
@@ -131,19 +134,25 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
 
     double pnlPercent = 0.0;
     if (totalCostMinor > 0) {
-      pnlPercent = ((totalValuationMinor - totalCostMinor) / totalCostMinor) * 100;
+      pnlPercent =
+          ((totalValuationMinor - totalCostMinor) / totalCostMinor) * 100;
     }
 
-    emit(AssetLoaded(
-      assets: event.assets,
-      totalCostBasis: totalCost,
-      totalCurrentValuation: totalValuation,
-      totalProfitLoss: totalProfitLoss,
-      profitLossPercent: double.parse(pnlPercent.toStringAsFixed(1)),
-    ));
+    emit(
+      AssetLoaded(
+        assets: event.assets,
+        totalCostBasis: totalCost,
+        totalCurrentValuation: totalValuation,
+        totalProfitLoss: totalProfitLoss,
+        profitLossPercent: double.parse(pnlPercent.toStringAsFixed(1)),
+      ),
+    );
   }
 
-  Future<void> _onCreateSubmitted(AssetCreateSubmitted event, Emitter<AssetState> emit) async {
+  Future<void> _onCreateSubmitted(
+    AssetCreateSubmitted event,
+    Emitter<AssetState> emit,
+  ) async {
     final result = await _repository.createAsset(event.asset);
     result.fold(
       onSuccess: (_) {},
@@ -151,15 +160,24 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     );
   }
 
-  Future<void> _onValuationUpdated(AssetValuationUpdated event, Emitter<AssetState> emit) async {
-    final result = await _repository.updateAssetValuation(event.id, event.currentValue);
+  Future<void> _onValuationUpdated(
+    AssetValuationUpdated event,
+    Emitter<AssetState> emit,
+  ) async {
+    final result = await _repository.updateAssetValuation(
+      event.id,
+      event.currentValue,
+    );
     result.fold(
       onSuccess: (_) {},
       onFailure: (failure) => emit(AssetFailure(failure.message)),
     );
   }
 
-  Future<void> _onDeleteSubmitted(AssetDeleteSubmitted event, Emitter<AssetState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    AssetDeleteSubmitted event,
+    Emitter<AssetState> emit,
+  ) async {
     final result = await _repository.deleteAsset(event.id);
     result.fold(
       onSuccess: (_) {},

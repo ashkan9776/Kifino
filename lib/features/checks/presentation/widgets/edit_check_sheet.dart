@@ -107,12 +107,17 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
     final number = _numberController.text.trim();
     final bank = _bankController.text.trim();
     final party = _partyController.text.trim();
-    final amountMinor = int.tryParse(normalizeNumericInput(_amountController.text)) ?? 0;
+    final amountMinor =
+        int.tryParse(normalizeNumericInput(_amountController.text)) ?? 0;
 
     if (number.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'شماره چک را وارد کنید.' : 'Enter the check number.'),
+          content: Text(
+            l10n.isPersian
+                ? 'شماره چک را وارد کنید.'
+                : 'Enter the check number.',
+          ),
         ),
       );
       return;
@@ -120,7 +125,9 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
     if (bank.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'نام بانک را وارد کنید.' : 'Enter the bank name.'),
+          content: Text(
+            l10n.isPersian ? 'نام بانک را وارد کنید.' : 'Enter the bank name.',
+          ),
         ),
       );
       return;
@@ -128,7 +135,11 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
     if (party.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'نام طرف چک را وارد کنید.' : 'Enter the counterparty name.'),
+          content: Text(
+            l10n.isPersian
+                ? 'نام طرف چک را وارد کنید.'
+                : 'Enter the counterparty name.',
+          ),
         ),
       );
       return;
@@ -136,7 +147,11 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
     if (amountMinor <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.isPersian ? 'مبلغ چک را درست وارد کنید.' : 'Enter a valid amount.'),
+          content: Text(
+            l10n.isPersian
+                ? 'مبلغ چک را درست وارد کنید.'
+                : 'Enter a valid amount.',
+          ),
         ),
       );
       return;
@@ -172,9 +187,8 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -200,8 +214,12 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
             children: [
               AppSheetHeader(
                 title: isFa
-                    ? (check.type == CheckType.received ? 'ویرایش چک دریافتی' : 'ویرایش چک صادره')
-                    : (check.type == CheckType.received ? 'Edit received check' : 'Edit issued check'),
+                    ? (check.type == CheckType.received
+                          ? 'ویرایش چک دریافتی'
+                          : 'ویرایش چک صادره')
+                    : (check.type == CheckType.received
+                          ? 'Edit received check'
+                          : 'Edit issued check'),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
@@ -209,7 +227,9 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                     ? 'وضعیت چک از این بخش تغییر نمی‌کند؛ برای تغییر وضعیت از دکمه «تغییر وضعیت» استفاده کنید.'
                     : 'Status is not changed here; use "Change status" for that.',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -232,7 +252,9 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                   PersianDigitsTextInputFormatter(enabled: isFa),
                 ],
                 decoration: InputDecoration(
-                  labelText: isFa ? 'شناسه صیادی (اختیاری)' : 'Sayadi ID (optional)',
+                  labelText: isFa
+                      ? 'شناسه صیادی (اختیاری)'
+                      : 'Sayadi ID (optional)',
                   prefixIcon: const Icon(Icons.qr_code_2_outlined),
                 ),
               ),
@@ -249,7 +271,9 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                 controller: _partyController,
                 decoration: InputDecoration(
                   labelText: isFa
-                      ? (check.type == CheckType.received ? 'نام پرداخت‌کننده' : 'نام دریافت‌کننده')
+                      ? (check.type == CheckType.received
+                            ? 'نام پرداخت‌کننده'
+                            : 'نام دریافت‌کننده')
                       : 'Counterparty',
                   prefixIcon: const Icon(Icons.person_outline_rounded),
                 ),
@@ -272,10 +296,15 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                 onTap: _pickDate,
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -290,7 +319,10 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                         ],
                       ),
                       Text(
-                        AppDateFormatter.formatShort(_dueDate, locale: context.l10n.localeName),
+                        AppDateFormatter.formatShort(
+                          _dueDate,
+                          locale: context.l10n.localeName,
+                        ),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.income,
@@ -306,14 +338,19 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
                 items: [
                   DropdownMenuItem<String>(
                     value: null,
-                    child: Text(isFa ? 'بدون حساب تسویه' : 'No settlement account'),
+                    child: Text(
+                      isFa ? 'بدون حساب تسویه' : 'No settlement account',
+                    ),
                   ),
                   ..._accounts.map(
-                    (acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name)),
+                    (acc) =>
+                        DropdownMenuItem(value: acc.id, child: Text(acc.name)),
                   ),
                 ],
                 decoration: InputDecoration(
-                  labelText: isFa ? 'حساب تسویه (اختیاری)' : 'Settlement account (optional)',
+                  labelText: isFa
+                      ? 'حساب تسویه (اختیاری)'
+                      : 'Settlement account (optional)',
                   prefixIcon: const Icon(Icons.wallet_outlined),
                 ),
                 onChanged: (val) => setState(() => _accountId = val),

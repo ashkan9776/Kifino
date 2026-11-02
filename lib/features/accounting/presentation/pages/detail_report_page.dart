@@ -71,7 +71,8 @@ class _DetailReportPageState extends State<DetailReportPage> {
           _selectedValueId = null;
         }
         if (_selectedLedgerId != null && _selectedValueId != null) {
-          final values = _valuesOf(_selectedLedgerId!) ?? const <DetailValueEntity>[];
+          final values =
+              _valuesOf(_selectedLedgerId!) ?? const <DetailValueEntity>[];
           if (!values.any((v) => v.id == _selectedValueId)) {
             _selectedValueId = null;
           }
@@ -106,11 +107,11 @@ class _DetailReportPageState extends State<DetailReportPage> {
     });
     try {
       final report = await getIt<AccountingRepository>().getDetailReport(
-            ledgerId: ledgerId,
-            valueId: valueId,
-            startDate: _startDate,
-            endDate: _endDate,
-          );
+        ledgerId: ledgerId,
+        valueId: valueId,
+        startDate: _startDate,
+        endDate: _endDate,
+      );
       if (!mounted) return;
       setState(() {
         _report = report;
@@ -165,10 +166,12 @@ class _DetailReportPageState extends State<DetailReportPage> {
   }
 
   Widget _buildControls(KifinoColorsExtension colors) {
-    final selectedLedger =
-        _ledgers.where((l) => l.ledger.id == _selectedLedgerId).firstOrNull;
+    final selectedLedger = _ledgers
+        .where((l) => l.ledger.id == _selectedLedgerId)
+        .firstOrNull;
     final values = selectedLedger?.values ?? const <DetailValueEntity>[];
-    final canRun = _selectedLedgerId != null &&
+    final canRun =
+        _selectedLedgerId != null &&
         _selectedValueId != null &&
         !_loadingReport;
 
@@ -177,74 +180,84 @@ class _DetailReportPageState extends State<DetailReportPage> {
       child: AppCard(
         padding: const EdgeInsets.all(14),
         child: _loadingLedgers
-          ? const Column(
-              children: [
-                AppSkeleton(height: 48),
-                SizedBox(height: 10),
-                AppSkeleton(height: 48),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedLedgerId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'تفصیلی شناور *',
-                    prefixIcon: Icon(Icons.category_outlined),
-                  ),
-                  items: _ledgers
-                      .map((l) => DropdownMenuItem(
+            ? const Column(
+                children: [
+                  AppSkeleton(height: 48),
+                  SizedBox(height: 10),
+                  AppSkeleton(height: 48),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedLedgerId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'تفصیلی شناور *',
+                      prefixIcon: Icon(Icons.category_outlined),
+                    ),
+                    items: _ledgers
+                        .map(
+                          (l) => DropdownMenuItem(
                             value: l.ledger.id,
-                            child: Text(l.ledger.title, overflow: TextOverflow.ellipsis),
-                          ))
-                      .toList(),
-                  onChanged: (id) {
-                    setState(() {
-                      _selectedLedgerId = id;
-                      _selectedValueId = null;
-                      _report = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  key: ValueKey('detail-value-$_selectedLedgerId'),
-                  initialValue: _selectedValueId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'مقدار تفصیلی *',
-                    prefixIcon: Icon(Icons.label_outline),
+                            child: Text(
+                              l.ledger.title,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (id) {
+                      setState(() {
+                        _selectedLedgerId = id;
+                        _selectedValueId = null;
+                        _report = null;
+                      });
+                    },
                   ),
-                  items: values
-                      .map((v) => DropdownMenuItem(
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    key: ValueKey('detail-value-$_selectedLedgerId'),
+                    initialValue: _selectedValueId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'مقدار تفصیلی *',
+                      prefixIcon: Icon(Icons.label_outline),
+                    ),
+                    items: values
+                        .map(
+                          (v) => DropdownMenuItem(
                             value: v.id,
-                            child: Text(v.title, overflow: TextOverflow.ellipsis),
-                          ))
-                      .toList(),
-                  onChanged: _selectedLedgerId == null
-                      ? null
-                      : (id) {
-                          setState(() {
-                            _selectedValueId = id;
-                            _report = null;
-                          });
-                        },
-                ),
-                const SizedBox(height: 10),
-                _buildDateRangeField(colors),
-                const SizedBox(height: 12),
-                AppButton(
-                  label: 'نمایش گزارش',
-                  icon: const Icon(Icons.assessment_outlined, size: 18),
-                  onPressed: canRun ? _runReport : null,
-                  isLoading: _loadingReport,
-                ),
-              ],
-            ),
-          ),
-      );
+                            child: Text(
+                              v.title,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _selectedLedgerId == null
+                        ? null
+                        : (id) {
+                            setState(() {
+                              _selectedValueId = id;
+                              _report = null;
+                            });
+                          },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDateRangeField(colors),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    label: 'نمایش گزارش',
+                    icon: const Icon(Icons.assessment_outlined, size: 18),
+                    onPressed: canRun ? _runReport : null,
+                    isLoading: _loadingReport,
+                  ),
+                ],
+              ),
+      ),
+    );
   }
 
   Widget _buildDateRangeField(KifinoColorsExtension colors) {
@@ -316,7 +329,8 @@ class _DetailReportPageState extends State<DetailReportPage> {
       return AppEmptyState(
         icon: Icons.assessment_outlined,
         title: 'گزارشی نمایش داده نشده است',
-        description: 'تفصیلی شناور و مقدار آن را انتخاب کرده و روی «نمایش گزارش» بزنید.',
+        description:
+            'تفصیلی شناور و مقدار آن را انتخاب کرده و روی «نمایش گزارش» بزنید.',
       );
     }
 
@@ -375,7 +389,10 @@ class _ReportRowCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -393,7 +410,9 @@ class _ReportRowCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     '${TextNormalizer.auto(jalali.day.toString())} ${jalali.monthName} ${TextNormalizer.auto(jalali.year.toString())}',
-                    style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -401,8 +420,11 @@ class _ReportRowCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(row.documentTitle, style: AppTypography.titleSmall),
             Text(
-              row.subjectName + (row.description.isNotEmpty ? ' • ${row.description}' : ''),
-              style: AppTypography.bodySmall.copyWith(color: colors.textSecondary),
+              row.subjectName +
+                  (row.description.isNotEmpty ? ' • ${row.description}' : ''),
+              style: AppTypography.bodySmall.copyWith(
+                color: colors.textSecondary,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -412,14 +434,18 @@ class _ReportRowCard extends StatelessWidget {
                 Expanded(
                   child: _AmountCell(
                     label: 'بدهکار',
-                    amount: hasDebit ? Money.fromMinor(row.debitMinorUnits).formatted : '-',
+                    amount: hasDebit
+                        ? Money.fromMinor(row.debitMinorUnits).formatted
+                        : '-',
                     color: hasDebit ? colors.expense : colors.textTertiary,
                   ),
                 ),
                 Expanded(
                   child: _AmountCell(
                     label: 'بستانکار',
-                    amount: hasCredit ? Money.fromMinor(row.creditMinorUnits).formatted : '-',
+                    amount: hasCredit
+                        ? Money.fromMinor(row.creditMinorUnits).formatted
+                        : '-',
                     color: hasCredit ? colors.income : colors.textTertiary,
                   ),
                 ),
@@ -427,7 +453,9 @@ class _ReportRowCard extends StatelessWidget {
                   child: _AmountCell(
                     label: 'مانده (${_balanceSide()})',
                     amount: _balanceText(),
-                    color: row.runningBalanceMinorUnits >= 0 ? colors.expense : colors.income,
+                    color: row.runningBalanceMinorUnits >= 0
+                        ? colors.expense
+                        : colors.income,
                     bold: true,
                   ),
                 ),
@@ -459,7 +487,10 @@ class _AmountCell extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.labelSmall.copyWith(color: colors.textSecondary)),
+        Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(color: colors.textSecondary),
+        ),
         const SizedBox(height: 2),
         Text(
           amount,
@@ -505,7 +536,9 @@ class _TotalsCard extends StatelessWidget {
                     Text('جمع بدهکار', style: AppTypography.bodySmall),
                     Text(
                       Money.fromMinor(report.totalDebitMinorUnits).formatted,
-                      style: AppTypography.titleSmall.copyWith(color: colors.expense),
+                      style: AppTypography.titleSmall.copyWith(
+                        color: colors.expense,
+                      ),
                     ),
                   ],
                 ),
@@ -517,7 +550,9 @@ class _TotalsCard extends StatelessWidget {
                     Text('جمع بستانکار', style: AppTypography.bodySmall),
                     Text(
                       Money.fromMinor(report.totalCreditMinorUnits).formatted,
-                      style: AppTypography.titleSmall.copyWith(color: colors.income),
+                      style: AppTypography.titleSmall.copyWith(
+                        color: colors.income,
+                      ),
                     ),
                   ],
                 ),

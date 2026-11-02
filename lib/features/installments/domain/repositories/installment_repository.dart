@@ -5,7 +5,9 @@ import '../entities/installment_payment_entity.dart';
 abstract interface class InstallmentRepository {
   Stream<List<InstallmentEntity>> watchInstallments();
   Future<Result<List<InstallmentEntity>>> getInstallments();
-  Future<Result<InstallmentEntity>> createInstallment(InstallmentEntity installment);
+  Future<Result<InstallmentEntity>> createInstallment(
+    InstallmentEntity installment,
+  );
   Future<Result<void>> payNextInstallment(String id);
 
   /// Pays ALL remaining installments at once (تسویه زودهنگام).
@@ -16,7 +18,9 @@ abstract interface class InstallmentRepository {
   Future<Result<void>> updateInstallment(InstallmentEntity installment);
 
   /// Payment history for one installment, newest first.
-  Future<List<InstallmentPaymentEntity>> getPaymentHistory(String installmentId);
+  Future<List<InstallmentPaymentEntity>> getPaymentHistory(
+    String installmentId,
+  );
 
   /// Deletes a payment and fully reverts it: money returns to the linked
   /// account, the linked ledger transaction is soft-deleted, the paid count

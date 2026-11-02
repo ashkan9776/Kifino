@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum InvoiceType {
@@ -17,10 +18,10 @@ enum InvoiceType {
   }
 
   String get titleFa => switch (this) {
-        InvoiceType.sale => 'فاکتور فروش',
-        InvoiceType.purchase => 'فاکتور خرید',
-        InvoiceType.quote => 'پیش‌فاکتور',
-      };
+    InvoiceType.sale => 'فاکتور فروش',
+    InvoiceType.purchase => 'فاکتور خرید',
+    InvoiceType.quote => 'پیش‌فاکتور',
+  };
 }
 
 enum InvoiceStatus {
@@ -42,13 +43,13 @@ enum InvoiceStatus {
   }
 
   String get titleFa => switch (this) {
-        InvoiceStatus.draft => 'پیش‌نویس',
-        InvoiceStatus.sent => 'ارسال شده',
-        InvoiceStatus.partiallyPaid => 'پرداخت ناقص',
-        InvoiceStatus.paid => 'تسویه شده',
-        InvoiceStatus.overdue => 'سررسید گذشته',
-        InvoiceStatus.cancelled => 'لغو شده',
-      };
+    InvoiceStatus.draft => 'پیش‌نویس',
+    InvoiceStatus.sent => 'ارسال شده',
+    InvoiceStatus.partiallyPaid => 'پرداخت ناقص',
+    InvoiceStatus.paid => 'تسویه شده',
+    InvoiceStatus.overdue => 'سررسید گذشته',
+    InvoiceStatus.cancelled => 'لغو شده',
+  };
 }
 
 class InvoiceItemEntity extends Equatable {
@@ -87,7 +88,10 @@ class InvoiceItemEntity extends Equatable {
     final cur = unitPrice.currency;
     final grossMinor = (unitPrice.minorUnits * quantity).round();
     final discountMinor = discount?.minorUnits ?? 0;
-    final taxableMinor = (grossMinor - discountMinor).clamp(0, double.maxFinite.toInt());
+    final taxableMinor = (grossMinor - discountMinor).clamp(
+      0,
+      double.maxFinite.toInt(),
+    );
     final taxMinor = (taxableMinor * taxRate).round();
     final totalMinor = taxableMinor + taxMinor;
 
@@ -106,16 +110,16 @@ class InvoiceItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        invoiceId,
-        productId,
-        description,
-        quantity,
-        unitPrice,
-        discount,
-        tax,
-        total,
-      ];
+    id,
+    invoiceId,
+    productId,
+    description,
+    quantity,
+    unitPrice,
+    discount,
+    tax,
+    total,
+  ];
 }
 
 class InvoiceEntity extends Equatable {
@@ -163,7 +167,10 @@ class InvoiceEntity extends Equatable {
 
   Money get remainingBalance => total - paidAmount;
   bool get isFullyPaid => paidAmount >= total && total.minorUnits > 0;
-  bool get isOverdue => dueDate.isBefore(DateTime.now()) && !isFullyPaid && status != InvoiceStatus.cancelled;
+  bool get isOverdue =>
+      dueDate.isBefore(DateTime.now()) &&
+      !isFullyPaid &&
+      status != InvoiceStatus.cancelled;
 
   InvoiceEntity copyWith({
     String? id,
@@ -211,24 +218,24 @@ class InvoiceEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        invoiceNumber,
-        contactId,
-        contactName,
-        type,
-        status,
-        issueDate,
-        dueDate,
-        subtotal,
-        discount,
-        tax,
-        total,
-        paidAmount,
-        notes,
-        terms,
-        items,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    invoiceNumber,
+    contactId,
+    contactName,
+    type,
+    status,
+    issueDate,
+    dueDate,
+    subtotal,
+    discount,
+    tax,
+    total,
+    paidAmount,
+    notes,
+    terms,
+    items,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

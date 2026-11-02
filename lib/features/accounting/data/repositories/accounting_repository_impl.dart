@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
+
 import 'dart:convert';
 
 import '../../domain/entities/accounting_audit_entity.dart';
@@ -21,27 +22,32 @@ class AccountingRepositoryImpl implements AccountingRepository {
   final AppDatabase _db;
   final Uuid _uuid;
 
-  AccountingRepositoryImpl(this._db, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  AccountingRepositoryImpl(this._db, {Uuid? uuid})
+    : _uuid = uuid ?? const Uuid();
 
   @override
   Future<void> seedChartOfAccountsIfNotExists() async {
-    final existingCount = await (_db.selectOnly(_db.accountingSubjectsTable)
-          ..addColumns([_db.accountingSubjectsTable.id.count()]))
-        .getSingle();
-    final count = existingCount.read(_db.accountingSubjectsTable.id.count()) ?? 0;
+    final existingCount = await (_db.selectOnly(
+      _db.accountingSubjectsTable,
+    )..addColumns([_db.accountingSubjectsTable.id.count()])).getSingle();
+    final count =
+        existingCount.read(_db.accountingSubjectsTable.id.count()) ?? 0;
     if (count > 0) return;
 
     // Check or create default active fiscal year
-    final existingFiscalYear = await (_db.select(_db.fiscalYearsTable)
-          ..where((tbl) => tbl.isActive.equals(true))
-          ..limit(1))
-        .getSingleOrNull();
+    final existingFiscalYear =
+        await (_db.select(_db.fiscalYearsTable)
+              ..where((tbl) => tbl.isActive.equals(true))
+              ..limit(1))
+            .getSingleOrNull();
 
     String fiscalYearId;
     final now = DateTime.now();
     if (existingFiscalYear == null) {
       fiscalYearId = _uuid.v4();
-      await _db.into(_db.fiscalYearsTable).insert(
+      await _db
+          .into(_db.fiscalYearsTable)
+          .insert(
             FiscalYearsTableCompanion.insert(
               id: fiscalYearId,
               title: 'سال مالی جاری',
@@ -71,7 +77,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
     for (final seed in standardIranianChartOfAccounts) {
       final id = codeToIdMap[seed.code]!;
-      final parentId = seed.parentCode != null ? codeToIdMap[seed.parentCode] : null;
+      final parentId = seed.parentCode != null
+          ? codeToIdMap[seed.parentCode]
+          : null;
 
       companions.add(
         AccountingSubjectsTableCompanion.insert(
@@ -129,7 +137,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<List<AccountingSubjectEntity>> getChildSubjects(String parentId) async {
+  Future<List<AccountingSubjectEntity>> getChildSubjects(
+    String parentId,
+  ) async {
     final query = _db.select(_db.accountingSubjectsTable)
       ..where((tbl) => tbl.parentId.equals(parentId) & tbl.deletedAt.isNull())
       ..orderBy([(tbl) => OrderingTerm.asc(tbl.code)]);
@@ -156,10 +166,14 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<AccountingSubjectEntity> createSubject(AccountingSubjectEntity subject) async {
+  Future<AccountingSubjectEntity> createSubject(
+    AccountingSubjectEntity subject,
+  ) async {
     final id = subject.id.isEmpty ? _uuid.v4() : subject.id;
     final now = DateTime.now();
-    await _db.into(_db.accountingSubjectsTable).insert(
+    await _db
+        .into(_db.accountingSubjectsTable)
+        .insert(
           AccountingSubjectsTableCompanion.insert(
             id: id,
             code: subject.code,
@@ -178,11 +192,13 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<AccountingSubjectEntity> updateSubject(AccountingSubjectEntity subject) async {
+  Future<AccountingSubjectEntity> updateSubject(
+    AccountingSubjectEntity subject,
+  ) async {
     final now = DateTime.now();
-    await (_db.update(_db.accountingSubjectsTable)
-          ..where((tbl) => tbl.id.equals(subject.id)))
-        .write(
+    await (_db.update(
+      _db.accountingSubjectsTable,
+    )..where((tbl) => tbl.id.equals(subject.id))).write(
       AccountingSubjectsTableCompanion(
         code: Value(subject.code),
         name: Value(subject.name),
@@ -200,7 +216,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Future<void> deleteSubject(String id) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.accountingSubjectsTable)..where((tbl) => tbl.id.equals(id)))
+    await (_db.update(_db.accountingSubjectsTable)
+          ..where((tbl) => tbl.id.equals(id)))
         .write(AccountingSubjectsTableCompanion(deletedAt: Value(now)));
   }
 
@@ -211,7 +228,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final maxQuery = _db.selectOnly(_db.accountingDocumentsTable)
       ..addColumns([_db.accountingDocumentsTable.number.max()]);
     if (fiscalYearId != null) {
-      maxQuery.where(_db.accountingDocumentsTable.fiscalYearId.equals(fiscalYearId));
+      maxQuery.where(
+        _db.accountingDocumentsTable.fiscalYearId.equals(fiscalYearId),
+      );
     }
     final result = await maxQuery.getSingle();
     final maxNum = result.read(_db.accountingDocumentsTable.number.max()) ?? 0;
@@ -229,10 +248,18 @@ class AccountingRepositoryImpl implements AccountingRepository {
       ..where((tbl) => tbl.deletedAt.isNull());
 
     if (startDate != null) {
-      query = query..where((tbl) => tbl.date.isBiggerOrEqualValue(startDate.millisecondsSinceEpoch));
+      query = query
+        ..where(
+          (tbl) =>
+              tbl.date.isBiggerOrEqualValue(startDate.millisecondsSinceEpoch),
+        );
     }
     if (endDate != null) {
-      query = query..where((tbl) => tbl.date.isSmallerOrEqualValue(endDate.millisecondsSinceEpoch));
+      query = query
+        ..where(
+          (tbl) =>
+              tbl.date.isSmallerOrEqualValue(endDate.millisecondsSinceEpoch),
+        );
     }
     if (status != null) {
       query = query..where((tbl) => tbl.status.equals(status.code));
@@ -246,10 +273,11 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
     final List<AccountingDocumentEntity> result = [];
     for (final doc in docRows) {
-      final txRows = await (_db.select(_db.accountingTransactionsTable)
-            ..where((tbl) => tbl.documentId.equals(doc.id))
-            ..orderBy([(tbl) => OrderingTerm.asc(tbl.rowOrder)]))
-          .get();
+      final txRows =
+          await (_db.select(_db.accountingTransactionsTable)
+                ..where((tbl) => tbl.documentId.equals(doc.id))
+                ..orderBy([(tbl) => OrderingTerm.asc(tbl.rowOrder)]))
+              .get();
 
       final transactions = <AccountingTransactionEntity>[];
       for (final tx in txRows) {
@@ -297,17 +325,19 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   @override
   Future<AccountingDocumentEntity?> getDocumentById(String id) async {
-    final doc = await (_db.select(_db.accountingDocumentsTable)
-          ..where((tbl) => tbl.id.equals(id) & tbl.deletedAt.isNull())
-          ..limit(1))
-        .getSingleOrNull();
+    final doc =
+        await (_db.select(_db.accountingDocumentsTable)
+              ..where((tbl) => tbl.id.equals(id) & tbl.deletedAt.isNull())
+              ..limit(1))
+            .getSingleOrNull();
 
     if (doc == null) return null;
 
-    final txRows = await (_db.select(_db.accountingTransactionsTable)
-          ..where((tbl) => tbl.documentId.equals(doc.id))
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.rowOrder)]))
-        .get();
+    final txRows =
+        await (_db.select(_db.accountingTransactionsTable)
+              ..where((tbl) => tbl.documentId.equals(doc.id))
+              ..orderBy([(tbl) => OrderingTerm.asc(tbl.rowOrder)]))
+            .get();
 
     final transactions = <AccountingTransactionEntity>[];
     for (final tx in txRows) {
@@ -362,14 +392,18 @@ class AccountingRepositoryImpl implements AccountingRepository {
     // Integrity lock: only drafts may register unbalanced; official statuses
     // (approved/posted) must be balanced before they touch the ledger.
     if (document.status != DocumentStatus.draft && !document.isBalanced) {
-      throw StateError('سند ناموازنه قابل ثبت نیست. مجموع بدهکار و بستانکار برابر نیست.');
+      throw StateError(
+        'سند ناموازنه قابل ثبت نیست. مجموع بدهکار و بستانکار برابر نیست.',
+      );
     }
     await _ensurePeriodOpen(document.date);
 
     final afterJson = _documentSnapshotJson(docId, docNumber, document);
 
     await _db.transaction(() async {
-      await _db.into(_db.accountingDocumentsTable).insert(
+      await _db
+          .into(_db.accountingDocumentsTable)
+          .insert(
             AccountingDocumentsTableCompanion.insert(
               id: docId,
               number: docNumber,
@@ -389,7 +423,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
       int order = 1;
       for (final tx in document.transactions) {
         final txId = tx.id.isEmpty ? _uuid.v4() : tx.id;
-        await _db.into(_db.accountingTransactionsTable).insert(
+        await _db
+            .into(_db.accountingTransactionsTable)
+            .insert(
               AccountingTransactionsTableCompanion.insert(
                 id: txId,
                 documentId: docId,
@@ -435,20 +471,26 @@ class AccountingRepositoryImpl implements AccountingRepository {
       throw StateError('سند قطعی‌شده قابل ویرایش نیست.');
     }
     if (document.status != DocumentStatus.draft && !document.isBalanced) {
-      throw StateError('سند ناموازنه قابل تأیید نیست. مجموع بدهکار و بستانکار برابر نیست.');
+      throw StateError(
+        'سند ناموازنه قابل تأیید نیست. مجموع بدهکار و بستانکار برابر نیست.',
+      );
     }
     await _ensurePeriodOpen(document.date);
     final beforeJson = _documentSnapshotJson(
-      existing.id, existing.number, existing,
+      existing.id,
+      existing.number,
+      existing,
     );
     final afterJson = _documentSnapshotJson(
-      document.id, existing.number, document,
+      document.id,
+      existing.number,
+      document,
     );
 
     await _db.transaction(() async {
-      await (_db.update(_db.accountingDocumentsTable)
-            ..where((tbl) => tbl.id.equals(document.id)))
-          .write(
+      await (_db.update(
+        _db.accountingDocumentsTable,
+      )..where((tbl) => tbl.id.equals(document.id))).write(
         AccountingDocumentsTableCompanion(
           date: Value(document.date.millisecondsSinceEpoch),
           title: Value(document.title),
@@ -460,14 +502,16 @@ class AccountingRepositoryImpl implements AccountingRepository {
       );
 
       // Re-create transactions
-      await (_db.delete(_db.accountingTransactionsTable)
-            ..where((tbl) => tbl.documentId.equals(document.id)))
-          .go();
+      await (_db.delete(
+        _db.accountingTransactionsTable,
+      )..where((tbl) => tbl.documentId.equals(document.id))).go();
 
       int order = 1;
       for (final tx in document.transactions) {
         final txId = tx.id.isEmpty ? _uuid.v4() : tx.id;
-        await _db.into(_db.accountingTransactionsTable).insert(
+        await _db
+            .into(_db.accountingTransactionsTable)
+            .insert(
               AccountingTransactionsTableCompanion.insert(
                 id: txId,
                 documentId: document.id,
@@ -493,9 +537,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
       );
 
       if (details != null) {
-        await (_db.delete(_db.accountingDocumentDetailLinksTable)
-              ..where((tbl) => tbl.documentId.equals(document.id)))
-            .go();
+        await (_db.delete(
+          _db.accountingDocumentDetailLinksTable,
+        )..where((tbl) => tbl.documentId.equals(document.id))).go();
         if (details.isNotEmpty) {
           await _applyDetailTags(document.id, details, now);
         }
@@ -510,15 +554,17 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final doc = await getDocumentById(documentId);
     if (doc == null) throw StateError('سند حسابداری پیدا نشد.');
     if (!doc.isBalanced) {
-      throw StateError('سند متوازن نیست. مجموع بدهکار و بستانکار باید برابر باشد.');
+      throw StateError(
+        'سند متوازن نیست. مجموع بدهکار و بستانکار باید برابر باشد.',
+      );
     }
     await _ensurePeriodOpen(doc.date);
 
     final now = DateTime.now();
     final beforeJson = _documentSnapshotJson(doc.id, doc.number, doc);
-    await (_db.update(_db.accountingDocumentsTable)
-          ..where((tbl) => tbl.id.equals(documentId)))
-        .write(
+    await (_db.update(
+      _db.accountingDocumentsTable,
+    )..where((tbl) => tbl.id.equals(documentId))).write(
       AccountingDocumentsTableCompanion(
         status: const Value('approved'),
         approvedAt: Value(now.millisecondsSinceEpoch),
@@ -547,12 +593,16 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
     final now = DateTime.now();
     final beforeJson = _documentSnapshotJson(doc.id, doc.number, doc);
-    await (_db.update(_db.accountingDocumentsTable)
-          ..where((tbl) => tbl.id.equals(documentId)))
-        .write(AccountingDocumentsTableCompanion(deletedAt: Value(now.millisecondsSinceEpoch)));
-    await (_db.delete(_db.accountingDocumentDetailLinksTable)
-          ..where((tbl) => tbl.documentId.equals(documentId)))
-        .go();
+    await (_db.update(
+      _db.accountingDocumentsTable,
+    )..where((tbl) => tbl.id.equals(documentId))).write(
+      AccountingDocumentsTableCompanion(
+        deletedAt: Value(now.millisecondsSinceEpoch),
+      ),
+    );
+    await (_db.delete(
+      _db.accountingDocumentDetailLinksTable,
+    )..where((tbl) => tbl.documentId.equals(documentId))).go();
     await _insertAuditLog(
       action: AuditLogAction.delete,
       entityId: documentId,
@@ -635,8 +685,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
           final balanceSide = runningMinor > 0
               ? 'بد'
               : runningMinor < 0
-                  ? 'بس'
-                  : '-';
+              ? 'بس'
+              : '-';
 
           entries.add(
             LedgerEntry(
@@ -645,7 +695,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
               documentId: doc.id,
               documentNumber: doc.number,
               date: doc.date,
-              description: tx.description.isNotEmpty ? tx.description : doc.title,
+              description: tx.description.isNotEmpty
+                  ? tx.description
+                  : doc.title,
               debit: tx.debit,
               credit: tx.credit,
               runningBalance: Money.fromMinor(runningMinor.abs()),
@@ -659,8 +711,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final openingSide = openingMinor > 0
         ? 'بد'
         : openingMinor < 0
-            ? 'بس'
-            : '-';
+        ? 'بس'
+        : '-';
 
     return LedgerReport(
       subject: subject,
@@ -672,7 +724,10 @@ class AccountingRepositoryImpl implements AccountingRepository {
     );
   }
 
-  Set<String> _getDescendantSubjectIds(String parentId, List<AccountingSubjectEntity> all) {
+  Set<String> _getDescendantSubjectIds(
+    String parentId,
+    List<AccountingSubjectEntity> all,
+  ) {
     final set = <String>{};
     for (final s in all) {
       if (s.parentId == parentId) {
@@ -708,7 +763,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
       for (final doc in allDocs) {
         final isPrior = startDate != null && doc.date.isBefore(startDate);
-        final isInPeriod = (startDate == null || !doc.date.isBefore(startDate)) &&
+        final isInPeriod =
+            (startDate == null || !doc.date.isBefore(startDate)) &&
             (endDate == null || !doc.date.isAfter(endDate));
 
         for (final tx in doc.transactions) {
@@ -766,7 +822,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
     for (final entry in trialBalance.entries) {
       final code = entry.subject.code;
-      final balance = entry.netMinorUnits; // positive = debit, negative = credit
+      final balance =
+          entry.netMinorUnits; // positive = debit, negative = credit
 
       if (entry.subject.isPermanent) {
         if (code.startsWith('010') ||
@@ -827,7 +884,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
           netRevenueMinor += -balance; // credit is revenue
         } else if (code.startsWith('070') || code.startsWith('041')) {
           cogsMinor += balance; // debit is cogs
-        } else if (code.startsWith('040') || code.startsWith('061') || code.startsWith('066')) {
+        } else if (code.startsWith('040') ||
+            code.startsWith('061') ||
+            code.startsWith('066')) {
           expensesMinor += balance; // debit is expense
         }
       }
@@ -939,9 +998,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   @override
   Future<List<FiscalYearEntity>> getFiscalYears() async {
-    final rows = await (_db.select(_db.fiscalYearsTable)
-          ..orderBy([(tbl) => OrderingTerm.desc(tbl.yearNumber)]))
-        .get();
+    final rows = await (_db.select(
+      _db.fiscalYearsTable,
+    )..orderBy([(tbl) => OrderingTerm.desc(tbl.yearNumber)])).get();
     return rows
         .map(
           (r) => FiscalYearEntity(
@@ -963,10 +1022,11 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   @override
   Future<FiscalYearEntity?> getActiveFiscalYear() async {
-    final r = await (_db.select(_db.fiscalYearsTable)
-          ..where((tbl) => tbl.isActive.equals(true))
-          ..limit(1))
-        .getSingleOrNull();
+    final r =
+        await (_db.select(_db.fiscalYearsTable)
+              ..where((tbl) => tbl.isActive.equals(true))
+              ..limit(1))
+            .getSingleOrNull();
     if (r == null) return null;
     return FiscalYearEntity(
       id: r.id,
@@ -987,7 +1047,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
   Future<FiscalYearEntity> createFiscalYear(FiscalYearEntity fiscalYear) async {
     final id = fiscalYear.id.isEmpty ? _uuid.v4() : fiscalYear.id;
     final now = DateTime.now();
-    await _db.into(_db.fiscalYearsTable).insert(
+    await _db
+        .into(_db.fiscalYearsTable)
+        .insert(
           FiscalYearsTableCompanion.insert(
             id: id,
             title: fiscalYear.title,
@@ -1009,7 +1071,8 @@ class AccountingRepositoryImpl implements AccountingRepository {
       await _db
           .update(_db.fiscalYearsTable)
           .write(const FiscalYearsTableCompanion(isActive: Value(false)));
-      await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(id)))
+      await (_db.update(_db.fiscalYearsTable)
+            ..where((tbl) => tbl.id.equals(id)))
           .write(const FiscalYearsTableCompanion(isActive: Value(true)));
     });
   }
@@ -1017,8 +1080,14 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Future<void> closeFiscalYear(String id) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(id)))
-        .write(FiscalYearsTableCompanion(isClosed: const Value(true), updatedAt: Value(now)));
+    await (_db.update(
+      _db.fiscalYearsTable,
+    )..where((tbl) => tbl.id.equals(id))).write(
+      FiscalYearsTableCompanion(
+        isClosed: const Value(true),
+        updatedAt: Value(now),
+      ),
+    );
   }
 
   // ─── Phase 1: integrity, audit, floating details, fiscal close/open ───
@@ -1031,7 +1100,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
       if (fy.isClosed &&
           !date.isBefore(fy.startDate) &&
           !date.isAfter(fy.endDate.add(const Duration(days: 1)))) {
-        throw StateError('دوره مالی ${fy.title} بسته شده است و ثبت در آن مجاز نیست.');
+        throw StateError(
+          'دوره مالی ${fy.title} بسته شده است و ثبت در آن مجاز نیست.',
+        );
       }
     }
   }
@@ -1050,12 +1121,14 @@ class AccountingRepositoryImpl implements AccountingRepository {
       'totalDebitMinor': document.totalDebit.minorUnits,
       'totalCreditMinor': document.totalCredit.minorUnits,
       'lines': document.transactions
-          .map((t) => {
-                'subjectId': t.subjectId,
-                'debit': t.debit.minorUnits,
-                'credit': t.credit.minorUnits,
-                'description': t.description,
-              })
+          .map(
+            (t) => {
+              'subjectId': t.subjectId,
+              'debit': t.debit.minorUnits,
+              'credit': t.credit.minorUnits,
+              'description': t.description,
+            },
+          )
           .toList(),
     });
   }
@@ -1068,7 +1141,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     String? description,
     required DateTime at,
   }) async {
-    await _db.into(_db.accountingAuditLogsTable).insert(
+    await _db
+        .into(_db.accountingAuditLogsTable)
+        .insert(
           AccountingAuditLogsTableCompanion.insert(
             id: _uuid.v4(),
             entityType: 'document',
@@ -1089,7 +1164,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     DateTime now,
   ) async {
     for (final tag in tags) {
-      await _db.into(_db.accountingDocumentDetailLinksTable).insert(
+      await _db
+          .into(_db.accountingDocumentDetailLinksTable)
+          .insert(
             AccountingDocumentDetailLinksTableCompanion.insert(
               id: _uuid.v4(),
               documentId: documentId,
@@ -1104,9 +1181,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Stream<List<AccountingAuditLogEntity>> watchAuditLogs({int limit = 200}) {
     final query = _db.select(_db.accountingAuditLogsTable)
-      ..orderBy([
-          (tbl) => OrderingTerm.desc(tbl.performedAt),
-        ])
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.performedAt)])
       ..limit(limit);
     return query.watch().map((rows) {
       return rows.map((r) {
@@ -1130,9 +1205,10 @@ class AccountingRepositoryImpl implements AccountingRepository {
     required String entityId,
   }) {
     final query = _db.select(_db.accountingAuditLogsTable)
-      ..where((tbl) =>
-          tbl.entityType.equals(entityType) &
-          tbl.entityId.equals(entityId))
+      ..where(
+        (tbl) =>
+            tbl.entityType.equals(entityType) & tbl.entityId.equals(entityId),
+      )
       ..orderBy([(tbl) => OrderingTerm.desc(tbl.performedAt)]);
     return query.watch().map((rows) {
       return rows.map((r) {
@@ -1156,15 +1232,17 @@ class AccountingRepositoryImpl implements AccountingRepository {
     required String code,
   }) async {
     // Floating detail dimension limit: max 10 ledgers.
-    final existing = await (_db.select(_db.accountingDetailLedgersTable)
-          ..where((tbl) => tbl.deletedAt.isNull()))
-        .get();
+    final existing = await (_db.select(
+      _db.accountingDetailLedgersTable,
+    )..where((tbl) => tbl.deletedAt.isNull())).get();
     if (existing.length >= 10) {
       throw StateError('حداکثر ۱۰ تفصیلی شناور قابل تعریف است.');
     }
     final id = _uuid.v4();
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _db.into(_db.accountingDetailLedgersTable).insert(
+    await _db
+        .into(_db.accountingDetailLedgersTable)
+        .insert(
           AccountingDetailLedgersTableCompanion.insert(
             id: id,
             title: title,
@@ -1183,7 +1261,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     bool? isActive,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.accountingDetailLedgersTable)..where((tbl) => tbl.id.equals(id))).write(
+    await (_db.update(
+      _db.accountingDetailLedgersTable,
+    )..where((tbl) => tbl.id.equals(id))).write(
       AccountingDetailLedgersTableCompanion(
         title: Value(title),
         isActive: isActive != null ? Value(isActive) : const Value.absent(),
@@ -1195,43 +1275,50 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Future<void> deleteDetailLedger(String id) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.accountingDetailLedgersTable)..where((tbl) => tbl.id.equals(id))).write(
-      AccountingDetailLedgersTableCompanion(deletedAt: Value(now)),
-    );
-    await (_db.update(_db.accountingDetailValuesTable)..where((tbl) => tbl.ledgerId.equals(id))).write(
-      AccountingDetailValuesTableCompanion(deletedAt: Value(now)),
-    );
+    await (_db.update(_db.accountingDetailLedgersTable)
+          ..where((tbl) => tbl.id.equals(id)))
+        .write(AccountingDetailLedgersTableCompanion(deletedAt: Value(now)));
+    await (_db.update(_db.accountingDetailValuesTable)
+          ..where((tbl) => tbl.ledgerId.equals(id)))
+        .write(AccountingDetailValuesTableCompanion(deletedAt: Value(now)));
   }
 
   @override
   Future<List<DetailLedgerWithValues>> getDetailLedgers() async {
-    final ledgers = await (_db.select(_db.accountingDetailLedgersTable)
-          ..where((tbl) => tbl.deletedAt.isNull())
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.sortOrder)]))
-        .get();
+    final ledgers =
+        await (_db.select(_db.accountingDetailLedgersTable)
+              ..where((tbl) => tbl.deletedAt.isNull())
+              ..orderBy([(tbl) => OrderingTerm.asc(tbl.sortOrder)]))
+            .get();
     final result = <DetailLedgerWithValues>[];
     for (final l in ledgers) {
-      final values = await (_db.select(_db.accountingDetailValuesTable)
-            ..where((tbl) => tbl.ledgerId.equals(l.id) & tbl.deletedAt.isNull()))
-          .get();
-      result.add(DetailLedgerWithValues(
-        ledger: DetailLedgerEntity(
-          id: l.id,
-          title: l.title,
-          code: l.code,
-          isActive: l.isActive,
-          sortOrder: l.sortOrder,
-        ),
-        values: values
-            .map((v) => DetailValueEntity(
+      final values =
+          await (_db.select(_db.accountingDetailValuesTable)..where(
+                (tbl) => tbl.ledgerId.equals(l.id) & tbl.deletedAt.isNull(),
+              ))
+              .get();
+      result.add(
+        DetailLedgerWithValues(
+          ledger: DetailLedgerEntity(
+            id: l.id,
+            title: l.title,
+            code: l.code,
+            isActive: l.isActive,
+            sortOrder: l.sortOrder,
+          ),
+          values: values
+              .map(
+                (v) => DetailValueEntity(
                   id: v.id,
                   ledgerId: v.ledgerId,
                   title: v.title,
                   code: v.code,
                   isActive: v.isActive,
-                ))
-            .toList(),
-      ));
+                ),
+              )
+              .toList(),
+        ),
+      );
     }
     return result;
   }
@@ -1244,7 +1331,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }) async {
     final id = _uuid.v4();
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _db.into(_db.accountingDetailValuesTable).insert(
+    await _db
+        .into(_db.accountingDetailValuesTable)
+        .insert(
           AccountingDetailValuesTableCompanion.insert(
             id: id,
             ledgerId: ledgerId,
@@ -1260,9 +1349,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
   @override
   Future<void> deleteDetailValue(String id) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.accountingDetailValuesTable)..where((tbl) => tbl.id.equals(id))).write(
-      AccountingDetailValuesTableCompanion(deletedAt: Value(now)),
-    );
+    await (_db.update(_db.accountingDetailValuesTable)
+          ..where((tbl) => tbl.id.equals(id)))
+        .write(AccountingDetailValuesTableCompanion(deletedAt: Value(now)));
   }
 
   @override
@@ -1272,18 +1361,18 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }) async {
     final now = DateTime.now();
     await _db.transaction(() async {
-      await (_db.delete(_db.accountingDocumentDetailLinksTable)
-            ..where((tbl) => tbl.documentId.equals(documentId)))
-          .go();
+      await (_db.delete(
+        _db.accountingDocumentDetailLinksTable,
+      )..where((tbl) => tbl.documentId.equals(documentId))).go();
       await _applyDetailTags(documentId, tags, now);
     });
   }
 
   @override
   Future<List<DocumentDetailTag>> getDocumentDetails(String documentId) async {
-    final rows = await (_db.select(_db.accountingDocumentDetailLinksTable)
-          ..where((tbl) => tbl.documentId.equals(documentId)))
-        .get();
+    final rows = await (_db.select(
+      _db.accountingDocumentDetailLinksTable,
+    )..where((tbl) => tbl.documentId.equals(documentId))).get();
     return rows
         .map((r) => DocumentDetailTag(ledgerId: r.ledgerId, valueId: r.valueId))
         .toList();
@@ -1308,21 +1397,27 @@ class AccountingRepositoryImpl implements AccountingRepository {
     if (value == null) throw StateError('مقدار تفصیلی پیدا نشد.');
 
     // Approved documents tagged with this value, chronological.
-    final links = await (_db.select(_db.accountingDocumentDetailLinksTable).join([
-          innerJoin(
-            _db.accountingDocumentsTable,
-            _db.accountingDocumentsTable.id
-                .equalsExp(_db.accountingDocumentDetailLinksTable.documentId),
-          ),
-        ])
-          ..where(_db.accountingDocumentDetailLinksTable.valueId.equals(valueId) &
-              _db.accountingDocumentDetailLinksTable.ledgerId.equals(ledgerId) &
-              _db.accountingDocumentsTable.status.equals('approved') &
-              _db.accountingDocumentsTable.deletedAt.isNull()))
-        .get();
+    final links =
+        await (_db.select(_db.accountingDocumentDetailLinksTable).join([
+              innerJoin(
+                _db.accountingDocumentsTable,
+                _db.accountingDocumentsTable.id.equalsExp(
+                  _db.accountingDocumentDetailLinksTable.documentId,
+                ),
+              ),
+            ])..where(
+              _db.accountingDocumentDetailLinksTable.valueId.equals(valueId) &
+                  _db.accountingDocumentDetailLinksTable.ledgerId.equals(
+                    ledgerId,
+                  ) &
+                  _db.accountingDocumentsTable.status.equals('approved') &
+                  _db.accountingDocumentsTable.deletedAt.isNull(),
+            ))
+            .get();
 
-    final docIds = links.map((l) => l.readTable(_db.accountingDocumentsTable)).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final docIds =
+        links.map((l) => l.readTable(_db.accountingDocumentsTable)).toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
 
     final rows = <DetailReportRow>[];
     int running = 0;
@@ -1330,32 +1425,37 @@ class AccountingRepositoryImpl implements AccountingRepository {
     int totalCredit = 0;
 
     for (final doc in docIds) {
-      if (startDate != null && DateTime.fromMillisecondsSinceEpoch(doc.date).isBefore(startDate)) {
+      if (startDate != null &&
+          DateTime.fromMillisecondsSinceEpoch(doc.date).isBefore(startDate)) {
         continue;
       }
-      if (endDate != null && DateTime.fromMillisecondsSinceEpoch(doc.date).isAfter(endDate)) {
+      if (endDate != null &&
+          DateTime.fromMillisecondsSinceEpoch(doc.date).isAfter(endDate)) {
         continue;
       }
-      final txs = await (_db.select(_db.accountingTransactionsTable)
-            ..where((tbl) =>
-                tbl.documentId.equals(doc.id) & tbl.deletedAt.isNull()))
-          .get();
+      final txs =
+          await (_db.select(_db.accountingTransactionsTable)..where(
+                (tbl) => tbl.documentId.equals(doc.id) & tbl.deletedAt.isNull(),
+              ))
+              .get();
       for (final tx in txs) {
         if (subjectId != null && tx.subjectId != subjectId) continue;
         final subject = await getSubjectById(tx.subjectId);
         running += tx.debitMinorUnits - tx.creditMinorUnits;
         totalDebit += tx.debitMinorUnits;
         totalCredit += tx.creditMinorUnits;
-        rows.add(DetailReportRow(
-          date: DateTime.fromMillisecondsSinceEpoch(doc.date),
-          documentNumber: doc.number,
-          documentTitle: doc.title,
-          subjectName: subject?.name ?? tx.subjectId,
-          description: tx.description,
-          debitMinorUnits: tx.debitMinorUnits,
-          creditMinorUnits: tx.creditMinorUnits,
-          runningBalanceMinorUnits: running,
-        ));
+        rows.add(
+          DetailReportRow(
+            date: DateTime.fromMillisecondsSinceEpoch(doc.date),
+            documentNumber: doc.number,
+            documentTitle: doc.title,
+            subjectName: subject?.name ?? tx.subjectId,
+            description: tx.description,
+            debitMinorUnits: tx.debitMinorUnits,
+            creditMinorUnits: tx.creditMinorUnits,
+            runningBalanceMinorUnits: running,
+          ),
+        );
       }
     }
 
@@ -1369,8 +1469,12 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(String fiscalYearId) async {
-    final fy = (await getFiscalYears()).where((f) => f.id == fiscalYearId).firstOrNull;
+  Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(
+    String fiscalYearId,
+  ) async {
+    final fy = (await getFiscalYears())
+        .where((f) => f.id == fiscalYearId)
+        .firstOrNull;
     if (fy == null) throw StateError('سال مالی پیدا نشد.');
     if (fy.isClosed) throw StateError('این سال مالی قبلاً بسته شده است.');
 
@@ -1411,34 +1515,38 @@ class AccountingRepositoryImpl implements AccountingRepository {
       netMinor += net;
       // Closing a debit balance (expense): credit the account. Closing a
       // credit balance (revenue): debit the account.
-      rows.add(AccountingTransactionEntity(
-        id: _uuid.v4(),
-        documentId: closingDoc.id,
-        subjectId: subject.id,
-        debit: Money.fromMinor(net > 0 ? net : 0),
-        credit: Money.fromMinor(net < 0 ? -net : 0),
-        description: 'بستن حساب ${subject.name}',
-        rowOrder: rows.length + 1,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      rows.add(
+        AccountingTransactionEntity(
+          id: _uuid.v4(),
+          documentId: closingDoc.id,
+          subjectId: subject.id,
+          debit: Money.fromMinor(net > 0 ? net : 0),
+          credit: Money.fromMinor(net < 0 ? -net : 0),
+          description: 'بستن حساب ${subject.name}',
+          rowOrder: rows.length + 1,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
     }
 
     // Accumulated profit/loss lands on equity (030).
     final plSubject =
         await getSubjectByCode('030001') ?? await getSubjectByCode('030');
     if (plSubject != null && netMinor != 0) {
-      rows.add(AccountingTransactionEntity(
-        id: _uuid.v4(),
-        documentId: closingDoc.id,
-        subjectId: plSubject.id,
-        debit: Money.fromMinor(netMinor > 0 ? netMinor : 0),
-        credit: Money.fromMinor(netMinor < 0 ? -netMinor : 0),
-        description: 'سود (زیان) ویژه دوره',
-        rowOrder: rows.length + 1,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      rows.add(
+        AccountingTransactionEntity(
+          id: _uuid.v4(),
+          documentId: closingDoc.id,
+          subjectId: plSubject.id,
+          debit: Money.fromMinor(netMinor > 0 ? netMinor : 0),
+          credit: Money.fromMinor(netMinor < 0 ? -netMinor : 0),
+          description: 'سود (زیان) ویژه دوره',
+          rowOrder: rows.length + 1,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
     }
 
     final balancedClosing = closingDoc.copyWith(transactions: rows);
@@ -1447,8 +1555,11 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
     // Create the next fiscal year and its opening voucher.
     final nextStart = fy.endDate.add(const Duration(days: 1));
-    final nextEnd = DateTime(nextStart.year + 1, nextStart.month, nextStart.day)
-        .subtract(const Duration(days: 1));
+    final nextEnd = DateTime(
+      nextStart.year + 1,
+      nextStart.month,
+      nextStart.day,
+    ).subtract(const Duration(days: 1));
     final nextId = _uuid.v4();
     final nextYear = FiscalYearEntity(
       id: nextId,
@@ -1472,17 +1583,19 @@ class AccountingRepositoryImpl implements AccountingRepository {
       );
       final net = report.closingBalance.minorUnits;
       if (net == 0) continue;
-      openingRows.add(AccountingTransactionEntity(
-        id: _uuid.v4(),
-        documentId: 'opening-$nextId',
-        subjectId: subject.id,
-        debit: Money.fromMinor(net > 0 ? net : 0),
-        credit: Money.fromMinor(net < 0 ? -net : 0),
-        description: 'مانده افتتاحیه ${subject.name}',
-        rowOrder: openingRows.length + 1,
-        createdAt: now,
-        updatedAt: now,
-      ));
+      openingRows.add(
+        AccountingTransactionEntity(
+          id: _uuid.v4(),
+          documentId: 'opening-$nextId',
+          subjectId: subject.id,
+          debit: Money.fromMinor(net > 0 ? net : 0),
+          credit: Money.fromMinor(net < 0 ? -net : 0),
+          description: 'مانده افتتاحیه ${subject.name}',
+          rowOrder: openingRows.length + 1,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
     }
 
     final openingDoc = AccountingDocumentEntity(
@@ -1504,7 +1617,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     await approveDocument(openingDoc.id);
 
     // Mark the old year closed with its closing document, activate the new one.
-    await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(fiscalYearId))).write(
+    await (_db.update(
+      _db.fiscalYearsTable,
+    )..where((tbl) => tbl.id.equals(fiscalYearId))).write(
       FiscalYearsTableCompanion(
         isClosed: const Value(true),
         isActive: const Value(false),
@@ -1513,7 +1628,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
       ),
     );
     await setActiveFiscalYear(nextId);
-    await (_db.update(_db.fiscalYearsTable)..where((tbl) => tbl.id.equals(nextId))).write(
+    await (_db.update(
+      _db.fiscalYearsTable,
+    )..where((tbl) => tbl.id.equals(nextId))).write(
       FiscalYearsTableCompanion(
         openingDocumentId: Value(openingDoc.id),
         updatedAt: Value(now.millisecondsSinceEpoch),

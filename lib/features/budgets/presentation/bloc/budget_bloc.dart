@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -56,10 +57,7 @@ final class BudgetLoaded extends BudgetState {
   final List<BudgetEntity> budgets;
   final BudgetHealthResult health;
 
-  const BudgetLoaded({
-    required this.budgets,
-    required this.health,
-  });
+  const BudgetLoaded({required this.budgets, required this.health});
 
   @override
   List<Object?> get props => [budgets, health];
@@ -87,21 +85,23 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
   void _onWatchStarted(WatchBudgetsStarted event, Emitter<BudgetState> emit) {
     emit(BudgetLoading());
     _subscription?.cancel();
-    _subscription = _repository.watchActiveBudgets(forDate: event.forDate).listen(
-      (budgets) => add(_BudgetsUpdated(budgets)),
-      onError: (e) => emit(BudgetFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchActiveBudgets(forDate: event.forDate)
+        .listen(
+          (budgets) => add(_BudgetsUpdated(budgets)),
+          onError: (e) => emit(BudgetFailure(e.toString())),
+        );
   }
 
   void _onBudgetsUpdated(_BudgetsUpdated event, Emitter<BudgetState> emit) {
     final health = BudgetAdherenceCalculator.calculate(event.budgets);
-    emit(BudgetLoaded(
-      budgets: event.budgets,
-      health: health,
-    ));
+    emit(BudgetLoaded(budgets: event.budgets, health: health));
   }
 
-  Future<void> _onCreateSubmitted(BudgetCreateSubmitted event, Emitter<BudgetState> emit) async {
+  Future<void> _onCreateSubmitted(
+    BudgetCreateSubmitted event,
+    Emitter<BudgetState> emit,
+  ) async {
     final result = await _repository.createBudget(event.budget);
     result.fold(
       onSuccess: (_) {},
@@ -109,7 +109,10 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     );
   }
 
-  Future<void> _onDeleteSubmitted(BudgetDeleteSubmitted event, Emitter<BudgetState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    BudgetDeleteSubmitted event,
+    Emitter<BudgetState> emit,
+  ) async {
     final result = await _repository.deleteBudget(event.id);
     result.fold(
       onSuccess: (_) {},

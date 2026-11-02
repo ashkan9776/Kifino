@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 import 'accounting_subject_entity.dart';
 
@@ -41,48 +42,57 @@ class BalanceSheetReport extends Equatable {
   });
 
   Money get totalCurrentAssets => Money.fromMinor(
-        currentAssets.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    currentAssets.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get totalNonCurrentAssets => Money.fromMinor(
-        nonCurrentAssets.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    nonCurrentAssets.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
-  Money get totalAssets =>
-      Money.fromMinor(totalCurrentAssets.minorUnits + totalNonCurrentAssets.minorUnits);
+  Money get totalAssets => Money.fromMinor(
+    totalCurrentAssets.minorUnits + totalNonCurrentAssets.minorUnits,
+  );
 
   Money get totalCurrentLiabilities => Money.fromMinor(
-        currentLiabilities.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    currentLiabilities.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get totalNonCurrentLiabilities => Money.fromMinor(
-        nonCurrentLiabilities.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    nonCurrentLiabilities.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get totalLiabilities => Money.fromMinor(
-        totalCurrentLiabilities.minorUnits + totalNonCurrentLiabilities.minorUnits,
-      );
+    totalCurrentLiabilities.minorUnits + totalNonCurrentLiabilities.minorUnits,
+  );
 
   Money get totalEquity => Money.fromMinor(
-        equityItems.fold(0, (sum, item) => sum + (item.isNegative ? -item.amount.minorUnits : item.amount.minorUnits)) +
-            netIncomeForPeriod.minorUnits,
-      );
+    equityItems.fold(
+          0,
+          (sum, item) =>
+              sum +
+              (item.isNegative
+                  ? -item.amount.minorUnits
+                  : item.amount.minorUnits),
+        ) +
+        netIncomeForPeriod.minorUnits,
+  );
 
   Money get totalLiabilitiesAndEquity =>
       Money.fromMinor(totalLiabilities.minorUnits + totalEquity.minorUnits);
 
-  bool get isBalanced => totalAssets.minorUnits == totalLiabilitiesAndEquity.minorUnits;
+  bool get isBalanced =>
+      totalAssets.minorUnits == totalLiabilitiesAndEquity.minorUnits;
 
   @override
   List<Object?> get props => [
-        asOfDate,
-        currentAssets,
-        nonCurrentAssets,
-        currentLiabilities,
-        nonCurrentLiabilities,
-        equityItems,
-        netIncomeForPeriod,
-      ];
+    asOfDate,
+    currentAssets,
+    nonCurrentAssets,
+    currentLiabilities,
+    nonCurrentLiabilities,
+    equityItems,
+    netIncomeForPeriod,
+  ];
 }
 
 class IncomeStatementReport extends Equatable {
@@ -107,53 +117,55 @@ class IncomeStatementReport extends Equatable {
   });
 
   Money get totalGrossRevenue => Money.fromMinor(
-        revenues.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    revenues.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get totalSalesDeductions => Money.fromMinor(
-        salesDiscountsReturns.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    salesDiscountsReturns.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
-  Money get netRevenue =>
-      Money.fromMinor(totalGrossRevenue.minorUnits - totalSalesDeductions.minorUnits);
+  Money get netRevenue => Money.fromMinor(
+    totalGrossRevenue.minorUnits - totalSalesDeductions.minorUnits,
+  );
 
   Money get totalCogs => Money.fromMinor(
-        cogsItems.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    cogsItems.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get grossProfit =>
       Money.fromMinor(netRevenue.minorUnits - totalCogs.minorUnits);
 
   Money get totalOperatingExpenses => Money.fromMinor(
-        operatingExpenses.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    operatingExpenses.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
-  Money get operatingProfit =>
-      Money.fromMinor(grossProfit.minorUnits - totalOperatingExpenses.minorUnits);
+  Money get operatingProfit => Money.fromMinor(
+    grossProfit.minorUnits - totalOperatingExpenses.minorUnits,
+  );
 
   Money get totalOtherIncome => Money.fromMinor(
-        otherIncomes.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    otherIncomes.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get totalOtherExpenses => Money.fromMinor(
-        otherExpenses.fold(0, (sum, item) => sum + item.amount.minorUnits),
-      );
+    otherExpenses.fold(0, (sum, item) => sum + item.amount.minorUnits),
+  );
 
   Money get netProfit => Money.fromMinor(
-        operatingProfit.minorUnits +
-            totalOtherIncome.minorUnits -
-            totalOtherExpenses.minorUnits,
-      );
+    operatingProfit.minorUnits +
+        totalOtherIncome.minorUnits -
+        totalOtherExpenses.minorUnits,
+  );
 
   @override
   List<Object?> get props => [
-        startDate,
-        endDate,
-        revenues,
-        salesDiscountsReturns,
-        cogsItems,
-        operatingExpenses,
-        otherIncomes,
-        otherExpenses,
-      ];
+    startDate,
+    endDate,
+    revenues,
+    salesDiscountsReturns,
+    cogsItems,
+    operatingExpenses,
+    otherIncomes,
+    otherExpenses,
+  ];
 }

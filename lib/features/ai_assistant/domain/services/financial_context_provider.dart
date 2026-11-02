@@ -57,7 +57,8 @@ class FinancialContextProvider {
     final categoryTotals = <String, int>{};
 
     for (final tx in transactions) {
-      if (tx.date.isAfter(thirtyDaysAgo) && tx.amount.isCompatibleWith(currency)) {
+      if (tx.date.isAfter(thirtyDaysAgo) &&
+          tx.amount.isCompatibleWith(currency)) {
         final minor = tx.amount.normalizeTo(currency).minorUnits;
         if (tx.type == TransactionType.income) {
           monthlyIncomeMinor += minor;
@@ -73,7 +74,9 @@ class FinancialContextProvider {
     // 3. Savings Rate
     double savingsRate = 0.0;
     if (monthlyIncomeMinor > 0) {
-      savingsRate = ((monthlyIncomeMinor - monthlyExpenseMinor) / monthlyIncomeMinor) * 100.0;
+      savingsRate =
+          ((monthlyIncomeMinor - monthlyExpenseMinor) / monthlyIncomeMinor) *
+          100.0;
     }
 
     // 4. Runway

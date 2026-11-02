@@ -26,13 +26,21 @@ class PersianNlpTransactionParser {
     // 1. Detect which currency the user spoke (default: colloquial Toman).
     final lower = normalizedDigits.toLowerCase();
     _SpokenCurrency spoken = _SpokenCurrency.toman;
-    if (lower.contains('تومان') || lower.contains('تومن') || lower.contains('toman')) {
+    if (lower.contains('تومان') ||
+        lower.contains('تومن') ||
+        lower.contains('toman')) {
       spoken = _SpokenCurrency.toman;
-    } else if (lower.contains('ریال') || lower.contains('rial') || lower.contains('irr')) {
+    } else if (lower.contains('ریال') ||
+        lower.contains('rial') ||
+        lower.contains('irr')) {
       spoken = _SpokenCurrency.rial;
-    } else if (lower.contains('دلار') || lower.contains('usd') || lower.contains(r'$')) {
+    } else if (lower.contains('دلار') ||
+        lower.contains('usd') ||
+        lower.contains(r'$')) {
       spoken = _SpokenCurrency.usd;
-    } else if (lower.contains('یورو') || lower.contains('eur') || lower.contains('€')) {
+    } else if (lower.contains('یورو') ||
+        lower.contains('eur') ||
+        lower.contains('€')) {
       spoken = _SpokenCurrency.eur;
     }
 
@@ -48,9 +56,13 @@ class PersianNlpTransactionParser {
     if (baseNumber <= 0) return null;
 
     double multiplier = 1.0;
-    if (lower.contains('میلیون') || lower.contains('ملیون') || lower.contains('million')) {
+    if (lower.contains('میلیون') ||
+        lower.contains('ملیون') ||
+        lower.contains('million')) {
       multiplier = 1000000.0;
-    } else if (lower.contains('هزار') || lower.contains('هزارتومن') || lower.contains('thousand')) {
+    } else if (lower.contains('هزار') ||
+        lower.contains('هزارتومن') ||
+        lower.contains('thousand')) {
       multiplier = 1000.0;
     } else if (spoken == _SpokenCurrency.toman &&
         baseNumber <= 500 &&
@@ -95,16 +107,34 @@ class PersianNlpTransactionParser {
     // 5. Detect transaction type.
     TransactionType type = TransactionType.expense;
     const incomeKeywords = [
-      'حقوق', 'واریز', 'درآمد', 'درامد', 'پاداش', 'سود', 'فروش',
-      'طلب', 'بستانکار', 'salary', 'income', 'deposit', 'earned', 'bonus',
+      'حقوق',
+      'واریز',
+      'درآمد',
+      'درامد',
+      'پاداش',
+      'سود',
+      'فروش',
+      'طلب',
+      'بستانکار',
+      'salary',
+      'income',
+      'deposit',
+      'earned',
+      'bonus',
     ];
     const transferKeywords = [
-      'انتقال', 'کارت به کارت', 'کارت‌به‌کارت', 'جابجایی', 'واریز به حساب', 'transfer',
+      'انتقال',
+      'کارت به کارت',
+      'کارت‌به‌کارت',
+      'جابجایی',
+      'واریز به حساب',
+      'transfer',
     ];
 
     // "فروشگاه" (shop) must not read as "فروش" (a sale → income).
-    final incomeHit = incomeKeywords.any((k) =>
-        lower.contains(k) && !(k == 'فروش' && lower.contains('فروشگاه')));
+    final incomeHit = incomeKeywords.any(
+      (k) => lower.contains(k) && !(k == 'فروش' && lower.contains('فروشگاه')),
+    );
     if (incomeHit) {
       type = TransactionType.income;
     } else if (transferKeywords.any((k) => lower.contains(k))) {
@@ -167,8 +197,18 @@ class PersianNlpTransactionParser {
     // 7. Clean description (strip currency & magnitude words and any number).
     String description = cleanInput;
     final wordsToRemove = [
-      'تومان', 'تومن', 'ریال', 'میلیون', 'ملیون', 'هزار',
-      'دلار', 'یورو', 'usd', 'eur', 'toman', 'rial',
+      'تومان',
+      'تومن',
+      'ریال',
+      'میلیون',
+      'ملیون',
+      'هزار',
+      'دلار',
+      'یورو',
+      'usd',
+      'eur',
+      'toman',
+      'rial',
     ];
     for (final w in wordsToRemove) {
       description = description.replaceAll(w, '');

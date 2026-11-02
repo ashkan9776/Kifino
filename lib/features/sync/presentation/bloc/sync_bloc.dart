@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,8 +23,8 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
     required this._syncRepository,
     required this._syncEngine,
     Connectivity? connectivity,
-  })  : _connectivity = connectivity ?? Connectivity(),
-        super(const SyncState()) {
+  }) : _connectivity = connectivity ?? Connectivity(),
+       super(const SyncState()) {
     on<SyncInitRequested>(_onInitRequested);
     on<SyncTriggered>(_onSyncTriggered);
     on<SyncRetryFailedTriggered>(_onRetryFailedTriggered);
@@ -104,12 +105,14 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
 
     final result = await _syncEngine.runSyncCycle();
 
-    emit(state.copyWith(
-      isSyncing: false,
-      lastSyncTime: DateTime.now(),
-      lastSyncCount: result.syncedCount,
-      errorMessage: result.error,
-    ));
+    emit(
+      state.copyWith(
+        isSyncing: false,
+        lastSyncTime: DateTime.now(),
+        lastSyncCount: result.syncedCount,
+        errorMessage: result.error,
+      ),
+    );
   }
 
   Future<void> _onRetryFailedTriggered(
@@ -119,12 +122,14 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
     emit(state.copyWith(isSyncing: true));
     await _syncRepository.retryAllFailed();
     final result = await _syncEngine.runSyncCycle();
-    emit(state.copyWith(
-      isSyncing: false,
-      lastSyncTime: DateTime.now(),
-      lastSyncCount: result.syncedCount,
-      errorMessage: result.error,
-    ));
+    emit(
+      state.copyWith(
+        isSyncing: false,
+        lastSyncTime: DateTime.now(),
+        lastSyncCount: result.syncedCount,
+        errorMessage: result.error,
+      ),
+    );
   }
 
   Future<void> _onClearQueueTriggered(

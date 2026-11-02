@@ -23,7 +23,16 @@ class AccountingExportService {
       endDate: endDate,
     );
     final rows = <List<Object>>[
-      ['شماره سند', 'تاریخ', 'عنوان سند', 'کد حساب', 'نام حساب', 'شرح', 'بدهکار', 'بستانکار'],
+      [
+        'شماره سند',
+        'تاریخ',
+        'عنوان سند',
+        'کد حساب',
+        'نام حساب',
+        'شرح',
+        'بدهکار',
+        'بستانکار',
+      ],
     ];
     for (final doc in docs) {
       for (final tx in doc.transactions) {
@@ -75,9 +84,17 @@ class AccountingExportService {
       ]);
     }
     final closing = report.closingBalance;
-    rows.add(['', '', 'مانده پایان دوره', closing.minorUnits >= 0 ? closing.minorUnits : 0,
-        closing.minorUnits < 0 ? -closing.minorUnits : 0, closing.minorUnits]);
-    return _save('ledger', [XlsxSheetData('دفتر کل ${report.subject.name}', rows)]);
+    rows.add([
+      '',
+      '',
+      'مانده پایان دوره',
+      closing.minorUnits >= 0 ? closing.minorUnits : 0,
+      closing.minorUnits < 0 ? -closing.minorUnits : 0,
+      closing.minorUnits,
+    ]);
+    return _save('ledger', [
+      XlsxSheetData('دفتر کل ${report.subject.name}', rows),
+    ]);
   }
 
   Future<String> exportTrialBalance({
@@ -91,7 +108,16 @@ class AccountingExportService {
       endDate: endDate,
     );
     final rows = <List<Object>>[
-      ['کد', 'حساب', 'بد opens', 'بس opens', 'گردش بد', 'گردش بس', 'مانده بد', 'مانده بس'],
+      [
+        'کد',
+        'حساب',
+        'بد opens',
+        'بس opens',
+        'گردش بد',
+        'گردش بس',
+        'مانده بد',
+        'مانده بس',
+      ],
     ];
     for (final e in report.entries) {
       rows.add([
@@ -121,7 +147,9 @@ class AccountingExportService {
 
   Future<String> exportBalanceSheet({required DateTime asOfDate}) async {
     final report = await _repository.getBalanceSheetReport(asOfDate: asOfDate);
-    final rows = <List<Object>>[['گروه', 'حساب', 'مانده']];
+    final rows = <List<Object>>[
+      ['گروه', 'حساب', 'مانده'],
+    ];
     void addGroup(String title, List items) {
       for (final item in items) {
         rows.add([title, item.title, item.amount.minorUnits]);
@@ -145,7 +173,9 @@ class AccountingExportService {
       startDate: startDate,
       endDate: endDate,
     );
-    final rows = <List<Object>>[['گروه', 'حساب', 'مبلغ']];
+    final rows = <List<Object>>[
+      ['گروه', 'حساب', 'مبلغ'],
+    ];
     for (final item in report.revenues) {
       rows.add(['درآمد', item.title, item.amount.minorUnits]);
     }
@@ -174,8 +204,10 @@ class AccountingExportService {
     final exportDir = Directory(p.join(dir.path, 'exports'));
     if (!await exportDir.exists()) await exportDir.create(recursive: true);
 
-    final stamp = AppDateFormatter.formatShort(DateTime.now(), locale: 'fa')
-        .replaceAll(RegExp(r'[^\u0600-\u06FF\w]'), '-');
+    final stamp = AppDateFormatter.formatShort(
+      DateTime.now(),
+      locale: 'fa',
+    ).replaceAll(RegExp(r'[^\u0600-\u06FF\w]'), '-');
     final filePath = p.join(exportDir.path, 'kifino-$baseName-$stamp.xlsx');
     await File(filePath).writeAsBytes(bytes, flush: true);
     return filePath;

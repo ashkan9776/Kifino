@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -76,7 +77,12 @@ final class DebtLoaded extends DebtState {
   });
 
   @override
-  List<Object?> get props => [debts, totalDebtRemaining, totalReceivableRemaining, netBalance];
+  List<Object?> get props => [
+    debts,
+    totalDebtRemaining,
+    totalReceivableRemaining,
+    netBalance,
+  ];
 }
 
 final class DebtFailure extends DebtState {
@@ -103,10 +109,12 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
   void _onWatchStarted(WatchDebtsStarted event, Emitter<DebtState> emit) {
     emit(DebtLoading());
     _subscription?.cancel();
-    _subscription = _repository.watchDebts(type: event.type).listen(
-      (debts) => add(_DebtsUpdated(debts)),
-      onError: (e) => emit(DebtFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchDebts(type: event.type)
+        .listen(
+          (debts) => add(_DebtsUpdated(debts)),
+          onError: (e) => emit(DebtFailure(e.toString())),
+        );
   }
 
   void _onDebtsUpdated(_DebtsUpdated event, Emitter<DebtState> emit) {
@@ -127,15 +135,20 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     final totalReceivable = Money.fromMinor(totalReceivableMinor, currency);
     final net = totalReceivable - totalDebt;
 
-    emit(DebtLoaded(
-      debts: event.debts,
-      totalDebtRemaining: totalDebt,
-      totalReceivableRemaining: totalReceivable,
-      netBalance: net,
-    ));
+    emit(
+      DebtLoaded(
+        debts: event.debts,
+        totalDebtRemaining: totalDebt,
+        totalReceivableRemaining: totalReceivable,
+        netBalance: net,
+      ),
+    );
   }
 
-  Future<void> _onCreateSubmitted(DebtCreateSubmitted event, Emitter<DebtState> emit) async {
+  Future<void> _onCreateSubmitted(
+    DebtCreateSubmitted event,
+    Emitter<DebtState> emit,
+  ) async {
     final result = await _repository.createDebt(event.debt);
     result.fold(
       onSuccess: (_) => _scheduleDueReminder(event.debt),
@@ -150,15 +163,20 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     if (due == null) return;
     final reminderDate = DateTime(due.year, due.month, due.day, 9, 0);
     _notifications.scheduleNotification(
-      title: 'سررسید ${debt.type == DebtType.debt ? 'بدهی' : 'طلب'} ${debt.contactName}',
-      body: 'سررسید ${debt.contactName} به مبلغ ${debt.remainingAmount.formatCompact()} فرا رسید.',
+      title:
+          'سررسید ${debt.type == DebtType.debt ? 'بدهی' : 'طلب'} ${debt.contactName}',
+      body:
+          'سررسید ${debt.contactName} به مبلغ ${debt.remainingAmount.formatCompact()} فرا رسید.',
       type: NotificationType.debtDue,
       referenceId: debt.id,
       scheduledFor: reminderDate,
     );
   }
 
-  Future<void> _onPaymentSubmitted(DebtPaymentSubmitted event, Emitter<DebtState> emit) async {
+  Future<void> _onPaymentSubmitted(
+    DebtPaymentSubmitted event,
+    Emitter<DebtState> emit,
+  ) async {
     final result = await _repository.addPayment(event.id, event.amount);
     result.fold(
       onSuccess: (_) {},
@@ -166,7 +184,10 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     );
   }
 
-  Future<void> _onDeleteSubmitted(DebtDeleteSubmitted event, Emitter<DebtState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    DebtDeleteSubmitted event,
+    Emitter<DebtState> emit,
+  ) async {
     final result = await _repository.deleteDebt(event.id);
     result.fold(
       onSuccess: (_) => _notifications.cancelScheduled(event.id),

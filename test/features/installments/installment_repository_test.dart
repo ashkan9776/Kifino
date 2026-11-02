@@ -24,8 +24,14 @@ void main() {
         name: 'حساب ملت',
         type: AccountType.bankCard,
         currency: Currency.irr,
-        initialBalance: const Money(minorUnits: 20000000, currency: Currency.irr),
-        currentBalance: const Money(minorUnits: 20000000, currency: Currency.irr),
+        initialBalance: const Money(
+          minorUnits: 20000000,
+          currency: Currency.irr,
+        ),
+        currentBalance: const Money(
+          minorUnits: 20000000,
+          currency: Currency.irr,
+        ),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -46,7 +52,10 @@ void main() {
         accountId: 'acc-inst-1',
         totalAmount: const Money(minorUnits: 12000000, currency: Currency.irr),
         numberOfInstallments: 12,
-        installmentAmount: const Money(minorUnits: 1000000, currency: Currency.irr),
+        installmentAmount: const Money(
+          minorUnits: 1000000,
+          currency: Currency.irr,
+        ),
         startDate: now,
         nextDueDate: now.add(const Duration(days: 30)),
         createdAt: now,
@@ -66,7 +75,9 @@ void main() {
 
       // Verify account balance was deducted by 1,000,000
       final accounts = await accountRepository.getAccounts();
-      final account = accounts.dataOrNull!.firstWhere((a) => a.id == 'acc-inst-1');
+      final account = accounts.dataOrNull!.firstWhere(
+        (a) => a.id == 'acc-inst-1',
+      );
       expect(account.currentBalance.minorUnits, equals(19000000));
     });
   });

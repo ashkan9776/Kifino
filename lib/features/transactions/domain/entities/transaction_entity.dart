@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum TransactionType {
@@ -115,30 +116,32 @@ class TransactionEntity extends Equatable {
       syncStatus: syncStatus ?? this.syncStatus,
       version: version ?? this.version,
       accountName: accountName ?? this.accountName,
-      destinationAccountName: destinationAccountName ?? this.destinationAccountName,
+      destinationAccountName:
+          destinationAccountName ?? this.destinationAccountName,
       categoryName: categoryName ?? this.categoryName,
-      categoryIconCodePoint: categoryIconCodePoint ?? this.categoryIconCodePoint,
+      categoryIconCodePoint:
+          categoryIconCodePoint ?? this.categoryIconCodePoint,
       categoryColorHex: categoryColorHex ?? this.categoryColorHex,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        accountId,
-        destinationAccountId,
-        categoryId,
-        amount,
-        type,
-        date,
-        description,
-        notes,
-        isBusiness,
-        attachmentUri,
-        createdAt,
-        updatedAt,
-        deletedAt,
-        syncStatus,
-        version,
-      ];
+    id,
+    accountId,
+    destinationAccountId,
+    categoryId,
+    amount,
+    type,
+    date,
+    description,
+    notes,
+    isBusiness,
+    attachmentUri,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncStatus,
+    version,
+  ];
 }

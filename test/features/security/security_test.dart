@@ -148,9 +148,7 @@ void main() {
       },
       build: () => SecurityCubit(securityService: service),
       act: (cubit) => cubit.init(),
-      expect: () => [
-        predicate<SecurityState>((s) => s.isPinSet && s.isLocked),
-      ],
+      expect: () => [predicate<SecurityState>((s) => s.isPinSet && s.isLocked)],
     );
 
     blocTest<SecurityCubit, SecurityState>(
@@ -189,9 +187,7 @@ void main() {
       'savePin sets isPinSet true and unlocks',
       build: () => SecurityCubit(securityService: service),
       act: (cubit) => cubit.savePin('9876'),
-      expect: () => [
-        const SecurityState(isPinSet: true, isLocked: false),
-      ],
+      expect: () => [const SecurityState(isPinSet: true, isLocked: false)],
     );
 
     blocTest<SecurityCubit, SecurityState>(

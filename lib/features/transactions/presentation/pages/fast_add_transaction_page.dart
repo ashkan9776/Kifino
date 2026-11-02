@@ -9,9 +9,11 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_date_picker.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
@@ -42,7 +44,10 @@ class FastAddTransactionPage extends StatefulWidget {
 class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
   int _selectedTypeIndex = 0; // 0: Expense, 1: Income, 2: Transfer
   int _amountMinor = 0;
-  late final ValueNotifier<int> _amountNotifier = ValueNotifier<int>(_amountMinor);
+  late final ValueNotifier<int> _amountNotifier = ValueNotifier<int>(
+    _amountMinor,
+  );
+  DateTime _selectedDate = DateTime.now();
   String? _selectedAccountId;
   String? _selectedDestAccountId;
   String? _selectedCategoryId;
@@ -113,6 +118,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
           _amountMinor = editTx.amount.minorUnits;
           _amountNotifier.value = _amountMinor;
           _noteController.text = editTx.notes ?? '';
+          _selectedDate = editTx.date;
           _selectedTypeIndex = switch (editTx.type) {
             TransactionType.income => 1,
             TransactionType.transfer => 2,
@@ -209,7 +215,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
             : null,
         amount: Money.fromMinor(_amountMinor, currency),
         type: txType,
-        date: editTx.date,
+        date: _selectedDate,
         description: noteText.isNotEmpty ? noteText : editTx.description,
         notes: noteText.isNotEmpty ? noteText : null,
         isBusiness: editTx.isBusiness,
@@ -238,7 +244,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
           : null,
       amount: Money.fromMinor(_amountMinor, currency),
       type: txType,
-      date: DateTime.now(),
+      date: _selectedDate,
       description: noteText.isNotEmpty
           ? noteText
           : (txType == TransactionType.expense
@@ -281,246 +287,329 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          isEditing
-              ? (l10n.isPersian ? 'ویرایش تراکنش' : 'Edit transaction')
-              : l10n.addTransaction,
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: _isLoadingDeps
-          ? const Center(child: AppSkeleton(width: 200, height: 40))
-          : _accounts.isEmpty
-          ? AppEmptyState(
-              icon: Icons.account_balance_wallet_outlined,
-              title: l10n.isPersian ? 'هنوز حسابی ندارید' : 'No accounts yet',
-              description: l10n.isPersian
-                  ? 'برای ثبت تراکنش، ابتدا یک حساب اضافه کنید.'
-                  : 'Create an account first to start recording transactions.',
-              actionLabel: l10n.isPersian ? 'افزودن حساب' : 'Add an account',
-              onAction: () => context.push('/accounts'),
-            )
-          : SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      children: [
-                        // Segmented Control
-                        SegmentedButton<int>(
-                          segments: [
-                            ButtonSegment(
-                              value: 0,
-                              label: Text(l10n.expense),
-                              icon: const Icon(Icons.arrow_upward_rounded),
-                            ),
-                            ButtonSegment(
-                              value: 1,
-                              label: Text(l10n.income),
-                              icon: const Icon(Icons.arrow_downward_rounded),
-                            ),
-                            ButtonSegment(
-                              value: 2,
-                              label: Text(l10n.transfer),
-                              icon: const Icon(Icons.swap_horiz_rounded),
-                            ),
-                          ],
-                          selected: {_selectedTypeIndex},
-                          onSelectionChanged: (set) {
-                            setState(() {
-                              _selectedTypeIndex = set.first;
-                              final newFiltered = _categories.where((cat) {
-                                if (_selectedTypeIndex == 0) {
-                                  return cat.type == CategoryType.expense;
-                                }
-                                if (_selectedTypeIndex == 1) {
-                                  return cat.type == CategoryType.income;
-                                }
-                                return false;
-                              }).toList();
-                              if (newFiltered.isNotEmpty) {
-                                _selectedCategoryId = newFiltered.first.id;
-                              }
-                            });
-                            HapticFeedback.selectionClick();
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Amount Field
-                        AppAmountField(
-                          currency: currentCurrency,
-                          amountNotifier: _amountNotifier,
-                          signColor: typeColor,
-                          prefixSign: _selectedTypeIndex == 0
-                              ? '-'
-                              : (_selectedTypeIndex == 1 ? '+' : ''),
-                          onAmountMinorChanged: (value) {
-                            setState(() => _amountMinor = value);
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-
-                        // Quick Chips
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          children: _quickChipsToman.map((chipAmount) {
-                            final money = Money.fromMinor(
-                              chipAmount,
-                              currentCurrency,
-                            );
-                            return ActionChip(
-                              label: Text(
-                                money.format(
-                                  includeSymbol: false,
-                                  usePersianDigits: l10n.isPersian,
+          appBar: AppBar(
+            title: Text(
+              isEditing
+                  ? (l10n.isPersian ? 'ویرایش تراکنش' : 'Edit transaction')
+                  : l10n.addTransaction,
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => context.pop(),
+            ),
+          ),
+          body: _isLoadingDeps
+              ? const Center(child: AppSkeleton(width: 200, height: 40))
+              : _accounts.isEmpty
+              ? AppEmptyState(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: l10n.isPersian
+                      ? 'هنوز حسابی ندارید'
+                      : 'No accounts yet',
+                  description: l10n.isPersian
+                      ? 'برای ثبت تراکنش، ابتدا یک حساب اضافه کنید.'
+                      : 'Create an account first to start recording transactions.',
+                  actionLabel: l10n.isPersian
+                      ? 'افزودن حساب'
+                      : 'Add an account',
+                  onAction: () => context.push('/accounts'),
+                )
+              : SafeArea(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          children: [
+                            // Segmented Control
+                            SegmentedButton<int>(
+                              segments: [
+                                ButtonSegment(
+                                  value: 0,
+                                  label: Text(l10n.expense),
+                                  icon: const Icon(Icons.arrow_upward_rounded),
                                 ),
-                              ),
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                setState(() {
-                                  _amountMinor += chipAmount;
-                                  _amountNotifier.value = _amountMinor;
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Category Selector (if not transfer). The section
-                        // stays visible even with zero categories so the
-                        // «+ مدیریت» chip can open the categories manager.
-                        if (_selectedTypeIndex != 2) ...[
-                          Text(
-                            l10n.selectCategory,
-                            style: AppTypography.labelLarge,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.xs,
-                            children: [
-                              ...filteredCategories.map((cat) {
-                                final isSelected = _selectedCategoryId == cat.id;
-                                return ChoiceChip(
-                                  avatar: Icon(
-                                    CategoryIconAssets.resolve(cat.iconCodePoint),
-                                    size: 18,
+                                ButtonSegment(
+                                  value: 1,
+                                  label: Text(l10n.income),
+                                  icon: const Icon(
+                                    Icons.arrow_downward_rounded,
                                   ),
-                                  label: Text(cat.name),
+                                ),
+                                ButtonSegment(
+                                  value: 2,
+                                  label: Text(l10n.transfer),
+                                  icon: const Icon(Icons.swap_horiz_rounded),
+                                ),
+                              ],
+                              selected: {_selectedTypeIndex},
+                              onSelectionChanged: (set) {
+                                setState(() {
+                                  _selectedTypeIndex = set.first;
+                                  final newFiltered = _categories.where((cat) {
+                                    if (_selectedTypeIndex == 0) {
+                                      return cat.type == CategoryType.expense;
+                                    }
+                                    if (_selectedTypeIndex == 1) {
+                                      return cat.type == CategoryType.income;
+                                    }
+                                    return false;
+                                  }).toList();
+                                  if (newFiltered.isNotEmpty) {
+                                    _selectedCategoryId = newFiltered.first.id;
+                                  }
+                                });
+                                HapticFeedback.selectionClick();
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+
+                            // Amount Field
+                            AppAmountField(
+                              currency: currentCurrency,
+                              amountNotifier: _amountNotifier,
+                              signColor: typeColor,
+                              prefixSign: _selectedTypeIndex == 0
+                                  ? '-'
+                                  : (_selectedTypeIndex == 1 ? '+' : ''),
+                              onAmountMinorChanged: (value) {
+                                setState(() => _amountMinor = value);
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+
+                            // Quick Chips
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              children: _quickChipsToman.map((chipAmount) {
+                                final money = Money.fromMinor(
+                                  chipAmount,
+                                  currentCurrency,
+                                );
+                                return ActionChip(
+                                  label: Text(
+                                    money.format(
+                                      includeSymbol: false,
+                                      usePersianDigits: l10n.isPersian,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    setState(() {
+                                      _amountMinor += chipAmount;
+                                      _amountNotifier.value = _amountMinor;
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+
+                            // Category Selector (if not transfer). The section
+                            // stays visible even with zero categories so the
+                            // «+ مدیریت» chip can open the categories manager.
+                            if (_selectedTypeIndex != 2) ...[
+                              Text(
+                                l10n.selectCategory,
+                                style: AppTypography.labelLarge,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Wrap(
+                                spacing: AppSpacing.sm,
+                                runSpacing: AppSpacing.xs,
+                                children: [
+                                  ...filteredCategories.map((cat) {
+                                    final isSelected =
+                                        _selectedCategoryId == cat.id;
+                                    return ChoiceChip(
+                                      avatar: Icon(
+                                        CategoryIconAssets.resolve(
+                                          cat.iconCodePoint,
+                                        ),
+                                        size: 18,
+                                      ),
+                                      label: Text(cat.name),
+                                      selected: isSelected,
+                                      onSelected: (selected) {
+                                        if (selected) {
+                                          setState(
+                                            () => _selectedCategoryId = cat.id,
+                                          );
+                                        }
+                                      },
+                                    );
+                                  }),
+                                  ActionChip(
+                                    avatar: const Icon(
+                                      Icons.add_rounded,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      l10n.isPersian ? '+ مدیریت' : 'Manage',
+                                    ),
+                                    onPressed: () async {
+                                      await context.push('/categories');
+                                      if (mounted) await _reloadCategories();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                            ],
+
+                            // Account Selector
+                            Text(
+                              _selectedTypeIndex == 2
+                                  ? 'از حساب مبدأ'
+                                  : l10n.selectAccount,
+                              style: AppTypography.labelLarge,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              children: _accounts.map((acc) {
+                                final isSelected = _selectedAccountId == acc.id;
+                                return ChoiceChip(
+                                  label: Text(
+                                    '${acc.name} (${acc.currentBalance.format()})',
+                                  ),
                                   selected: isSelected,
                                   onSelected: (selected) {
                                     if (selected) {
                                       setState(
-                                        () => _selectedCategoryId = cat.id,
+                                        () => _selectedAccountId = acc.id,
                                       );
                                     }
                                   },
                                 );
-                              }),
-                              ActionChip(
-                                avatar: const Icon(Icons.add_rounded, size: 16),
-                                label: Text(l10n.isPersian ? '+ مدیریت' : 'Manage'),
-                                onPressed: () async {
-                                  await context.push('/categories');
-                                  if (mounted) await _reloadCategories();
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                        ],
+                              }).toList(),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
 
-                        // Account Selector
-                        Text(
-                          _selectedTypeIndex == 2
-                              ? 'از حساب مبدأ'
-                              : l10n.selectAccount,
-                          style: AppTypography.labelLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          children: _accounts.map((acc) {
-                            final isSelected = _selectedAccountId == acc.id;
-                            return ChoiceChip(
-                              label: Text(
-                                '${acc.name} (${acc.currentBalance.format()})',
+                            // Destination Account Selector (Transfer only)
+                            if (_selectedTypeIndex == 2) ...[
+                              Text(
+                                l10n.destinationAccount,
+                                style: AppTypography.labelLarge,
                               ),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setState(() => _selectedAccountId = acc.id);
+                              const SizedBox(height: AppSpacing.sm),
+                              Wrap(
+                                spacing: AppSpacing.sm,
+                                children: _accounts
+                                    .where((a) => a.id != _selectedAccountId)
+                                    .map((acc) {
+                                      final isSelected =
+                                          _selectedDestAccountId == acc.id;
+                                      return ChoiceChip(
+                                        label: Text(acc.name),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          if (selected) {
+                                            setState(
+                                              () => _selectedDestAccountId =
+                                                  acc.id,
+                                            );
+                                          }
+                                        },
+                                      );
+                                    })
+                                    .toList(),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                            ],
+
+                            // Date Selection Tile
+                            InkWell(
+                              onTap: () async {
+                                final picked = await showAppDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate,
+                                );
+                                if (picked != null) {
+                                  setState(() => _selectedDate = picked);
                                 }
                               },
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.calendar_month_rounded,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          l10n.isPersian
+                                              ? 'تاریخ تراکنش'
+                                              : 'Transaction Date',
+                                          style: AppTypography.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      AppDateFormatter.format(
+                                        _selectedDate,
+                                        locale: l10n.localeName,
+                                      ),
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
 
-                        // Destination Account Selector (Transfer only)
-                        if (_selectedTypeIndex == 2) ...[
-                          Text(
-                            l10n.destinationAccount,
-                            style: AppTypography.labelLarge,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            children: _accounts
-                                .where((a) => a.id != _selectedAccountId)
-                                .map((acc) {
-                                  final isSelected =
-                                      _selectedDestAccountId == acc.id;
-                                  return ChoiceChip(
-                                    label: Text(acc.name),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        setState(
-                                          () => _selectedDestAccountId = acc.id,
-                                        );
-                                      }
-                                    },
-                                  );
-                                })
-                                .toList(),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                        ],
-
-                        // Note Field
-                        TextField(
-                          controller: _noteController,
-                          decoration: InputDecoration(
-                            labelText: l10n.note,
-                            hintText: l10n.notePlaceholder,
-                            prefixIcon: const Icon(Icons.edit_note_rounded),
-                          ),
+                            // Note Field
+                            TextField(
+                              controller: _noteController,
+                              decoration: InputDecoration(
+                                labelText: l10n.note,
+                                hintText: l10n.notePlaceholder,
+                                prefixIcon: const Icon(Icons.edit_note_rounded),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: AppButton(
+                          label: isEditing
+                              ? (l10n.isPersian
+                                    ? 'ذخیره تغییرات'
+                                    : 'Save changes')
+                              : l10n.save,
+                          onPressed: _onSave,
+                          width: double.infinity,
+                          variant: AppButtonVariant.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: AppButton(
-                      label: isEditing
-                          ? (l10n.isPersian ? 'ذخیره تغییرات' : 'Save changes')
-                          : l10n.save,
-                      onPressed: _onSave,
-                      width: double.infinity,
-                      variant: AppButtonVariant.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
         ),
       ),
     );

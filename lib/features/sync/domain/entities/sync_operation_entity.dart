@@ -67,14 +67,14 @@ class SyncOperationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        queueId,
-        syncEntityName,
-        entityId,
-        operation,
-        payloadJson,
-        idempotencyKey,
-        retryCount,
-        lastError,
-        queuedAt,
-      ];
+    queueId,
+    syncEntityName,
+    entityId,
+    operation,
+    payloadJson,
+    idempotencyKey,
+    retryCount,
+    lastError,
+    queuedAt,
+  ];
 }

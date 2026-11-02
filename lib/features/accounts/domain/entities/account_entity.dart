@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum AccountType {
@@ -102,21 +103,21 @@ class AccountEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        type,
-        currency,
-        initialBalance,
-        currentBalance,
-        cardNumberLastFour,
-        bankName,
-        colorHex,
-        iconName,
-        isArchived,
-        createdAt,
-        updatedAt,
-        deletedAt,
-        syncStatus,
-        version,
-      ];
+    id,
+    name,
+    type,
+    currency,
+    initialBalance,
+    currentBalance,
+    cardNumberLastFour,
+    bankName,
+    colorHex,
+    iconName,
+    isArchived,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncStatus,
+    version,
+  ];
 }

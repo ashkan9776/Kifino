@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
@@ -155,7 +156,8 @@ class _AppAmountFieldState extends State<AppAmountField> {
   Widget build(BuildContext context) {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = widget.signColor ?? Theme.of(context).colorScheme.primary;
+    final accentColor =
+        widget.signColor ?? Theme.of(context).colorScheme.primary;
 
     final signWidget = widget.prefixSign == null
         ? null
@@ -167,9 +169,14 @@ class _AppAmountFieldState extends State<AppAmountField> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+        color: isDark
+            ? AppColors.darkSurfaceVariant
+            : AppColors.lightSurfaceVariant,
         borderRadius: AppSpacing.borderRadiusLg,
         border: Border.all(
           color: _focused
@@ -190,20 +197,27 @@ class _AppAmountFieldState extends State<AppAmountField> {
               controller: _controller,
               focusNode: _focusNode,
               autofocus: widget.autoFocus,
-              keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: false,
+                signed: false,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9۰-۹٠-٩,]')),
               ],
               onChanged: _formatInput,
               style: AppTypography.displayLarge.copyWith(
-                color: widget.signColor ?? Theme.of(context).colorScheme.onSurface,
+                color:
+                    widget.signColor ?? Theme.of(context).colorScheme.onSurface,
                 fontFeatures: AppTypography.tabularFigures,
               ),
               decoration: InputDecoration(
                 hintText: _persianDigits ? '۰' : '0',
                 hintStyle: AppTypography.displayLarge.copyWith(
-                  color: (isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary)
-                      .withValues(alpha: 0.5),
+                  color:
+                      (isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary)
+                          .withValues(alpha: 0.5),
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -218,13 +232,18 @@ class _AppAmountFieldState extends State<AppAmountField> {
             const SizedBox(width: AppSpacing.xs),
           ],
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.1),
               borderRadius: AppSpacing.borderRadiusSm,
             ),
             child: Text(
-              widget.currency.symbol.isNotEmpty ? widget.currency.symbol : widget.currency.code,
+              widget.currency.symbol.isNotEmpty
+                  ? widget.currency.symbol
+                  : widget.currency.code,
               style: AppTypography.labelLarge.copyWith(color: accentColor),
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/parsed_transaction_draft.dart';
 
 sealed class AiAssistantEvent extends Equatable {

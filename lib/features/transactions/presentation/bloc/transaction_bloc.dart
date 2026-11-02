@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -93,7 +94,12 @@ final class TransactionLoaded extends TransactionState {
   });
 
   @override
-  List<Object?> get props => [transactions, totalIncome, totalExpense, netCashFlow];
+  List<Object?> get props => [
+    transactions,
+    totalIncome,
+    totalExpense,
+    netCashFlow,
+  ];
 }
 
 final class TransactionFailure extends TransactionState {
@@ -127,26 +133,34 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<TransactionRestoreSubmitted>(_onRestoreSubmitted);
   }
 
-  void _onWatchStarted(WatchTransactionsStarted event, Emitter<TransactionState> emit) {
+  void _onWatchStarted(
+    WatchTransactionsStarted event,
+    Emitter<TransactionState> emit,
+  ) {
     // Only show the loading skeleton on first load or after a failure —
     // re-watching after a write must keep the current data on screen.
     if (state is TransactionInitial || state is TransactionFailure) {
       emit(TransactionLoading());
     }
     _subscription?.cancel();
-    _subscription = _repository.watchTransactions(
-      startDate: event.startDate,
-      endDate: event.endDate,
-      accountId: event.accountId,
-      categoryId: event.categoryId,
-      limit: event.limit,
-    ).listen(
-      (transactions) => add(_TransactionsUpdated(transactions)),
-      onError: (e) => emit(TransactionFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchTransactions(
+          startDate: event.startDate,
+          endDate: event.endDate,
+          accountId: event.accountId,
+          categoryId: event.categoryId,
+          limit: event.limit,
+        )
+        .listen(
+          (transactions) => add(_TransactionsUpdated(transactions)),
+          onError: (e) => emit(TransactionFailure(e.toString())),
+        );
   }
 
-  void _onTransactionsUpdated(_TransactionsUpdated event, Emitter<TransactionState> emit) {
+  void _onTransactionsUpdated(
+    _TransactionsUpdated event,
+    Emitter<TransactionState> emit,
+  ) {
     // Totals speak the base currency: Iranian amounts are normalized
     // (Toman↔Rial ×10); foreign-currency rows are excluded from the sums.
     final currency = AppCurrency.base;
@@ -167,19 +181,26 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final totalExpense = Money.fromMinor(expenseMinor, currency);
     final netCashFlow = totalIncome - totalExpense;
 
-    emit(TransactionLoaded(
-      transactions: event.transactions,
-      totalIncome: totalIncome,
-      totalExpense: totalExpense,
-      netCashFlow: netCashFlow,
-    ));
+    emit(
+      TransactionLoaded(
+        transactions: event.transactions,
+        totalIncome: totalIncome,
+        totalExpense: totalExpense,
+        netCashFlow: netCashFlow,
+      ),
+    );
   }
 
-  Future<void> _onCreateSubmitted(TransactionCreateSubmitted event, Emitter<TransactionState> emit) async {
+  Future<void> _onCreateSubmitted(
+    TransactionCreateSubmitted event,
+    Emitter<TransactionState> emit,
+  ) async {
     final result = await _repository.createTransaction(event.transaction);
     result.fold(
       onSuccess: (_) {
-        emit(const TransactionOperationSuccess('Transaction saved successfully'));
+        emit(
+          const TransactionOperationSuccess('Transaction saved successfully'),
+        );
         // Belt-and-suspenders: re-arm the watch so the UI always returns to
         // TransactionLoaded even if a drift stream update was missed.
         add(const WatchTransactionsStarted());
@@ -188,29 +209,45 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     );
   }
 
-  Future<void> _onUpdateSubmitted(TransactionUpdateSubmitted event, Emitter<TransactionState> emit) async {
+  Future<void> _onUpdateSubmitted(
+    TransactionUpdateSubmitted event,
+    Emitter<TransactionState> emit,
+  ) async {
     final result = await _repository.updateTransaction(event.transaction);
     result.fold(
       onSuccess: (_) {
-        emit(const TransactionOperationSuccess('Transaction updated successfully'));
+        emit(
+          const TransactionOperationSuccess('Transaction updated successfully'),
+        );
         add(const WatchTransactionsStarted());
       },
       onFailure: (failure) => emit(TransactionFailure(failure.message)),
     );
   }
 
-  Future<void> _onDeleteSubmitted(TransactionDeleteSubmitted event, Emitter<TransactionState> emit) async {
+  Future<void> _onDeleteSubmitted(
+    TransactionDeleteSubmitted event,
+    Emitter<TransactionState> emit,
+  ) async {
     final result = await _repository.softDeleteTransaction(event.id);
     result.fold(
       onSuccess: (_) {
-        emit(TransactionOperationSuccess('Transaction deleted', deletedTransactionId: event.id));
+        emit(
+          TransactionOperationSuccess(
+            'Transaction deleted',
+            deletedTransactionId: event.id,
+          ),
+        );
         add(const WatchTransactionsStarted());
       },
       onFailure: (failure) => emit(TransactionFailure(failure.message)),
     );
   }
 
-  Future<void> _onRestoreSubmitted(TransactionRestoreSubmitted event, Emitter<TransactionState> emit) async {
+  Future<void> _onRestoreSubmitted(
+    TransactionRestoreSubmitted event,
+    Emitter<TransactionState> emit,
+  ) async {
     final result = await _repository.restoreTransaction(event.id);
     result.fold(
       onSuccess: (_) {

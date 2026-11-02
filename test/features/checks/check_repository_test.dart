@@ -23,8 +23,14 @@ void main() {
         name: 'جاری سپه',
         type: AccountType.bankCard,
         currency: Currency.irr,
-        initialBalance: const Money(minorUnits: 5000000, currency: Currency.irr), // 5M
-        currentBalance: const Money(minorUnits: 5000000, currency: Currency.irr),
+        initialBalance: const Money(
+          minorUnits: 5000000,
+          currency: Currency.irr,
+        ), // 5M
+        currentBalance: const Money(
+          minorUnits: 5000000,
+          currency: Currency.irr,
+        ),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -59,8 +65,13 @@ void main() {
       await repository.updateCheckStatus('chk-issued-1', CheckStatus.cleared);
 
       var accounts = await accountRepository.getAccounts();
-      var account = accounts.dataOrNull!.firstWhere((a) => a.id == 'acc-check-1');
-      expect(account.currentBalance.minorUnits, equals(3000000)); // 5M - 2M = 3M
+      var account = accounts.dataOrNull!.firstWhere(
+        (a) => a.id == 'acc-check-1',
+      );
+      expect(
+        account.currentBalance.minorUnits,
+        equals(3000000),
+      ); // 5M - 2M = 3M
 
       // 2. Received Check for 4M
       final receivedCheck = CheckEntity(
@@ -83,7 +94,10 @@ void main() {
 
       accounts = await accountRepository.getAccounts();
       account = accounts.dataOrNull!.firstWhere((a) => a.id == 'acc-check-1');
-      expect(account.currentBalance.minorUnits, equals(7000000)); // 3M + 4M = 7M
+      expect(
+        account.currentBalance.minorUnits,
+        equals(7000000),
+      ); // 3M + 4M = 7M
     });
   });
 }

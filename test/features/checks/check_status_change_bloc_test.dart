@@ -35,21 +35,23 @@ void main() {
       ),
     );
 
-    await db.into(db.checksTable).insertOnConflictUpdate(
-      ChecksTableCompanion.insert(
-        id: 'ch-1',
-        checkNumber: '123',
-        bankName: 'ملت',
-        type: 'received',
-        amountMinor: 5000000,
-        currency: 'TOMAN',
-        partyName: 'مشتری الف',
-        dueDate: DateTime(2026, 3, 1).millisecondsSinceEpoch,
-        status: 'pending',
-        createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-        updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
-      ),
-    );
+    await db
+        .into(db.checksTable)
+        .insertOnConflictUpdate(
+          ChecksTableCompanion.insert(
+            id: 'ch-1',
+            checkNumber: '123',
+            bankName: 'ملت',
+            type: 'received',
+            amountMinor: 5000000,
+            currency: 'TOMAN',
+            partyName: 'مشتری الف',
+            dueDate: DateTime(2026, 3, 1).millisecondsSinceEpoch,
+            status: 'pending',
+            createdAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+            updatedAt: DateTime(2026, 1, 1).millisecondsSinceEpoch,
+          ),
+        );
   });
 
   tearDown(() async {
@@ -58,8 +60,9 @@ void main() {
   });
 
   Future<String> statusOf(String id) async {
-    final row = await (db.select(db.checksTable)..where((t) => t.id.equals(id)))
-        .getSingle();
+    final row = await (db.select(
+      db.checksTable,
+    )..where((t) => t.id.equals(id))).getSingle();
     return row.status;
   }
 
@@ -76,21 +79,28 @@ void main() {
     expect(loaded.checks.first.status, equals(CheckStatus.pending));
   });
 
-  test('status change to bounced actually persists (the reported bug)', () async {
-    bloc.add(const WatchChecksStarted());
-    await Future.delayed(const Duration(milliseconds: 200));
+  test(
+    'status change to bounced actually persists (the reported bug)',
+    () async {
+      bloc.add(const WatchChecksStarted());
+      await Future.delayed(const Duration(milliseconds: 200));
 
-    bloc.add(const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.bounced));
-    await Future.delayed(const Duration(milliseconds: 300));
+      bloc.add(
+        const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.bounced),
+      );
+      await Future.delayed(const Duration(milliseconds: 300));
 
-    expect(await statusOf('ch-1'), equals('bounced'));
-  });
+      expect(await statusOf('ch-1'), equals('bounced'));
+    },
+  );
 
   test('status change to cancelled persists', () async {
     bloc.add(const WatchChecksStarted());
     await Future.delayed(const Duration(milliseconds: 200));
 
-    bloc.add(const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.cancelled));
+    bloc.add(
+      const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.cancelled),
+    );
     await Future.delayed(const Duration(milliseconds: 300));
 
     expect(await statusOf('ch-1'), equals('cancelled'));
@@ -100,7 +110,9 @@ void main() {
     bloc.add(const WatchChecksStarted());
     await Future.delayed(const Duration(milliseconds: 200));
 
-    bloc.add(const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.transferred));
+    bloc.add(
+      const CheckStatusUpdated(id: 'ch-1', status: CheckStatus.transferred),
+    );
     await Future.delayed(const Duration(milliseconds: 300));
 
     expect(await statusOf('ch-1'), equals('transferred'));

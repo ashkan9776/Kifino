@@ -48,12 +48,27 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
 
     final isFa = context.l10n.isPersian;
     _quickPrompts = [
-      (Icons.insights_rounded, isFa ? 'وضعیت مالیم چطوره؟' : 'How is my finances?'),
-      (Icons.shopping_bag_rounded, isFa ? '۳۵۰ هزار تومن خرید سوپرمارکت' : '350K groceries'),
-      (Icons.timer_outlined, isFa ? 'چقدر دوام میارم؟' : 'How long can I last?'),
-      (Icons.pie_chart_rounded, isFa ? 'کجاها زیاد خرج کردم؟' : 'Biggest expenses?'),
+      (
+        Icons.insights_rounded,
+        isFa ? 'وضعیت مالیم چطوره؟' : 'How is my finances?',
+      ),
+      (
+        Icons.shopping_bag_rounded,
+        isFa ? '۳۵۰ هزار تومن خرید سوپرمارکت' : '350K groceries',
+      ),
+      (
+        Icons.timer_outlined,
+        isFa ? 'چقدر دوام میارم؟' : 'How long can I last?',
+      ),
+      (
+        Icons.pie_chart_rounded,
+        isFa ? 'کجاها زیاد خرج کردم؟' : 'Biggest expenses?',
+      ),
       (Icons.local_taxi_rounded, isFa ? '۴۵ هزار تومن اسنپ' : '45K taxi'),
-      (Icons.account_balance_wallet_rounded, isFa ? 'الان چقدر پول دارم؟' : 'How much money now?'),
+      (
+        Icons.account_balance_wallet_rounded,
+        isFa ? 'الان چقدر پول دارم؟' : 'How much money now?',
+      ),
     ];
   }
 
@@ -82,7 +97,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
 
     _textController.clear();
     final l10n = context.l10n;
-    context.read<AiAssistantBloc>().add(AiAssistantQuerySubmitted(query, isPersian: l10n.isPersian));
+    context.read<AiAssistantBloc>().add(
+      AiAssistantQuerySubmitted(query, isPersian: l10n.isPersian),
+    );
     _scrollToBottom();
   }
 
@@ -97,158 +114,221 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       child: SafeArea(
         top: false,
         child: Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            const _AiAvatar(size: 34),
-            const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          appBar: AppBar(
+            titleSpacing: 0,
+            title: Row(
               children: [
-                Text(l10n.isPersian ? 'دستیار مالی هوشمند' : 'Financial AI Assistant',
-                    style: AppTypography.titleSmall),
-                Text(
-                  l10n.isPersian ? 'همیشه آنلاین • آفلاین هم کار می‌کند' : 'Always here • works offline',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          BlocBuilder<AiAssistantBloc, AiAssistantState>(
-            builder: (context, state) {
-              if (state.summary != null) {
-                final score = state.summary!.healthScore;
-                final color = score >= 70 ? AppColors.income : (score >= 45 ? AppColors.warning : AppColors.danger);
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: color.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.health_and_safety_outlined, size: 16, color: color),
-                      const SizedBox(width: 4),
-                      Text(
-                        TextNormalizer.auto('سلامت: $score'),
-                        style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: color),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Chat Messages List
-          Expanded(
-            child: BlocConsumer<AiAssistantBloc, AiAssistantState>(
-              listener: (context, state) {
-                _scrollToBottom();
-              },
-              builder: (context, state) {
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  itemCount: state.messages.length + (state.isLoading ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == state.messages.length && state.isLoading) {
-                      return const _TypingIndicator();
-                    }
-
-                    final message = state.messages[index];
-                    // ValueKey keeps each _DraftTransactionCard stateful across
-                    // rebuilds — picking an account never resets on new messages.
-                    return KeyedSubtree(
-                      key: ValueKey(message.id),
-                      child: _buildMessageBubble(context, message, isDark),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Quick Prompt Suggestions
-          SizedBox(
-            height: 44,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              itemCount: _quickPrompts.length,
-              itemBuilder: (context, index) {
-                final (icon, prompt) = _quickPrompts[index];
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
-                  child: ActionChip(
-                    avatar: Icon(icon, size: 15, color: theme.colorScheme.primary),
-                    label: Text(prompt, style: const TextStyle(fontSize: 11.5)),
-                    onPressed: () => _handleSend(prompt),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Input Bar
-          Container(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              border: Border(top: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder)),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: _handleSend,
-                      decoration: InputDecoration(
-                        hintText: l10n.isPersian ? 'مثلاً: ۳۵۰ تومن اسنپ، یا وضعیت مالیم چطوره؟' : 'Ask anything or type a transaction...',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                const _AiAvatar(size: 34),
+                const SizedBox(width: AppSpacing.sm),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.isPersian
+                          ? 'دستیار مالی هوشمند'
+                          : 'Financial AI Assistant',
+                      style: AppTypography.titleSmall,
+                    ),
+                    Text(
+                      l10n.isPersian
+                          ? 'همیشه آنلاین • آفلاین هم کار می‌کند'
+                          : 'Always here • works offline',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.55,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, _) {
-                      final canSend = value.text.trim().isNotEmpty;
-                      return _SendButton(
-                        enabled: canSend,
-                        onTap: canSend ? () => _handleSend(_textController.text) : null,
-                      );
-                    },
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
+            actions: [
+              BlocBuilder<AiAssistantBloc, AiAssistantState>(
+                builder: (context, state) {
+                  if (state.summary != null) {
+                    final score = state.summary!.healthScore;
+                    final color = score >= 70
+                        ? AppColors.income
+                        : (score >= 45 ? AppColors.warning : AppColors.danger);
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 10,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: color.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.health_and_safety_outlined,
+                            size: 16,
+                            color: color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            TextNormalizer.auto('سلامت: $score'),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+          body: Column(
+            children: [
+              // Chat Messages List
+              Expanded(
+                child: BlocConsumer<AiAssistantBloc, AiAssistantState>(
+                  listener: (context, state) {
+                    _scrollToBottom();
+                  },
+                  builder: (context, state) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      itemCount:
+                          state.messages.length + (state.isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == state.messages.length && state.isLoading) {
+                          return const _TypingIndicator();
+                        }
+
+                        final message = state.messages[index];
+                        // ValueKey keeps each _DraftTransactionCard stateful across
+                        // rebuilds — picking an account never resets on new messages.
+                        return KeyedSubtree(
+                          key: ValueKey(message.id),
+                          child: _buildMessageBubble(context, message, isDark),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              // Quick Prompt Suggestions
+              SizedBox(
+                height: 44,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  itemCount: _quickPrompts.length,
+                  itemBuilder: (context, index) {
+                    final (icon, prompt) = _quickPrompts[index];
+                    return Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        end: AppSpacing.xs,
+                      ),
+                      child: ActionChip(
+                        avatar: Icon(
+                          icon,
+                          size: 15,
+                          color: theme.colorScheme.primary,
+                        ),
+                        label: Text(
+                          prompt,
+                          style: const TextStyle(fontSize: 11.5),
+                        ),
+                        onPressed: () => _handleSend(prompt),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Input Bar
+              Container(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
+                  ),
+                ),
+                child: SafeArea(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: _handleSend,
+                          decoration: InputDecoration(
+                            hintText: l10n.isPersian
+                                ? 'مثلاً: ۳۵۰ تومن اسنپ، یا وضعیت مالیم چطوره؟'
+                                : 'Ask anything or type a transaction...',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _textController,
+                        builder: (context, value, _) {
+                          final canSend = value.text.trim().isNotEmpty;
+                          return _SendButton(
+                            enabled: canSend,
+                            onTap: canSend
+                                ? () => _handleSend(_textController.text)
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMessageBubble(BuildContext context, AiChatMessage msg, bool isDark) {
+  Widget _buildMessageBubble(
+    BuildContext context,
+    AiChatMessage msg,
+    bool isDark,
+  ) {
     final theme = Theme.of(context);
 
     final bubble = msg.isUser
@@ -268,7 +348,11 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
               ),
               child: Text(
                 msg.text,
-                style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.45),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.5,
+                  height: 1.45,
+                ),
               ),
             ),
           )
@@ -288,7 +372,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                         Container(
                           padding: const EdgeInsets.all(13),
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                            color: isDark
+                                ? AppColors.darkSurfaceVariant
+                                : AppColors.lightSurfaceVariant,
                             borderRadius: const BorderRadiusDirectional.only(
                               bottomStart: Radius.circular(4),
                               bottomEnd: Radius.circular(16),
@@ -298,7 +384,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                           ),
                           child: Text(
                             msg.text,
-                            style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.55,
+                            ),
                           ),
                         ),
                         if (msg.draftTransaction != null) ...[
@@ -306,11 +394,21 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                           _DraftTransactionCard(draft: msg.draftTransaction!),
                         ],
                         Padding(
-                          padding: const EdgeInsetsDirectional.only(start: AppSpacing.xs, top: 3),
+                          padding: const EdgeInsetsDirectional.only(
+                            start: AppSpacing.xs,
+                            top: 3,
+                          ),
                           child: Text(
-                            TextNormalizer.auto(AppDateFormatter.formatTime(msg.timestamp, locale: 'fa')),
+                            TextNormalizer.auto(
+                              AppDateFormatter.formatTime(
+                                msg.timestamp,
+                                locale: 'fa',
+                              ),
+                            ),
                             style: AppTypography.labelMedium.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
                             ),
                           ),
                         ),
@@ -329,7 +427,10 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       curve: KifinoMotion.easeOut,
       builder: (context, t, child) => Opacity(
         opacity: t,
-        child: Transform.translate(offset: Offset(0, 8 * (1 - t)), child: child),
+        child: Transform.translate(
+          offset: Offset(0, 8 * (1 - t)),
+          child: child,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
@@ -354,7 +455,11 @@ class _AiAvatar extends StatelessWidget {
         gradient: KifinoPalette.actionLight,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Color(0x3320C8E8), blurRadius: 10, offset: Offset(0, 3)),
+          BoxShadow(
+            color: Color(0x3320C8E8),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
         ],
       ),
       child: Icon(
@@ -409,7 +514,9 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                color: isDark
+                    ? AppColors.darkSurfaceVariant
+                    : AppColors.lightSurfaceVariant,
                 borderRadius: const BorderRadiusDirectional.only(
                   bottomStart: Radius.circular(4),
                   bottomEnd: Radius.circular(16),
@@ -433,7 +540,10 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: dotColor.withValues(alpha: 0.35 + 0.65 * (1 - (t < 0.5 ? t : 1 - t))),
+                              color: dotColor.withValues(
+                                alpha:
+                                    0.35 + 0.65 * (1 - (t < 0.5 ? t : 1 - t)),
+                              ),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -469,19 +579,25 @@ class _SendButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            gradient: enabled ? const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [KifinoPalette.blue600, KifinoPalette.cyan500],
-            ) : null,
-            color: enabled ? null : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+            gradient: enabled
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [KifinoPalette.blue600, KifinoPalette.cyan500],
+                  )
+                : null,
+            color: enabled
+                ? null
+                : Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.arrow_upward_rounded,
             color: enabled
                 ? Colors.white
-                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                : Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.4),
             size: 22,
           ),
         ),
@@ -583,7 +699,9 @@ class _DraftTransactionCardState extends State<_DraftTransactionCard> {
                     Flexible(
                       child: Text(
                         draft.description,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -608,7 +726,9 @@ class _DraftTransactionCardState extends State<_DraftTransactionCard> {
               child: Text(
                 'دسته‌بندی: ${draft.suggestedCategory}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
               ),
             ),
@@ -636,11 +756,11 @@ class _DraftTransactionCardState extends State<_DraftTransactionCard> {
                     if (_selectedAccountId != null) {
                       setState(() => _submitted = true);
                       context.read<AiAssistantBloc>().add(
-                            AiAssistantDraftConfirmed(
-                              draft: draft,
-                              accountId: _selectedAccountId!,
-                            ),
-                          );
+                        AiAssistantDraftConfirmed(
+                          draft: draft,
+                          accountId: _selectedAccountId!,
+                        ),
+                      );
                     }
                   },
           ),

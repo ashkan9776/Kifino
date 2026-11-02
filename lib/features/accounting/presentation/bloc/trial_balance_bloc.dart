@@ -44,10 +44,7 @@ final class TrialBalanceLoaded extends TrialBalanceState {
   final TrialBalanceReport report;
   final bool isEightColumn;
 
-  const TrialBalanceLoaded({
-    required this.report,
-    this.isEightColumn = false,
-  });
+  const TrialBalanceLoaded({required this.report, this.isEightColumn = false});
 
   TrialBalanceLoaded copyWith({
     TrialBalanceReport? report,

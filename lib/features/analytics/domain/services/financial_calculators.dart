@@ -149,7 +149,9 @@ class BudgetAdherenceCalculator {
     }
 
     return BudgetHealthResult(
-      overallAdherencePercent: double.parse(adherence.clamp(0.0, 100.0).toStringAsFixed(1)),
+      overallAdherencePercent: double.parse(
+        adherence.clamp(0.0, 100.0).toStringAsFixed(1),
+      ),
       totalBudgets: budgets.length,
       overBudgetCount: overCount,
       nearLimitCount: nearCount,

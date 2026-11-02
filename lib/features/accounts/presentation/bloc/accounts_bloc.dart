@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -65,10 +66,7 @@ final class AccountsLoaded extends AccountsState {
   final List<AccountEntity> accounts;
   final Money totalBalance;
 
-  const AccountsLoaded({
-    required this.accounts,
-    required this.totalBalance,
-  });
+  const AccountsLoaded({required this.accounts, required this.totalBalance});
 
   @override
   List<Object?> get props => [accounts, totalBalance];
@@ -94,13 +92,18 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
     on<AccountDeleteRequested>(_onDeleteRequested);
   }
 
-  void _onWatchStarted(WatchAccountsStarted event, Emitter<AccountsState> emit) {
+  void _onWatchStarted(
+    WatchAccountsStarted event,
+    Emitter<AccountsState> emit,
+  ) {
     emit(AccountsLoading());
     _subscription?.cancel();
-    _subscription = _repository.watchAccounts(includeArchived: event.includeArchived).listen(
-      (accounts) => add(_AccountsUpdated(accounts)),
-      onError: (e) => emit(AccountsFailure(e.toString())),
-    );
+    _subscription = _repository
+        .watchAccounts(includeArchived: event.includeArchived)
+        .listen(
+          (accounts) => add(_AccountsUpdated(accounts)),
+          onError: (e) => emit(AccountsFailure(e.toString())),
+        );
   }
 
   void _onAccountsUpdated(_AccountsUpdated event, Emitter<AccountsState> emit) {
@@ -116,13 +119,18 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
       }
     }
 
-    emit(AccountsLoaded(
-      accounts: event.accounts,
-      totalBalance: Money.fromMinor(totalMinor, currency),
-    ));
+    emit(
+      AccountsLoaded(
+        accounts: event.accounts,
+        totalBalance: Money.fromMinor(totalMinor, currency),
+      ),
+    );
   }
 
-  Future<void> _onCreateRequested(AccountCreateRequested event, Emitter<AccountsState> emit) async {
+  Future<void> _onCreateRequested(
+    AccountCreateRequested event,
+    Emitter<AccountsState> emit,
+  ) async {
     final result = await _repository.createAccount(event.account);
     result.fold(
       onSuccess: (_) {},
@@ -130,7 +138,10 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
     );
   }
 
-  Future<void> _onArchiveToggled(AccountArchiveToggled event, Emitter<AccountsState> emit) async {
+  Future<void> _onArchiveToggled(
+    AccountArchiveToggled event,
+    Emitter<AccountsState> emit,
+  ) async {
     final result = await _repository.archiveAccount(event.id, event.archive);
     result.fold(
       onSuccess: (_) {},
@@ -138,7 +149,10 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
     );
   }
 
-  Future<void> _onDeleteRequested(AccountDeleteRequested event, Emitter<AccountsState> emit) async {
+  Future<void> _onDeleteRequested(
+    AccountDeleteRequested event,
+    Emitter<AccountsState> emit,
+  ) async {
     final result = await _repository.deleteAccount(event.id);
     result.fold(
       onSuccess: (_) {},

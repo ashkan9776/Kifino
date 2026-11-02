@@ -33,12 +33,12 @@ class _TrialBalancePageState extends State<TrialBalancePage>
 
   void _loadData() {
     context.read<TrialBalanceBloc>().add(
-          LoadTrialBalance(
-            level: _selectedLevel,
-            startDate: _startDate,
-            endDate: _endDate,
-          ),
-        );
+      LoadTrialBalance(
+        level: _selectedLevel,
+        startDate: _startDate,
+        endDate: _endDate,
+      ),
+    );
   }
 
   @override
@@ -96,9 +96,13 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                 SegmentedButton<AccountingSubjectLevel>(
                   segments: const [
                     ButtonSegment(
-                        value: AccountingSubjectLevel.kol, label: Text('کل')),
+                      value: AccountingSubjectLevel.kol,
+                      label: Text('کل'),
+                    ),
                     ButtonSegment(
-                        value: AccountingSubjectLevel.moein, label: Text('معین')),
+                      value: AccountingSubjectLevel.moein,
+                      label: Text('معین'),
+                    ),
                   ],
                   selected: {_selectedLevel},
                   onSelectionChanged: (set) {
@@ -126,10 +130,16 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.balance, size: 56, color: colors.textSecondary),
+                          Icon(
+                            Icons.balance,
+                            size: 56,
+                            color: colors.textSecondary,
+                          ),
                           const SizedBox(height: 10),
-                          Text('ترازی برای نمایش وجود ندارد',
-                              style: AppTypography.titleMedium),
+                          Text(
+                            'ترازی برای نمایش وجود ندارد',
+                            style: AppTypography.titleMedium,
+                          ),
                         ],
                       ),
                     );
@@ -146,8 +156,8 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                             child: _columnCount == 6
                                 ? _buildSixColumnTable(report, colors)
                                 : _columnCount == 8
-                                    ? _buildEightColumnTable(report, colors)
-                                    : _buildFourColumnTable(report, colors),
+                                ? _buildEightColumnTable(report, colors)
+                                : _buildFourColumnTable(report, colors),
                           ),
                         ),
                       ),
@@ -171,54 +181,98 @@ class _TrialBalancePageState extends State<TrialBalancePage>
     );
   }
 
-  Widget _buildFourColumnTable(TrialBalanceReport report, KifinoColorsExtension colors) {
+  Widget _buildFourColumnTable(
+    TrialBalanceReport report,
+    KifinoColorsExtension colors,
+  ) {
     return DataTable(
-      headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.1)),
+      headingRowColor: WidgetStateProperty.all(
+        Colors.grey.withValues(alpha: 0.1),
+      ),
       columnSpacing: 16,
       horizontalMargin: 12,
       columns: const [
-        DataColumn(label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('نام حساب', style: TextStyle(fontWeight: FontWeight.bold))),
         DataColumn(
-          label: Text('گردش بدهکار',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+          label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text(
+            'نام حساب',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'گردش بدهکار',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
           numeric: true,
         ),
         DataColumn(
-          label: Text('گردش بستانکار',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+          label: Text(
+            'گردش بستانکار',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+          ),
           numeric: true,
         ),
         DataColumn(
-          label: Text('مانده بدهکار',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+          label: Text(
+            'مانده بدهکار',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
           numeric: true,
         ),
         DataColumn(
-          label: Text('مانده بستانکار',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+          label: Text(
+            'مانده بستانکار',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+          ),
           numeric: true,
         ),
       ],
       rows: report.entries.map((entry) {
         return DataRow(
           cells: [
-            DataCell(Text(entry.subject.formattedCode,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
-            DataCell(Text(entry.subject.name,
-                style: const TextStyle(fontWeight: FontWeight.w500))),
-            DataCell(Text(entry.totalDebit.minorUnits > 0
-                ? entry.totalDebit.formatted
-                : '-')),
-            DataCell(Text(entry.totalCredit.minorUnits > 0
-                ? entry.totalCredit.formatted
-                : '-')),
-            DataCell(Text(entry.endingDebit.minorUnits > 0
-                ? entry.endingDebit.formatted
-                : '-')),
-            DataCell(Text(entry.endingCredit.minorUnits > 0
-                ? entry.endingCredit.formatted
-                : '-')),
+            DataCell(
+              Text(
+                entry.subject.formattedCode,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.subject.name,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.totalDebit.minorUnits > 0
+                    ? entry.totalDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.totalCredit.minorUnits > 0
+                    ? entry.totalCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingDebit.minorUnits > 0
+                    ? entry.endingDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingCredit.minorUnits > 0
+                    ? entry.endingCredit.formatted
+                    : '-',
+              ),
+            ),
           ],
         );
       }).toList(),
@@ -226,94 +280,289 @@ class _TrialBalancePageState extends State<TrialBalancePage>
   }
 
   /// 6-column: opening (بد/بس) + period turnover (بد/بس) + ending (بد/بس).
-  Widget _buildSixColumnTable(TrialBalanceReport report, KifinoColorsExtension colors) {
+  Widget _buildSixColumnTable(
+    TrialBalanceReport report,
+    KifinoColorsExtension colors,
+  ) {
     return DataTable(
-      headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.1)),
+      headingRowColor: WidgetStateProperty.all(
+        Colors.grey.withValues(alpha: 0.1),
+      ),
       columnSpacing: 14,
       horizontalMargin: 10,
       columns: const [
-        DataColumn(label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('نام حساب', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ابتدای بد', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('ابتدای بس', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('دوره بد', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('دوره بس', style: TextStyle(fontSize: 11)), numeric: true),
         DataColumn(
-          label: Text('پایان بد',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 11)),
+          label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text(
+            'نام حساب',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text('ابتدای بد', style: TextStyle(fontSize: 11)),
           numeric: true,
         ),
         DataColumn(
-          label: Text('پایان بس',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 11)),
+          label: Text('ابتدای بس', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('دوره بد', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('دوره بس', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'پایان بد',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+              fontSize: 11,
+            ),
+          ),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'پایان بس',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+              fontSize: 11,
+            ),
+          ),
           numeric: true,
         ),
       ],
       rows: report.entries.map((entry) {
         return DataRow(
           cells: [
-            DataCell(Text(entry.subject.formattedCode,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 11))),
-            DataCell(Text(entry.subject.name,
-                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-            DataCell(Text(entry.openingDebit.minorUnits > 0 ? entry.openingDebit.formatted : '-')),
-            DataCell(Text(entry.openingCredit.minorUnits > 0 ? entry.openingCredit.formatted : '-')),
-            DataCell(Text(entry.periodDebit.minorUnits > 0 ? entry.periodDebit.formatted : '-')),
-            DataCell(Text(entry.periodCredit.minorUnits > 0 ? entry.periodCredit.formatted : '-')),
-            DataCell(Text(entry.endingDebit.minorUnits > 0 ? entry.endingDebit.formatted : '-')),
-            DataCell(Text(entry.endingCredit.minorUnits > 0 ? entry.endingCredit.formatted : '-')),
+            DataCell(
+              Text(
+                entry.subject.formattedCode,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.subject.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.openingDebit.minorUnits > 0
+                    ? entry.openingDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.openingCredit.minorUnits > 0
+                    ? entry.openingCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.periodDebit.minorUnits > 0
+                    ? entry.periodDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.periodCredit.minorUnits > 0
+                    ? entry.periodCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingDebit.minorUnits > 0
+                    ? entry.endingDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingCredit.minorUnits > 0
+                    ? entry.endingCredit.formatted
+                    : '-',
+              ),
+            ),
           ],
         );
       }).toList(),
     );
   }
 
-  Widget _buildEightColumnTable(TrialBalanceReport report, KifinoColorsExtension colors) {
+  Widget _buildEightColumnTable(
+    TrialBalanceReport report,
+    KifinoColorsExtension colors,
+  ) {
     return DataTable(
-      headingRowColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.1)),
+      headingRowColor: WidgetStateProperty.all(
+        Colors.grey.withValues(alpha: 0.1),
+      ),
       columnSpacing: 14,
       horizontalMargin: 10,
       columns: const [
-        DataColumn(label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('نام حساب', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ابتدای بد', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('ابتدای بس', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('دوره بد', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('دوره بس', style: TextStyle(fontSize: 11)), numeric: true),
-        DataColumn(label: Text('مجموع بد', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)), numeric: true),
-        DataColumn(label: Text('مجموع بس', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)), numeric: true),
-        DataColumn(label: Text('پایان بد', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)), numeric: true),
-        DataColumn(label: Text('پایان بس', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)), numeric: true),
+        DataColumn(
+          label: Text('کد', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text(
+            'نام حساب',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text('ابتدای بد', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('ابتدای بس', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('دوره بد', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text('دوره بس', style: TextStyle(fontSize: 11)),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'مجموع بد',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'مجموع بس',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+          ),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'پایان بد',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          numeric: true,
+        ),
+        DataColumn(
+          label: Text(
+            'پایان بس',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+          ),
+          numeric: true,
+        ),
       ],
       rows: report.entries.map((entry) {
         return DataRow(
           cells: [
-            DataCell(Text(entry.subject.formattedCode,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 11))),
-            DataCell(Text(entry.subject.name,
-                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-            DataCell(Text(entry.openingDebit.minorUnits > 0 ? entry.openingDebit.formatted : '-')),
-            DataCell(Text(entry.openingCredit.minorUnits > 0 ? entry.openingCredit.formatted : '-')),
-            DataCell(Text(entry.periodDebit.minorUnits > 0 ? entry.periodDebit.formatted : '-')),
-            DataCell(Text(entry.periodCredit.minorUnits > 0 ? entry.periodCredit.formatted : '-')),
-            DataCell(Text(entry.totalDebit.minorUnits > 0 ? entry.totalDebit.formatted : '-')),
-            DataCell(Text(entry.totalCredit.minorUnits > 0 ? entry.totalCredit.formatted : '-')),
-            DataCell(Text(entry.endingDebit.minorUnits > 0 ? entry.endingDebit.formatted : '-')),
-            DataCell(Text(entry.endingCredit.minorUnits > 0 ? entry.endingCredit.formatted : '-')),
+            DataCell(
+              Text(
+                entry.subject.formattedCode,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.subject.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.openingDebit.minorUnits > 0
+                    ? entry.openingDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.openingCredit.minorUnits > 0
+                    ? entry.openingCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.periodDebit.minorUnits > 0
+                    ? entry.periodDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.periodCredit.minorUnits > 0
+                    ? entry.periodCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.totalDebit.minorUnits > 0
+                    ? entry.totalDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.totalCredit.minorUnits > 0
+                    ? entry.totalCredit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingDebit.minorUnits > 0
+                    ? entry.endingDebit.formatted
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                entry.endingCredit.minorUnits > 0
+                    ? entry.endingCredit.formatted
+                    : '-',
+              ),
+            ),
           ],
         );
       }).toList(),
     );
   }
 
-  Widget _buildFooterEquilibrium(TrialBalanceReport report, KifinoColorsExtension colors) {
+  Widget _buildFooterEquilibrium(
+    TrialBalanceReport report,
+    KifinoColorsExtension colors,
+  ) {
     final isBalanced = report.isBalanced;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.25))),
+        border: Border(
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -332,7 +581,9 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                 Row(
                   children: [
                     Icon(
-                      isBalanced ? Icons.check_circle : Icons.warning_amber_rounded,
+                      isBalanced
+                          ? Icons.check_circle
+                          : Icons.warning_amber_rounded,
                       color: isBalanced ? colors.income : colors.expense,
                       size: 18,
                     ),
@@ -364,7 +615,10 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                     Text('مجموع گردش: ', style: AppTypography.bodySmall),
                     AppMoneyText(
                       money: report.sumTotalDebit,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -373,7 +627,10 @@ class _TrialBalancePageState extends State<TrialBalancePage>
                     Text('مجموع مانده نهایی: ', style: AppTypography.bodySmall),
                     AppMoneyText(
                       money: report.sumEndingDebit,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),

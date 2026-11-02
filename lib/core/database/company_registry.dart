@@ -29,11 +29,13 @@ class CompanyRegistry {
     try {
       final list = jsonDecode(raw) as List;
       return list
-          .map((e) => CompanyInfo(
-                id: (e as Map<String, dynamic>)['id'] as String,
-                name: e['name'] as String,
-                createdAt: DateTime.parse(e['createdAt'] as String),
-              ))
+          .map(
+            (e) => CompanyInfo(
+              id: (e as Map<String, dynamic>)['id'] as String,
+              name: e['name'] as String,
+              createdAt: DateTime.parse(e['createdAt'] as String),
+            ),
+          )
           .toList();
     } catch (_) {
       return [];
@@ -41,10 +43,17 @@ class CompanyRegistry {
   }
 
   Future<void> _encode(List<CompanyInfo> companies) async {
-    await prefs.setString(_storageKey, jsonEncode([
-      for (final c in companies)
-        {'id': c.id, 'name': c.name, 'createdAt': c.createdAt.toIso8601String()},
-    ]));
+    await prefs.setString(
+      _storageKey,
+      jsonEncode([
+        for (final c in companies)
+          {
+            'id': c.id,
+            'name': c.name,
+            'createdAt': c.createdAt.toIso8601String(),
+          },
+      ]),
+    );
   }
 
   /// All registered companies; seeds the default company on first run so a
@@ -77,7 +86,11 @@ class CompanyRegistry {
   Future<void> renameCompany(String id, String name) async {
     final companies = await getCompanies();
     final updated = [
-      for (final c in companies) if (c.id == id) CompanyInfo(id: c.id, name: name, createdAt: c.createdAt) else c,
+      for (final c in companies)
+        if (c.id == id)
+          CompanyInfo(id: c.id, name: name, createdAt: c.createdAt)
+        else
+          c,
     ];
     await _encode(updated);
   }
@@ -85,7 +98,10 @@ class CompanyRegistry {
   Future<void> removeCompany(String id) async {
     assert(id != defaultCompanyId, 'شرکت پیش‌فرض قابل حذف نیست');
     final companies = await getCompanies();
-    await _encode([for (final c in companies) if (c.id != id) c]);
+    await _encode([
+      for (final c in companies)
+        if (c.id != id) c,
+    ]);
     if (activeCompanyId == id) {
       await setActiveCompanyId(defaultCompanyId);
     }

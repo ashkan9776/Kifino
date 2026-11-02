@@ -12,7 +12,9 @@ class AppTypography {
   static const String fontFamily = 'Vazirmatn';
 
   // Tabular figures prevent layout jitter during financial number updates
-  static const List<FontFeature> tabularFigures = [FontFeature.tabularFigures()];
+  static const List<FontFeature> tabularFigures = [
+    FontFeature.tabularFigures(),
+  ];
 
   static const TextStyle displayLarge = TextStyle(
     fontFamily: fontFamily,

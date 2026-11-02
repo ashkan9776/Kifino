@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 
@@ -26,10 +27,11 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final resolvedBg = backgroundColor ??
+    final resolvedBg =
+        backgroundColor ??
         (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface);
-    final resolvedBorder = borderColor ??
-        (isDark ? AppColors.darkBorder : AppColors.lightBorder);
+    final resolvedBorder =
+        borderColor ?? (isDark ? AppColors.darkBorder : AppColors.lightBorder);
 
     Widget cardContent = Container(
       width: width,

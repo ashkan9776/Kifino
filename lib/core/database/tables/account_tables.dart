@@ -7,10 +7,13 @@ class AccountsTable extends Table {
 
   TextColumn get id => text()();
   TextColumn get name => text()();
-  TextColumn get type => text()(); // bankCard, cashWallet, savings, credit, investment, crypto
+  TextColumn get type =>
+      text()(); // bankCard, cashWallet, savings, credit, investment, crypto
   TextColumn get currency => text()(); // IRR, TOMAN, USD, EUR, etc.
-  IntColumn get initialBalanceMinor => integer().withDefault(const Constant(0))();
-  IntColumn get currentBalanceMinor => integer().withDefault(const Constant(0))();
+  IntColumn get initialBalanceMinor =>
+      integer().withDefault(const Constant(0))();
+  IntColumn get currentBalanceMinor =>
+      integer().withDefault(const Constant(0))();
   TextColumn get cardNumberLastFour => text().nullable()();
   TextColumn get bankName => text().nullable()();
   TextColumn get colorHex => text().nullable()();

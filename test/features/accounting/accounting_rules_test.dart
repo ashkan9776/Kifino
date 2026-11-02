@@ -75,10 +75,15 @@ void main() {
         updatedAt: DateTime.now(),
         transactions: [
           AccountingTransactionEntity(
-            id: '', documentId: '', subjectId: '011',
-            debit: Money.fromMinor(100000), credit: Money.fromMinor(0),
-            description: '', rowOrder: 1,
-            createdAt: DateTime.now(), updatedAt: DateTime.now(),
+            id: '',
+            documentId: '',
+            subjectId: '011',
+            debit: Money.fromMinor(100000),
+            credit: Money.fromMinor(0),
+            description: '',
+            rowOrder: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
         ],
       );
@@ -88,15 +93,24 @@ void main() {
 
     test('allows unbalanced draft but blocks approving it', () async {
       final draft = AccountingDocumentEntity(
-        id: '', number: 0, date: DateTime.now(), title: 'پیش‌نویس ناموازنه',
+        id: '',
+        number: 0,
+        date: DateTime.now(),
+        title: 'پیش‌نویس ناموازنه',
         status: DocumentStatus.draft,
-        createdAt: DateTime.now(), updatedAt: DateTime.now(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
         transactions: [
           AccountingTransactionEntity(
-            id: '', documentId: '', subjectId: '011',
-            debit: Money.fromMinor(100000), credit: Money.fromMinor(0),
-            description: '', rowOrder: 1,
-            createdAt: DateTime.now(), updatedAt: DateTime.now(),
+            id: '',
+            documentId: '',
+            subjectId: '011',
+            debit: Money.fromMinor(100000),
+            credit: Money.fromMinor(0),
+            description: '',
+            rowOrder: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
         ],
       );
@@ -129,21 +143,22 @@ void main() {
       expect(updated.title, equals('ویرایش پس از تأیید'));
 
       final logs = await repo.watchAuditLogs().first;
-      expect(
-        logs.any((l) => l.action == AuditLogAction.update),
-        isTrue,
-      );
+      expect(logs.any((l) => l.action == AuditLogAction.update), isTrue);
     });
   });
 
   group('Phase 1 — audit trail', () {
     test('logs create, approve, update and delete with snapshots', () async {
-      final created = await repo.createDocument(balancedDoc(title: 'سند حسابرسی'));
+      final created = await repo.createDocument(
+        balancedDoc(title: 'سند حسابرسی'),
+      );
       await repo.approveDocument(created.id);
-      await repo.updateDocument(created.copyWith(
-        title: 'سند حسابرسی ویرایش‌شده',
-        status: DocumentStatus.draft,
-      ));
+      await repo.updateDocument(
+        created.copyWith(
+          title: 'سند حسابرسی ویرایش‌شده',
+          status: DocumentStatus.draft,
+        ),
+      );
       await repo.deleteDocument(created.id);
 
       final logs = await repo.watchAuditLogs().first;
@@ -154,7 +169,9 @@ void main() {
       expect(actions.contains(AuditLogAction.update), isTrue);
       expect(actions.contains(AuditLogAction.delete), isTrue);
 
-      final updateLog = logs.firstWhere((l) => l.action == AuditLogAction.update);
+      final updateLog = logs.firstWhere(
+        (l) => l.action == AuditLogAction.update,
+      );
       expect(updateLog.beforeJson, isNotNull);
       expect(updateLog.afterJson, isNotNull);
       expect(updateLog.beforeJson, contains('سند حسابرسی'));
@@ -168,7 +185,8 @@ void main() {
       final fy = years.first;
 
       // Close the year directly (lock).
-      await (db.update(db.fiscalYearsTable)..where((tbl) => tbl.id.equals(fy.id)))
+      await (db.update(db.fiscalYearsTable)
+            ..where((tbl) => tbl.id.equals(fy.id)))
           .write(FiscalYearsTableCompanion(isClosed: const Value(true)));
 
       final doc = balancedDoc(date: fy.startDate.add(const Duration(days: 5)));
@@ -177,28 +195,37 @@ void main() {
   });
 
   group('Phase 1 — floating details (تفصیلی شناور)', () {
-    test('creates ledger + values, tags document, and reports by value', () async {
-      final ledgerId = await repo.createDetailLedger(title: 'مشتریان', code: 'customer');
-      final valueId = await repo.createDetailValue(
-        ledgerId: ledgerId,
-        title: 'شرکت الف',
-      );
+    test(
+      'creates ledger + values, tags document, and reports by value',
+      () async {
+        final ledgerId = await repo.createDetailLedger(
+          title: 'مشتریان',
+          code: 'customer',
+        );
+        final valueId = await repo.createDetailValue(
+          ledgerId: ledgerId,
+          title: 'شرکت الف',
+        );
 
-      final doc = await repo.createDocument(
-        balancedDoc(title: 'فروش به شرکت الف'),
-        details: [DocumentDetailTag(ledgerId: ledgerId, valueId: valueId)],
-      );
+        final doc = await repo.createDocument(
+          balancedDoc(title: 'فروش به شرکت الف'),
+          details: [DocumentDetailTag(ledgerId: ledgerId, valueId: valueId)],
+        );
 
-      final report = await repo.getDetailReport(ledgerId: ledgerId, valueId: valueId);
-      expect(report.rows, isNotEmpty);
-      expect(report.totalDebitMinorUnits, equals(100000));
-      expect(report.totalCreditMinorUnits, equals(100000));
-      expect(report.rows.first.documentNumber, doc.number);
+        final report = await repo.getDetailReport(
+          ledgerId: ledgerId,
+          valueId: valueId,
+        );
+        expect(report.rows, isNotEmpty);
+        expect(report.totalDebitMinorUnits, equals(100000));
+        expect(report.totalCreditMinorUnits, equals(100000));
+        expect(report.rows.first.documentNumber, doc.number);
 
-      final tags = await repo.getDocumentDetails(doc.id);
-      expect(tags.length, equals(1));
-      expect(tags.first.valueId, equals(valueId));
-    });
+        final tags = await repo.getDocumentDetails(doc.id);
+        expect(tags.length, equals(1));
+        expect(tags.first.valueId, equals(valueId));
+      },
+    );
 
     test('enforces the 10-ledger limit', () async {
       for (var i = 0; i < 10; i++) {
@@ -212,28 +239,34 @@ void main() {
   });
 
   group('Phase 1 — fiscal year close/open', () {
-    test('closing produces balanced closing voucher, next year and opening voucher',
-        () async {
+    test('closing produces balanced closing voucher, next year and opening voucher', () async {
       // Revenue + expense documents inside the current fiscal year.
       final now = DateTime.now();
-      await repo.createDocument(balancedDoc(
-        title: 'فروش',
-        date: now,
-      ));
+      await repo.createDocument(balancedDoc(title: 'فروش', date: now));
       await repo.createDocument(
         balancedDoc(title: 'هزینه').copyWith(
           transactions: [
             AccountingTransactionEntity(
-              id: '', documentId: '', subjectId: '040001',
-              debit: Money.fromMinor(40000), credit: Money.fromMinor(0),
-              description: 'هزینه', rowOrder: 1,
-              createdAt: now, updatedAt: now,
+              id: '',
+              documentId: '',
+              subjectId: '040001',
+              debit: Money.fromMinor(40000),
+              credit: Money.fromMinor(0),
+              description: 'هزینه',
+              rowOrder: 1,
+              createdAt: now,
+              updatedAt: now,
             ),
             AccountingTransactionEntity(
-              id: '', documentId: '', subjectId: '011',
-              debit: Money.fromMinor(0), credit: Money.fromMinor(40000),
-              description: 'پرداخت', rowOrder: 2,
-              createdAt: now, updatedAt: now,
+              id: '',
+              documentId: '',
+              subjectId: '011',
+              debit: Money.fromMinor(0),
+              credit: Money.fromMinor(40000),
+              description: 'پرداخت',
+              rowOrder: 2,
+              createdAt: now,
+              updatedAt: now,
             ),
           ],
         ),

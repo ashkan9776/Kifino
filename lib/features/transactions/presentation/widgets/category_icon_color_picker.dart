@@ -127,8 +127,8 @@ class CategoryIconGrid extends StatelessWidget {
               color: isSelected
                   ? primary.withValues(alpha: 0.12)
                   : (isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSurfaceVariant),
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
                 color: isSelected ? primary : Colors.transparent,

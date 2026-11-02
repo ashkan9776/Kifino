@@ -40,9 +40,11 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
     setState(() {
       // Only kol/moein accounts can back a voucher line.
       _subjects = result
-          .where((s) =>
-              s.level == AccountingSubjectLevel.kol ||
-              s.level == AccountingSubjectLevel.moein)
+          .where(
+            (s) =>
+                s.level == AccountingSubjectLevel.kol ||
+                s.level == AccountingSubjectLevel.moein,
+          )
           .toList();
     });
   }
@@ -56,7 +58,10 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
     });
   }
 
-  Future<void> _pickSubject(String currentCode, ValueChanged<String> onPicked) async {
+  Future<void> _pickSubject(
+    String currentCode,
+    ValueChanged<String> onPicked,
+  ) async {
     final subjects = _subjects;
     if (subjects == null) return;
     final l10n = context.l10n;
@@ -73,7 +78,9 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
             height: MediaQuery.of(sheetContext).size.height * 0.7,
             child: Column(
               children: [
-                AppSheetHeader(title: l10n.isPersian ? 'انتخاب حساب' : 'Select account'),
+                AppSheetHeader(
+                  title: l10n.isPersian ? 'انتخاب حساب' : 'Select account',
+                ),
                 Expanded(
                   child: ListView(
                     children: [
@@ -83,10 +90,14 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: AppSpacing.borderRadiusMd,
                           ),
-                          title: Text('${subject.formattedCode} — ${subject.name}'),
+                          title: Text(
+                            '${subject.formattedCode} — ${subject.name}',
+                          ),
                           trailing: subject.code == currentCode
-                              ? const Icon(Icons.check_circle_rounded,
-                                  color: AppColors.income)
+                              ? const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.income,
+                                )
                               : null,
                           onTap: () {
                             onPicked(subject.code);
@@ -111,18 +122,31 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
 
     final rows = <(String, String)>[
       (isPersian ? 'فروش' : 'Sales', _settings.salesCode),
-      (isPersian ? 'حساب‌های دریافتنی' : 'Accounts receivable', _settings.receivableCode),
+      (
+        isPersian ? 'حساب‌های دریافتنی' : 'Accounts receivable',
+        _settings.receivableCode,
+      ),
       (isPersian ? 'مالیات فروش' : 'Output VAT', _settings.vatOutputCode),
-      (isPersian ? 'تخفیف فروش' : 'Sales discount', _settings.discountSalesCode),
+      (
+        isPersian ? 'تخفیف فروش' : 'Sales discount',
+        _settings.discountSalesCode,
+      ),
       (isPersian ? 'موجودی کالا' : 'Inventory', _settings.inventoryCode),
       (isPersian ? 'خرید' : 'Purchases', _settings.purchaseCode),
       (isPersian ? 'بستانکاران' : 'Accounts payable', _settings.payableCode),
       (isPersian ? 'مالیات خرید' : 'Input VAT', _settings.vatInputCode),
-      (isPersian ? 'تخفیف خرید' : 'Purchase discount', _settings.purchaseDiscountCode),
+      (
+        isPersian ? 'تخفیف خرید' : 'Purchase discount',
+        _settings.purchaseDiscountCode,
+      ),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(isPersian ? 'حساب‌های سند خودکار' : 'Auto-voucher accounts')),
+      appBar: AppBar(
+        title: Text(
+          isPersian ? 'حساب‌های سند خودکار' : 'Auto-voucher accounts',
+        ),
+      ),
       body: _subjects == null
           ? const Padding(
               padding: EdgeInsets.all(AppSpacing.md),
@@ -147,13 +171,27 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
                     children: [
                       for (var i = 0; i < rows.length; i++) ...[
                         if (i > 0)
-                          Divider(height: 1, indent: AppSpacing.xl, color: Theme.of(context).dividerColor),
+                          Divider(
+                            height: 1,
+                            indent: AppSpacing.xl,
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ListTile(
-                          title: Text(rows[i].$1, style: AppTypography.bodyLarge),
-                          subtitle: Text(rows[i].$2, style: AppTypography.labelMedium.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
-                          )),
-                          trailing: const Icon(Icons.chevron_left_rounded, size: 20),
+                          title: Text(
+                            rows[i].$1,
+                            style: AppTypography.bodyLarge,
+                          ),
+                          subtitle: Text(
+                            rows[i].$2,
+                            style: AppTypography.labelMedium.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface
+                                  .withValues(alpha: 0.55),
+                            ),
+                          ),
+                          trailing: const Icon(
+                            Icons.chevron_left_rounded,
+                            size: 20,
+                          ),
                           onTap: () => _pickSubject(rows[i].$2, (code) {
                             setState(() {
                               _settings = _settings.copyWith(

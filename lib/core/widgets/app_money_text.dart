@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_typography.dart';
 import '../utils/money.dart';
@@ -62,10 +63,12 @@ class AppMoneyText extends StatelessWidget {
     String formatMinor(int minor) {
       final m = Money.fromMinor(minor, money.currency);
       final formatted = m.abs().format(
-            includeSymbol: includeSymbol,
-            usePersianDigits: usePersianDigits,
-          );
-      return isRtl && prefix.isNotEmpty ? '$formatted $prefix' : '$prefix$formatted';
+        includeSymbol: includeSymbol,
+        usePersianDigits: usePersianDigits,
+      );
+      return isRtl && prefix.isNotEmpty
+          ? '$formatted $prefix'
+          : '$prefix$formatted';
     }
 
     final textStyle = defaultStyle.copyWith(

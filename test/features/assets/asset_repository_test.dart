@@ -21,33 +21,45 @@ void main() {
   group('AssetRepositoryImpl Tests', () {
     final now = DateTime.now();
 
-    test('Creates asset, updates valuation and computes profit/loss accurately', () async {
-      final asset = AssetEntity(
-        id: 'asset-1',
-        name: 'سکه تمام بهار',
-        category: AssetCategory.gold,
-        quantity: 2.0,
-        unit: 'سکه',
-        costBasis: const Money(minorUnits: 50000000, currency: Currency.irr), // 50M
-        currentValue: const Money(minorUnits: 50000000, currency: Currency.irr),
-        purchaseDate: now,
-        createdAt: now,
-        updatedAt: now,
-      );
+    test(
+      'Creates asset, updates valuation and computes profit/loss accurately',
+      () async {
+        final asset = AssetEntity(
+          id: 'asset-1',
+          name: 'سکه تمام بهار',
+          category: AssetCategory.gold,
+          quantity: 2.0,
+          unit: 'سکه',
+          costBasis: const Money(
+            minorUnits: 50000000,
+            currency: Currency.irr,
+          ), // 50M
+          currentValue: const Money(
+            minorUnits: 50000000,
+            currency: Currency.irr,
+          ),
+          purchaseDate: now,
+          createdAt: now,
+          updatedAt: now,
+        );
 
-      await repository.createAsset(asset);
+        await repository.createAsset(asset);
 
-      // Update market valuation to 65,000,000 (+15M gain)
-      await repository.updateAssetValuation('asset-1', const Money(minorUnits: 65000000, currency: Currency.irr));
+        // Update market valuation to 65,000,000 (+15M gain)
+        await repository.updateAssetValuation(
+          'asset-1',
+          const Money(minorUnits: 65000000, currency: Currency.irr),
+        );
 
-      final assets = await repository.getAssets();
-      expect(assets.isSuccess, isTrue);
-      final updated = assets.dataOrNull!.first;
+        final assets = await repository.getAssets();
+        expect(assets.isSuccess, isTrue);
+        final updated = assets.dataOrNull!.first;
 
-      expect(updated.currentValue.minorUnits, equals(65000000));
-      expect(updated.profitLossMoney.minorUnits, equals(15000000));
-      expect(updated.profitLossPercent, equals(30.0));
-      expect(updated.isProfitable, isTrue);
-    });
+        expect(updated.currentValue.minorUnits, equals(65000000));
+        expect(updated.profitLossMoney.minorUnits, equals(15000000));
+        expect(updated.profitLossPercent, equals(30.0));
+        expect(updated.isProfitable, isTrue);
+      },
+    );
   });
 }

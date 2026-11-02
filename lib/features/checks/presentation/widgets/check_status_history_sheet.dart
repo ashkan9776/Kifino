@@ -244,8 +244,8 @@ class _HistoryRowState extends State<_HistoryRow> {
     final subtext = isDark ? AppColors.darkSubtext : AppColors.lightSubtext;
 
     final (icon, color, fallbackTitle) = _actionStyle(isFa, isDark);
-    final title = (widget.log.description != null &&
-            widget.log.description!.isNotEmpty)
+    final title =
+        (widget.log.description != null && widget.log.description!.isNotEmpty)
         ? widget.log.description!
         : fallbackTitle;
     final when =
@@ -260,8 +260,9 @@ class _HistoryRowState extends State<_HistoryRow> {
           vertical: AppSpacing.sm + 2,
         ),
         decoration: BoxDecoration(
-          color: (isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant)
-              .withValues(alpha: 0.55),
+          color:
+              (isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant)
+                  .withValues(alpha: 0.55),
           borderRadius: AppSpacing.borderRadiusSm,
         ),
         child: Column(
@@ -315,11 +316,19 @@ class _HistoryRowState extends State<_HistoryRow> {
             ),
             if (_expanded) ...[
               const SizedBox(height: AppSpacing.sm),
-              _jsonBlock(isFa ? 'قبل' : 'Before', widget.prettyBefore, theme,
-                  isDark),
+              _jsonBlock(
+                isFa ? 'قبل' : 'Before',
+                widget.prettyBefore,
+                theme,
+                isDark,
+              ),
               const SizedBox(height: AppSpacing.xs),
-              _jsonBlock(isFa ? 'بعد' : 'After', widget.prettyAfter, theme,
-                  isDark),
+              _jsonBlock(
+                isFa ? 'بعد' : 'After',
+                widget.prettyAfter,
+                theme,
+                isDark,
+              ),
             ],
           ],
         ),
@@ -354,7 +363,11 @@ class _HistoryRowState extends State<_HistoryRow> {
             scrollDirection: Axis.horizontal,
             child: SelectableText(
               pretty,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 11, height: 1.4),
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                height: 1.4,
+              ),
             ),
           ),
         ),

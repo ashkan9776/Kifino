@@ -60,12 +60,20 @@ class _EditProductSheetState extends State<EditProductSheet> {
     _skuController = TextEditingController(text: p.sku ?? '');
     _unitController = TextEditingController(text: p.unit);
     _purchasePriceController = TextEditingController(
-      text: formatNumberWithSeparators(p.purchasePrice.minorUnits, toPersian: isFa),
+      text: formatNumberWithSeparators(
+        p.purchasePrice.minorUnits,
+        toPersian: isFa,
+      ),
     );
     _sellingPriceController = TextEditingController(
-      text: formatNumberWithSeparators(p.sellingPrice.minorUnits, toPersian: isFa),
+      text: formatNumberWithSeparators(
+        p.sellingPrice.minorUnits,
+        toPersian: isFa,
+      ),
     );
-    _thresholdController = TextEditingController(text: _qtyText(p.lowStockThreshold));
+    _thresholdController = TextEditingController(
+      text: _qtyText(p.lowStockThreshold),
+    );
   }
 
   @override
@@ -109,9 +117,8 @@ class _EditProductSheetState extends State<EditProductSheet> {
     final cur = Currency.fromCode(AppConstants.defaultCurrencyCode);
     final sku = _skuController.text.trim();
     final unit = _unitController.text.trim();
-    final threshold = double.tryParse(
-          normalizeDecimalInput(_thresholdController.text),
-        ) ??
+    final threshold =
+        double.tryParse(normalizeDecimalInput(_thresholdController.text)) ??
         old.lowStockThreshold;
 
     // currentStock is untouched — stock only changes via adjustStock.
@@ -141,9 +148,8 @@ class _EditProductSheetState extends State<EditProductSheet> {
       onSuccess: (_) => Navigator.of(context).pop(),
       onFailure: (failure) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message)));
       },
     );
   }
@@ -171,7 +177,9 @@ class _EditProductSheetState extends State<EditProductSheet> {
               Text(
                 '${isFa ? 'موجودی فعلی انبار' : 'Current stock'}: ${_qtyText(widget.product.currentStock)} ${widget.product.unit}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -216,7 +224,9 @@ class _EditProductSheetState extends State<EditProductSheet> {
                       controller: _purchasePriceController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        PersianThousandsSeparatorTextInputFormatter(enabled: isFa),
+                        PersianThousandsSeparatorTextInputFormatter(
+                          enabled: isFa,
+                        ),
                       ],
                       decoration: InputDecoration(
                         labelText: isFa ? 'قیمت خرید (ریال)' : 'Purchase price',
@@ -229,7 +239,9 @@ class _EditProductSheetState extends State<EditProductSheet> {
                       controller: _sellingPriceController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        PersianThousandsSeparatorTextInputFormatter(enabled: isFa),
+                        PersianThousandsSeparatorTextInputFormatter(
+                          enabled: isFa,
+                        ),
                       ],
                       decoration: InputDecoration(
                         labelText: isFa ? 'قیمت فروش (ریال)' : 'Selling price',
@@ -241,12 +253,16 @@ class _EditProductSheetState extends State<EditProductSheet> {
               const SizedBox(height: AppSpacing.sm),
               TextField(
                 controller: _thresholdController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   PersianDigitsTextInputFormatter(enabled: isFa),
                 ],
                 decoration: InputDecoration(
-                  labelText: isFa ? 'حداقل موجودی هشدار' : 'Low-stock threshold',
+                  labelText: isFa
+                      ? 'حداقل موجودی هشدار'
+                      : 'Low-stock threshold',
                   prefixIcon: const Icon(Icons.warning_amber_outlined),
                 ),
               ),

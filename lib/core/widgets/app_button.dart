@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
@@ -36,21 +37,33 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        bgColor = isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight;
+        bgColor = isDark
+            ? AppColors.primaryBlueDark
+            : AppColors.primaryBlueLight;
         fgColor = isDark ? AppColors.darkBackground : Colors.white;
         break;
       case AppButtonVariant.secondary:
-        bgColor = isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant;
-        fgColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        bgColor = isDark
+            ? AppColors.darkSurfaceVariant
+            : AppColors.lightSurfaceVariant;
+        fgColor = isDark
+            ? AppColors.darkTextPrimary
+            : AppColors.lightTextPrimary;
         break;
       case AppButtonVariant.outline:
         bgColor = Colors.transparent;
-        fgColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-        borderSide = BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder);
+        fgColor = isDark
+            ? AppColors.darkTextPrimary
+            : AppColors.lightTextPrimary;
+        borderSide = BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        );
         break;
       case AppButtonVariant.text:
         bgColor = Colors.transparent;
-        fgColor = isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight;
+        fgColor = isDark
+            ? AppColors.primaryBlueDark
+            : AppColors.primaryBlueLight;
         break;
       case AppButtonVariant.danger:
         bgColor = isDark ? AppColors.expenseDark : AppColors.expenseLight;
@@ -78,10 +91,7 @@ class AppButton extends StatelessWidget {
           icon!,
           const SizedBox(width: AppSpacing.sm),
         ],
-        Text(
-          label,
-          style: AppTypography.labelLarge.copyWith(color: fgColor),
-        ),
+        Text(label, style: AppTypography.labelLarge.copyWith(color: fgColor)),
       ],
     );
 
@@ -95,7 +105,9 @@ class AppButton extends StatelessWidget {
           foregroundColor: fgColor,
           elevation: 0,
           side: borderSide,
-          shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppSpacing.borderRadiusMd,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         ),
         child: content,

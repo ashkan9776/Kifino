@@ -12,7 +12,8 @@ class BudgetsTable extends Table {
   TextColumn get periodType => text()(); // monthly, weekly, custom
   IntColumn get startDate => integer()();
   IntColumn get endDate => integer()();
-  RealColumn get alertThresholdPercent => real().withDefault(const Constant(80.0))();
+  RealColumn get alertThresholdPercent =>
+      real().withDefault(const Constant(80.0))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
   IntColumn get deletedAt => integer().nullable()();
@@ -71,10 +72,12 @@ class InstallmentsTable extends Table {
   IntColumn get totalAmountMinor => integer()();
   TextColumn get currency => text()();
   IntColumn get numberOfInstallments => integer()();
-  IntColumn get paidInstallmentsCount => integer().withDefault(const Constant(0))();
+  IntColumn get paidInstallmentsCount =>
+      integer().withDefault(const Constant(0))();
   IntColumn get installmentAmountMinor => integer()();
   IntColumn get startDate => integer()();
-  IntColumn get recurrenceIntervalDays => integer().withDefault(const Constant(30))();
+  IntColumn get recurrenceIntervalDays =>
+      integer().withDefault(const Constant(30))();
   IntColumn get nextDueDate => integer()();
   TextColumn get status => text()(); // ongoing, completed, overdue
   TextColumn get notes => text().nullable()();
@@ -103,7 +106,8 @@ class ChecksTable extends Table {
   TextColumn get partyName => text()();
   IntColumn get dueDate => integer()();
   TextColumn get accountId => text().nullable()();
-  TextColumn get status => text()(); // pending, cleared, bounced, cancelled, transferred
+  TextColumn get status =>
+      text()(); // pending, cleared, bounced, cancelled, transferred
   TextColumn get frontImagePath => text().nullable()();
   TextColumn get backImagePath => text().nullable()();
   TextColumn get notes => text().nullable()();
@@ -124,8 +128,10 @@ class AssetsTable extends Table {
 
   TextColumn get id => text()();
   TextColumn get name => text()();
-  TextColumn get category => text()(); // gold, currency, crypto, stock, property, vehicle, other
-  TextColumn get customTypeName => text().nullable()(); // user-defined type when category = other
+  TextColumn get category =>
+      text()(); // gold, currency, crypto, stock, property, vehicle, other
+  TextColumn get customTypeName =>
+      text().nullable()(); // user-defined type when category = other
   RealColumn get quantity => real()();
   TextColumn get unit => text()();
   IntColumn get costBasisMinor => integer()();
@@ -142,7 +148,6 @@ class AssetsTable extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
-
 
 /// Payment history for one installment plan (Phase 3 rework): every «پرداخت
 /// قسط» records a row here so users can review and correct payments.

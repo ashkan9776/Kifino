@@ -60,98 +60,108 @@ class _LockPageState extends State<LockPage> {
           child: SafeArea(
             top: false,
             child: Scaffold(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: Column(
-                children: [
-                  const Spacer(),
-
-                  // 1. App Icon / Shield Branding
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock_outline_rounded,
-                      color: AppColors.primary,
-                      size: 36,
-                    ),
+              backgroundColor: isDark
+                  ? AppColors.darkBackground
+                  : AppColors.lightBackground,
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'کیفینو قفل است',
-                    style: AppTypography.titleLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'برای ورود، رمز ۴ رقمی خود را وارد نمایید',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkSubtext : AppColors.lightSubtext,
-                    ),
-                  ),
+                  child: Column(
+                    children: [
+                      const Spacer(),
 
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // 2. PIN Dot Indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pinLength, (index) {
-                      final isFilled = index < _enteredPin.length;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        width: isFilled ? 18 : 14,
-                        height: isFilled ? 18 : 14,
+                      // 1. App Icon / Shield Branding
+                      Container(
+                        width: 72,
+                        height: 72,
                         decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
-                          color: isFilled
-                              ? AppColors.primary
-                              : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightBorder),
-                          border: isFilled
-                              ? null
-                              : Border.all(
-                                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                                  width: 2,
-                                ),
                         ),
-                      );
-                    }),
+                        child: const Icon(
+                          Icons.lock_outline_rounded,
+                          color: AppColors.primary,
+                          size: 36,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'کیفینو قفل است',
+                        style: AppTypography.titleLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'برای ورود، رمز ۴ رقمی خود را وارد نمایید',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // 2. PIN Dot Indicators
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_pinLength, (index) {
+                          final isFilled = index < _enteredPin.length;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            width: isFilled ? 18 : 14,
+                            height: isFilled ? 18 : 14,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isFilled
+                                  ? AppColors.primary
+                                  : (isDark
+                                        ? AppColors.darkSurfaceVariant
+                                        : AppColors.lightBorder),
+                              border: isFilled
+                                  ? null
+                                  : Border.all(
+                                      color: isDark
+                                          ? AppColors.darkBorder
+                                          : AppColors.lightBorder,
+                                      width: 2,
+                                    ),
+                            ),
+                          );
+                        }),
+                      ),
+
+                      // Error Text if any
+                      SizedBox(
+                        height: 36,
+                        child: Center(
+                          child: state.errorMessage != null
+                              ? Text(
+                                  state.errorMessage!,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.expense,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // 3. Numeric Keypad
+                      _buildKeypad(context, state, isDark),
+
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
                   ),
-
-                  // Error Text if any
-                  SizedBox(
-                    height: 36,
-                    child: Center(
-                      child: state.errorMessage != null
-                          ? Text(
-                              state.errorMessage!,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.expense,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  // 3. Numeric Keypad
-                  _buildKeypad(context, state, isDark),
-
-                  const SizedBox(height: AppSpacing.xl),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
           ),
         );
       },
@@ -174,7 +184,8 @@ class _LockPageState extends State<LockPage> {
             if (state.canBiometric && state.isBiometricEnabled)
               _buildSpecialKey(
                 icon: Icons.fingerprint_rounded,
-                onTap: () => context.read<SecurityCubit>().authenticateBiometric(),
+                onTap: () =>
+                    context.read<SecurityCubit>().authenticateBiometric(),
                 isDark: isDark,
               )
             else
@@ -246,7 +257,9 @@ class _LockPageState extends State<LockPage> {
           child: Icon(
             icon,
             size: 28,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
         ),
       ),

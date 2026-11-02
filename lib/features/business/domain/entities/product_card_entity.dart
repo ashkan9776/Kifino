@@ -25,6 +25,12 @@ class ProductCardEntry extends Equatable {
 
   @override
   List<Object?> get props => [
-        date, movementType, description, inQuantity, outQuantity, balance, referenceId,
-      ];
+    date,
+    movementType,
+    description,
+    inQuantity,
+    outQuantity,
+    balance,
+    referenceId,
+  ];
 }

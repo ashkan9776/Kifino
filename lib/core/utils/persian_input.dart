@@ -86,8 +86,10 @@ class PersianThousandsSeparatorTextInputFormatter extends TextInputFormatter {
 
     // 1. Calculate how many raw digits appeared before the cursor in newValue
     int digitsBeforeCursor = 0;
-    final cursorOffset =
-        newValue.selection.baseOffset.clamp(0, newValue.text.length);
+    final cursorOffset = newValue.selection.baseOffset.clamp(
+      0,
+      newValue.text.length,
+    );
     for (int i = 0; i < cursorOffset; i++) {
       if (_digitRegex.hasMatch(newValue.text[i])) {
         digitsBeforeCursor++;
@@ -161,9 +163,10 @@ String normalizeNumericInput(String input) =>
 
 /// Same as [normalizeNumericInput] but preserves the decimal point (both
 /// Latin '.' and Persian '٫') — use for quantities like ۱.۵ گرم.
-String normalizeDecimalInput(String input) => TextNormalizer.toLatinDigits(input)
-    .replaceAll('٫', '.')
-    .replaceAll(RegExp(r'[^0-9.]'), '');
+String normalizeDecimalInput(String input) =>
+    TextNormalizer.toLatinDigits(input)
+        .replaceAll('٫', '.')
+        .replaceAll(RegExp(r'[^0-9.]'), '');
 
 /// Formats an integer or numeric string with thousands separators (e.g. 1000000 -> "۱,۰۰۰,۰۰۰").
 String formatNumberWithSeparators(dynamic value, {bool toPersian = true}) {

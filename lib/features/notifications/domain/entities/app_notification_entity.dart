@@ -64,13 +64,13 @@ class AppNotificationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        body,
-        type,
-        referenceId,
-        scheduledFor,
-        isRead,
-        createdAt,
-      ];
+    id,
+    title,
+    body,
+    type,
+    referenceId,
+    scheduledFor,
+    isRead,
+    createdAt,
+  ];
 }

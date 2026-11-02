@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../../../core/utils/money.dart';
 
 enum InstallmentStatus {
@@ -54,7 +55,10 @@ class InstallmentEntity extends Equatable {
   });
 
   int get remainingInstallmentsCount =>
-      (numberOfInstallments - paidInstallmentsCount).clamp(0, numberOfInstallments);
+      (numberOfInstallments - paidInstallmentsCount).clamp(
+        0,
+        numberOfInstallments,
+      );
 
   Money get paidAmount {
     final paidMinor = paidInstallmentsCount * installmentAmount.minorUnits;
@@ -68,11 +72,15 @@ class InstallmentEntity extends Equatable {
 
   double get progressPercent {
     if (numberOfInstallments <= 0) return 100.0;
-    return ((paidInstallmentsCount / numberOfInstallments) * 100).clamp(0.0, 100.0);
+    return ((paidInstallmentsCount / numberOfInstallments) * 100).clamp(
+      0.0,
+      100.0,
+    );
   }
 
   bool get isCompleted =>
-      status == InstallmentStatus.completed || paidInstallmentsCount >= numberOfInstallments;
+      status == InstallmentStatus.completed ||
+      paidInstallmentsCount >= numberOfInstallments;
 
   bool get isDeleted => deletedAt != null;
 
@@ -99,10 +107,12 @@ class InstallmentEntity extends Equatable {
       accountId: accountId ?? this.accountId,
       totalAmount: totalAmount ?? this.totalAmount,
       numberOfInstallments: numberOfInstallments ?? this.numberOfInstallments,
-      paidInstallmentsCount: paidInstallmentsCount ?? this.paidInstallmentsCount,
+      paidInstallmentsCount:
+          paidInstallmentsCount ?? this.paidInstallmentsCount,
       installmentAmount: installmentAmount ?? this.installmentAmount,
       startDate: startDate ?? this.startDate,
-      recurrenceIntervalDays: recurrenceIntervalDays ?? this.recurrenceIntervalDays,
+      recurrenceIntervalDays:
+          recurrenceIntervalDays ?? this.recurrenceIntervalDays,
       nextDueDate: nextDueDate ?? this.nextDueDate,
       status: status ?? this.status,
       notes: notes ?? this.notes,
@@ -114,20 +124,20 @@ class InstallmentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        accountId,
-        totalAmount,
-        numberOfInstallments,
-        paidInstallmentsCount,
-        installmentAmount,
-        startDate,
-        recurrenceIntervalDays,
-        nextDueDate,
-        status,
-        notes,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      ];
+    id,
+    title,
+    accountId,
+    totalAmount,
+    numberOfInstallments,
+    paidInstallmentsCount,
+    installmentAmount,
+    startDate,
+    recurrenceIntervalDays,
+    nextDueDate,
+    status,
+    notes,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
 }

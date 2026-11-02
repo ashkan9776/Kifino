@@ -26,8 +26,10 @@ class AppBottomSheet extends StatelessWidget {
     final mq = MediaQuery.of(context);
     // Keyboard height beyond what SafeArea already covers, so we never
     // double-count the gesture nav bar inset.
-    final extraKeyboard =
-        (mq.viewInsets.bottom - mq.padding.bottom).clamp(0.0, double.infinity);
+    final extraKeyboard = (mq.viewInsets.bottom - mq.padding.bottom).clamp(
+      0.0,
+      double.infinity,
+    );
 
     return Padding(
       padding: EdgeInsets.only(bottom: extraKeyboard),
