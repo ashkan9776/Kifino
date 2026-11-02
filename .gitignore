@@ -50,3 +50,6 @@ AGENTS.md
 
 # Secrets & local config
 *.env
+key.properties
+*.jks
+*.keystore

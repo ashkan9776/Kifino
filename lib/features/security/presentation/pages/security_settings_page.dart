@@ -148,7 +148,32 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
 
                   const SizedBox(height: AppSpacing.md),
 
-                  // 3. Security Status & Encryption
+                  // 3. Screenshot & Privacy Protection (FLAG_SECURE)
+                  AppCard(
+                    child: SwitchListTile(
+                      secondary: const Icon(Icons.shield_outlined),
+                      title: const Text('جلوگیری از اسکرین‌شات و ضبط صفحه'),
+                      subtitle: Text(
+                        'محافظت از حریم خصوصی در پیش‌نمایش برنامه‌ها و جلوگیری از تصویربرداری از صفحه',
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
+                          fontSize: 12,
+                        ),
+                      ),
+                      value: state.isScreenshotProtected,
+                      onChanged: (val) {
+                        context
+                            .read<SecurityCubit>()
+                            .toggleScreenshotProtection(val);
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  // 4. Security Status & Encryption
                   AppCard(
                     backgroundColor: isDark
                         ? AppColors.darkSurfaceVariant

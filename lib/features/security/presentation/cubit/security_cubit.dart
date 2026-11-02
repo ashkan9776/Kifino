@@ -16,12 +16,15 @@ class SecurityCubit extends Cubit<SecurityState> {
     final isPinSet = await securityService.isPinSet();
     final canBio = await securityService.canCheckBiometrics();
     final isBioEnabled = await securityService.isBiometricEnabled();
+    final isSecProt = await securityService.isScreenshotProtectionEnabled();
+    await securityService.syncSecurityFlags();
 
     emit(
       state.copyWith(
         isPinSet: isPinSet,
         canBiometric: canBio,
         isBiometricEnabled: isBioEnabled,
+        isScreenshotProtected: isSecProt,
         isLocked: isPinSet, // Automatically lock if PIN is configured
       ),
     );
@@ -29,6 +32,11 @@ class SecurityCubit extends Cubit<SecurityState> {
     if (isPinSet && isBioEnabled && canBio) {
       authenticateBiometric();
     }
+  }
+
+  Future<void> toggleScreenshotProtection(bool enabled) async {
+    await securityService.setScreenshotProtection(enabled);
+    emit(state.copyWith(isScreenshotProtected: enabled));
   }
 
   Future<bool> verifyPin(String pin) async {

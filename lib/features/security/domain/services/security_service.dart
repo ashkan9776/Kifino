@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:uuid/uuid.dart';
@@ -12,6 +13,10 @@ class SecurityService {
   static const String _pinHashKey = 'kifino_sec_pin_hash';
   static const String _pinSaltKey = 'kifino_sec_pin_salt';
   static const String _biometricEnabledKey = 'kifino_sec_bio_enabled';
+  static const String _screenshotProtectionKey = 'kifino_sec_screenshot_prot';
+  static const MethodChannel _securityChannel = MethodChannel(
+    'ir.kifino.app/security',
+  );
 
   SecurityService({required this.secureStorage, LocalAuthentication? localAuth})
     : _localAuth = localAuth ?? LocalAuthentication();
@@ -81,5 +86,36 @@ class SecurityService {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<bool> isScreenshotProtectionEnabled() async {
+    final val = await secureStorage.read(key: _screenshotProtectionKey);
+    // Defaults to true for financial app privacy
+    return val == null || val == 'true';
+  }
+
+  Future<void> setScreenshotProtection(bool enabled) async {
+    await secureStorage.write(
+      key: _screenshotProtectionKey,
+      value: enabled.toString(),
+    );
+    try {
+      if (enabled) {
+        await _securityChannel.invokeMethod('enableSecureMode');
+      } else {
+        await _securityChannel.invokeMethod('disableSecureMode');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> syncSecurityFlags() async {
+    final enabled = await isScreenshotProtectionEnabled();
+    try {
+      if (enabled) {
+        await _securityChannel.invokeMethod('enableSecureMode');
+      } else {
+        await _securityChannel.invokeMethod('disableSecureMode');
+      }
+    } catch (_) {}
   }
 }

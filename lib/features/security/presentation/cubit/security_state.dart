@@ -5,6 +5,7 @@ class SecurityState extends Equatable {
   final bool isPinSet;
   final bool isBiometricEnabled;
   final bool canBiometric;
+  final bool isScreenshotProtected;
   final String? errorMessage;
   final bool isAuthenticating;
 
@@ -13,6 +14,7 @@ class SecurityState extends Equatable {
     this.isPinSet = false,
     this.isBiometricEnabled = false,
     this.canBiometric = false,
+    this.isScreenshotProtected = true,
     this.errorMessage,
     this.isAuthenticating = false,
   });
@@ -22,6 +24,7 @@ class SecurityState extends Equatable {
     bool? isPinSet,
     bool? isBiometricEnabled,
     bool? canBiometric,
+    bool? isScreenshotProtected,
     String? errorMessage,
     bool? isAuthenticating,
   }) {
@@ -30,6 +33,8 @@ class SecurityState extends Equatable {
       isPinSet: isPinSet ?? this.isPinSet,
       isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
       canBiometric: canBiometric ?? this.canBiometric,
+      isScreenshotProtected:
+          isScreenshotProtected ?? this.isScreenshotProtected,
       errorMessage: errorMessage,
       isAuthenticating: isAuthenticating ?? this.isAuthenticating,
     );
@@ -41,6 +46,7 @@ class SecurityState extends Equatable {
     isPinSet,
     isBiometricEnabled,
     canBiometric,
+    isScreenshotProtected,
     errorMessage,
     isAuthenticating,
   ];
