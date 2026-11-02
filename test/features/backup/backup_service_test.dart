@@ -812,7 +812,7 @@ void main() {
             ),
           );
       final backupResult = await service.createEncryptedBackup(
-        password: 'PassVer',
+        password: 'PassVersion123',
       );
       expect(backupResult.isSuccess, isTrue);
 
@@ -828,7 +828,7 @@ void main() {
 
       final restoreResult = await service.restoreEncryptedBackup(
         filePath: filePath,
-        password: 'PassVer',
+        password: 'PassVersion123',
       );
       expect(restoreResult.isFailure, isTrue);
       expect(restoreResult.failureOrNull?.message, contains('جدیدتر است'));

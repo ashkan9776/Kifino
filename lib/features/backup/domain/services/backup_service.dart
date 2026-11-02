@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -7,6 +8,7 @@ import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:pointycastle/export.dart' as pc;
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/app_database.dart';
@@ -21,6 +23,7 @@ class BackupMetadata {
   final DateTime exportedAt;
   final String checksum;
   final Map<String, int> entityCounts;
+  final bool isLegacyFormat;
 
   const BackupMetadata({
     required this.schemaVersion,
@@ -28,6 +31,7 @@ class BackupMetadata {
     required this.exportedAt,
     required this.checksum,
     required this.entityCounts,
+    this.isLegacyFormat = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -36,14 +40,20 @@ class BackupMetadata {
     'exportedAt': exportedAt.toIso8601String(),
     'checksum': checksum,
     'entityCounts': entityCounts,
+    'isLegacyFormat': isLegacyFormat,
   };
 
-  factory BackupMetadata.fromJson(Map<String, dynamic> json) => BackupMetadata(
+  factory BackupMetadata.fromJson(
+    Map<String, dynamic> json, {
+    bool isLegacyFormat = false,
+  }) => BackupMetadata(
     schemaVersion: json['schemaVersion'] as int,
     appVersion: json['appVersion'] as String,
     exportedAt: DateTime.parse(json['exportedAt'] as String),
     checksum: json['checksum'] as String,
     entityCounts: Map<String, int>.from(json['entityCounts'] as Map),
+    isLegacyFormat:
+        isLegacyFormat || (json['isLegacyFormat'] as bool? ?? false),
   );
 }
 
@@ -124,7 +134,76 @@ class BackupService {
     }
   }
 
-  /// Derives a 32-byte Key and 16-byte IV from password
+  /// Evaluates password strength:
+  /// Returns a score between 0 and 4:
+  /// 0: Too short (< 8)
+  /// 1: Weak
+  /// 2: Fair
+  /// 3: Good
+  /// 4: Strong
+  static int evaluatePasswordStrength(String password) {
+    if (password.length < 8) return 0;
+    int score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (RegExp(r'[0-9]').hasMatch(password) &&
+        RegExp(r'[a-zA-Z]').hasMatch(password)) {
+      score++;
+    }
+    if (RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(password)) score++;
+    return score;
+  }
+
+  /// PBKDF2-HMAC-SHA256 key derivation with salt and configurable iterations
+  Uint8List _derivePbkdf2Key({
+    required String password,
+    required Uint8List salt,
+    int iterations = 300000,
+    int keyLength = 32,
+  }) {
+    final derivator = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64))
+      ..init(pc.Pbkdf2Parameters(salt, iterations, keyLength));
+    final passwordBytes = Uint8List.fromList(utf8.encode(password));
+    return derivator.process(passwordBytes);
+  }
+
+  /// Encrypts plaintext using AES-256-GCM with 128-bit authentication tag
+  (Uint8List cipherWithTag, Uint8List nonce) _encryptGcm({
+    required Uint8List key,
+    required Uint8List plaintext,
+    Uint8List? nonce,
+  }) {
+    final actualNonce =
+        nonce ??
+        () {
+          final rng = Random.secure();
+          return Uint8List.fromList(List.generate(12, (_) => rng.nextInt(256)));
+        }();
+
+    final cipher = pc.GCMBlockCipher(pc.AESEngine())
+      ..init(
+        true,
+        pc.AEADParameters(pc.KeyParameter(key), 128, actualNonce, Uint8List(0)),
+      );
+    final output = cipher.process(plaintext);
+    return (output, actualNonce);
+  }
+
+  /// Decrypts ciphertext and verifies GCM authentication tag
+  Uint8List _decryptGcm({
+    required Uint8List key,
+    required Uint8List nonce,
+    required Uint8List cipherWithTag,
+  }) {
+    final cipher = pc.GCMBlockCipher(pc.AESEngine())
+      ..init(
+        false,
+        pc.AEADParameters(pc.KeyParameter(key), 128, nonce, Uint8List(0)),
+      );
+    return cipher.process(cipherWithTag);
+  }
+
+  /// Derives a 32-byte Key and 16-byte IV from password (legacy V1 format)
   (enc.Key, enc.IV) _deriveKeyAndIv(String password) {
     final keyBytes = sha256.convert(utf8.encode('kifino:key:$password')).bytes;
     final ivBytes = md5.convert(utf8.encode('kifino:iv:$password')).bytes;
@@ -137,7 +216,13 @@ class BackupService {
   /// Exports all financial entities to an encrypted JSON file
   Future<Result<String>> createEncryptedBackup({
     required String password,
+    int iterations = 300000,
   }) async {
+    if (password.length < 8) {
+      return const FailureResult(
+        ValidationFailure('رمز عبور باید حداقل ۸ کاراکتر باشد.'),
+      );
+    }
     try {
       final accounts = await _db.select(_db.accountsTable).get();
       final categories = await _db.select(_db.categoriesTable).get();
@@ -273,14 +358,33 @@ class BackupService {
         },
       );
 
-      // AES-256-CBC Encryption
-      final (key, iv) = _deriveKeyAndIv(password);
-      final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
-      final encrypted = encrypter.encrypt(jsonPayload, iv: iv);
+      // PBKDF2-HMAC-SHA256 (300k iterations by default) + AES-256-GCM
+      final rng = Random.secure();
+      final salt = Uint8List.fromList(
+        List.generate(16, (_) => rng.nextInt(256)),
+      );
+      final key = _derivePbkdf2Key(
+        password: password,
+        salt: salt,
+        iterations: iterations,
+      );
+
+      final (cipherWithTag, nonce) = _encryptGcm(
+        key: key,
+        plaintext: Uint8List.fromList(utf8.encode(jsonPayload)),
+      );
 
       final backupPackage = jsonEncode({
+        'magic': 'KIFINO',
+        'formatVersion': 2,
+        'kdf': {
+          'algorithm': 'PBKDF2-HMAC-SHA256',
+          'iterations': iterations,
+          'salt': base64Encode(salt),
+        },
+        'nonce': base64Encode(nonce),
         'metadata': metadata.toJson(),
-        'cipher': encrypted.base64,
+        'cipher': base64Encode(cipherWithTag),
       });
 
       final dir = await getApplicationDocumentsDirectory();
@@ -312,8 +416,14 @@ class BackupService {
       final Map<String, dynamic> package =
           jsonDecode(content) as Map<String, dynamic>;
 
+      final isV2 =
+          package['formatVersion'] == 2 && package['magic'] == 'KIFINO';
+
       final metadataJson = package['metadata'] as Map<String, dynamic>;
-      final metadata = BackupMetadata.fromJson(metadataJson);
+      final metadata = BackupMetadata.fromJson(
+        metadataJson,
+        isLegacyFormat: !isV2,
+      );
 
       if (metadata.schemaVersion > AppConstants.databaseVersion) {
         return FailureResult(
@@ -324,19 +434,48 @@ class BackupService {
       }
 
       final cipherBase64 = package['cipher'] as String;
-
-      // Decrypt
-      final (key, iv) = _deriveKeyAndIv(password);
-      final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
       String decryptedPayload;
-      try {
-        decryptedPayload = encrypter.decrypt64(cipherBase64, iv: iv);
-      } catch (e) {
-        return const FailureResult(
-          SecurityFailure(
-            'رمز عبور پشتیبان اشتباه است یا فایل دستکاری شده است.',
-          ),
-        );
+
+      if (isV2) {
+        // Modern V2: PBKDF2-HMAC-SHA256 + AES-256-GCM
+        final kdfInfo = package['kdf'] as Map<String, dynamic>;
+        final iterations = (kdfInfo['iterations'] as num).toInt();
+        final salt = base64Decode(kdfInfo['salt'] as String);
+        final nonce = base64Decode(package['nonce'] as String);
+        final cipherBytes = base64Decode(cipherBase64);
+
+        try {
+          final key = _derivePbkdf2Key(
+            password: password,
+            salt: salt,
+            iterations: iterations,
+          );
+          final decryptedBytes = _decryptGcm(
+            key: key,
+            nonce: nonce,
+            cipherWithTag: cipherBytes,
+          );
+          decryptedPayload = utf8.decode(decryptedBytes);
+        } catch (e) {
+          return const FailureResult(
+            SecurityFailure(
+              'رمز عبور پشتیبان اشتباه است یا فایل دستکاری شده است.',
+            ),
+          );
+        }
+      } else {
+        // Legacy V1: sha256/md5 + AES-256-CBC
+        final (key, iv) = _deriveKeyAndIv(password);
+        final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
+        try {
+          decryptedPayload = encrypter.decrypt64(cipherBase64, iv: iv);
+        } catch (e) {
+          return const FailureResult(
+            SecurityFailure(
+              'رمز عبور پشتیبان اشتباه است یا فایل دستکاری شده است.',
+            ),
+          );
+        }
       }
 
       // Verify Checksum
@@ -344,8 +483,10 @@ class BackupService {
           .convert(utf8.encode(decryptedPayload))
           .toString();
       if (computedChecksum != metadata.checksum) {
-        return FailureResult(
-          DatabaseFailure('فایل پشتیبان معتبر نیست (ناهماهنگی در چک‌سام).'),
+        return const FailureResult(
+          SecurityFailure(
+            'فایل پشتیبان معتبر نیست یا داده‌ها دستکاری شده‌اند (ناهماهنگی در چک‌سام).',
+          ),
         );
       }
 

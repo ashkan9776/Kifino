@@ -51,67 +51,114 @@ class _BackupPageState extends State<BackupPage> {
     _passwordController.clear();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('پشتیبان‌گیری رمزنگاری‌شده (AES-256)'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'یک رمز عبور برای محافظت از اطلاعات مالی خود وارد کنید. برای بازیابی به این رمز نیاز خواهید داشت:',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'رمز عبور پشتیبان',
-                prefixIcon: Icon(Icons.key_rounded),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('انصراف'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_passwordController.text.trim().isEmpty) return;
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final password = _passwordController.text;
+          final strength = BackupService.evaluatePasswordStrength(password);
+          final isValid = password.length >= 8;
 
-              final backupService = sl<BackupService>();
-              final result = await backupService.createEncryptedBackup(
-                password: _passwordController.text.trim(),
-              );
+          final (strengthLabel, strengthColor) = switch (strength) {
+            4 => ('بسیار قوی', Colors.green),
+            3 => ('خوب', Colors.lightGreen),
+            2 => ('متوسط', Colors.orange),
+            1 => ('ضعیف', Colors.redAccent),
+            _ => ('بسیار ضعیف (حداقل ۸ کاراکتر)', Colors.grey),
+          };
 
-              setState(() => _isLoading = false);
-
-              result.fold(
-                onSuccess: (filePath) {
-                  setState(() => _lastBackupPath = filePath);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'فایل پشتیبان با موفقیت در مسیر ذخیره شد:\n$filePath',
-                      ),
-                      duration: const Duration(seconds: 4),
+          return AlertDialog(
+            title: const Text('پشتیبان‌گیری رمزنگاری‌شده (AES-GCM)'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'یک رمز عبور با حداقل ۸ کاراکتر برای محافظت از اطلاعات مالی خود وارد کنید:',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  onChanged: (_) => setDialogState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'رمز عبور پشتیبان',
+                    prefixIcon: const Icon(Icons.key_rounded),
+                    errorText: password.isNotEmpty && !isValid
+                        ? 'رمز عبور باید حداقل ۸ کاراکتر باشد'
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Text(
+                      'قدرت رمز: ',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                  );
-                },
-                onFailure: (err) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('خطا: ${err.message}')),
-                  );
-                },
-              );
-            },
-            child: const Text('ایجاد پشتیبان'),
-          ),
-        ],
+                    Text(
+                      strengthLabel,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: strengthColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: password.isEmpty ? 0 : (strength.clamp(1, 4) / 4),
+                    backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                    valueColor: AlwaysStoppedAnimation<Color>(strengthColor),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('انصراف'),
+              ),
+              ElevatedButton(
+                onPressed: isValid
+                    ? () async {
+                        final pwd = _passwordController.text.trim();
+                        Navigator.pop(ctx);
+                        setState(() => _isLoading = true);
+
+                        final backupService = sl<BackupService>();
+                        final result = await backupService
+                            .createEncryptedBackup(password: pwd);
+
+                        setState(() => _isLoading = false);
+
+                        result.fold(
+                          onSuccess: (filePath) {
+                            setState(() => _lastBackupPath = filePath);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'فایل پشتیبان با موفقیت در مسیر ذخیره شد:\n$filePath',
+                                ),
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          },
+                          onFailure: (err) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('خطا: ${err.message}')),
+                            );
+                          },
+                        );
+                      }
+                    : null,
+                child: const Text('ایجاد پشتیبان'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -171,8 +218,14 @@ class _BackupPageState extends State<BackupPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'اطلاعات با موفقیت بازیابی شد!\nتراکنش‌ها: ${metadata.entityCounts["transactions"] ?? 0} | حساب‌ها: ${metadata.entityCounts["accounts"] ?? 0}',
+                        metadata.isLegacyFormat
+                            ? 'اطلاعات با موفقیت بازیابی شد!\nتوجه: این پشتیبان با ساختار قدیمی بازیابی شد. برای امنیت بیشتر، پیشنهاد می‌شود یک پشتیبان جدید (AES-GCM) ایجاد کنید.'
+                            : 'اطلاعات با موفقیت بازیابی شد!\nتراکنش‌ها: ${metadata.entityCounts["transactions"] ?? 0} | حساب‌ها: ${metadata.entityCounts["accounts"] ?? 0}',
                       ),
+                      duration: const Duration(seconds: 5),
+                      backgroundColor: metadata.isLegacyFormat
+                          ? Colors.orange.shade800
+                          : null,
                     ),
                   );
                 },
