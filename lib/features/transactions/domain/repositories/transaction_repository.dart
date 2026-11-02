@@ -14,10 +14,18 @@ abstract interface class TransactionRepository {
 
   Stream<TransactionEntity?> watchTransactionById(String id);
 
-  Future<Result<TransactionEntity>> createTransaction(TransactionEntity transaction);
-  Future<Result<TransactionEntity>> updateTransaction(TransactionEntity transaction);
+  Future<Result<TransactionEntity>> createTransaction(
+    TransactionEntity transaction,
+  );
+  Future<Result<TransactionEntity>> updateTransaction(
+    TransactionEntity transaction,
+  );
   Future<Result<void>> softDeleteTransaction(String id);
   Future<Result<void>> restoreTransaction(String id);
 
-  Future<Result<List<TransactionEntity>>> getRecentTransactions({int limit = 10});
+  Future<Result<void>> recomputeBalances();
+
+  Future<Result<List<TransactionEntity>>> getRecentTransactions({
+    int limit = 10,
+  });
 }

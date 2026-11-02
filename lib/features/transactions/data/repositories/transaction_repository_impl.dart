@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -38,7 +39,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
       attachmentUri: tx.attachmentUri,
       createdAt: DateTime.fromMillisecondsSinceEpoch(tx.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(tx.updatedAt),
-      deletedAt: tx.deletedAt != null ? DateTime.fromMillisecondsSinceEpoch(tx.deletedAt!) : null,
+      deletedAt: tx.deletedAt != null
+          ? DateTime.fromMillisecondsSinceEpoch(tx.deletedAt!)
+          : null,
       syncStatus: tx.syncStatus,
       version: tx.version,
       accountName: accountName,
@@ -74,10 +77,18 @@ class TransactionRepositoryImpl implements TransactionRepository {
     query.where(_db.transactionsTable.deletedAt.isNull());
 
     if (startDate != null) {
-      query.where(_db.transactionsTable.transactionDate.isBiggerOrEqualValue(startDate.millisecondsSinceEpoch));
+      query.where(
+        _db.transactionsTable.transactionDate.isBiggerOrEqualValue(
+          startDate.millisecondsSinceEpoch,
+        ),
+      );
     }
     if (endDate != null) {
-      query.where(_db.transactionsTable.transactionDate.isSmallerOrEqualValue(endDate.millisecondsSinceEpoch));
+      query.where(
+        _db.transactionsTable.transactionDate.isSmallerOrEqualValue(
+          endDate.millisecondsSinceEpoch,
+        ),
+      );
     }
     if (accountId != null) {
       query.where(_db.transactionsTable.accountId.equals(accountId));
@@ -114,23 +125,124 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Stream<TransactionEntity?> watchTransactionById(String id) {
-    final query = _db.select(_db.transactionsTable)..where((t) => t.id.equals(id));
-    return query.watchSingleOrNull().map((row) => row != null ? _toEntity(row) : null);
+    final query = _db.select(_db.transactionsTable)
+      ..where((t) => t.id.equals(id));
+    return query.watchSingleOrNull().map(
+      (row) => row != null ? _toEntity(row) : null,
+    );
+  }
+
+  void _validateTransaction(TransactionEntity transaction) {
+    if (transaction.type == TransactionType.transfer) {
+      if (transaction.destinationAccountId == null ||
+          transaction.destinationAccountId!.trim().isEmpty) {
+        throw ArgumentError('انتقال وجه نیازمند انتخاب حساب مقصد است.');
+      }
+      if (transaction.accountId == transaction.destinationAccountId) {
+        throw ArgumentError('حساب مبدأ و مقصد در انتقال نمی‌تواند یکسان باشد.');
+      }
+    }
+  }
+
+  /// Applies or reverses the balance effect of [tx].
+  /// When [reverse] is true, inverts the balance change.
+  Future<void> _applyBalanceEffect(
+    TransactionEntity tx, {
+    required int now,
+    bool reverse = false,
+  }) async {
+    // 1. Source Account
+    final sourceAccount = await (_db.select(
+      _db.accountsTable,
+    )..where((t) => t.id.equals(tx.accountId))).getSingle();
+    final sourceCurrency = Currency.fromCode(sourceAccount.currency);
+    Money effectiveAmount = tx.amount;
+    if (effectiveAmount.currency != sourceCurrency) {
+      if (effectiveAmount.isCompatibleWith(sourceCurrency)) {
+        effectiveAmount = effectiveAmount.normalizeTo(sourceCurrency);
+      } else {
+        throw StateError(
+          'Currency mismatch: transaction ${effectiveAmount.currency.code} vs source account ${sourceCurrency.code}',
+        );
+      }
+    }
+
+    int sourceDiff = 0;
+    if (tx.type == TransactionType.expense ||
+        tx.type == TransactionType.debtPayment) {
+      sourceDiff = reverse
+          ? effectiveAmount.minorUnits
+          : -effectiveAmount.minorUnits;
+    } else if (tx.type == TransactionType.income ||
+        tx.type == TransactionType.receivablePayment) {
+      sourceDiff = reverse
+          ? -effectiveAmount.minorUnits
+          : effectiveAmount.minorUnits;
+    } else if (tx.type == TransactionType.transfer) {
+      sourceDiff = reverse
+          ? effectiveAmount.minorUnits
+          : -effectiveAmount.minorUnits;
+    }
+
+    await (_db.update(
+      _db.accountsTable,
+    )..where((t) => t.id.equals(sourceAccount.id))).write(
+      AccountsTableCompanion(
+        currentBalanceMinor: Value(
+          sourceAccount.currentBalanceMinor + sourceDiff,
+        ),
+        updatedAt: Value(now),
+      ),
+    );
+
+    // 2. Destination Account (for transfers)
+    if (tx.type == TransactionType.transfer &&
+        tx.destinationAccountId != null) {
+      final destAccount = await (_db.select(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(tx.destinationAccountId!))).getSingle();
+      final destCurrency = Currency.fromCode(destAccount.currency);
+      Money destEffectiveAmount = tx.amount;
+      if (destEffectiveAmount.currency != destCurrency) {
+        if (destEffectiveAmount.isCompatibleWith(destCurrency)) {
+          destEffectiveAmount = destEffectiveAmount.normalizeTo(destCurrency);
+        } else {
+          throw StateError(
+            'Currency mismatch: transaction ${destEffectiveAmount.currency.code} vs destination account ${destCurrency.code}',
+          );
+        }
+      }
+
+      final destDiff = reverse
+          ? -destEffectiveAmount.minorUnits
+          : destEffectiveAmount.minorUnits;
+      await (_db.update(
+        _db.accountsTable,
+      )..where((t) => t.id.equals(destAccount.id))).write(
+        AccountsTableCompanion(
+          currentBalanceMinor: Value(
+            destAccount.currentBalanceMinor + destDiff,
+          ),
+          updatedAt: Value(now),
+        ),
+      );
+    }
   }
 
   @override
-  Future<Result<TransactionEntity>> createTransaction(TransactionEntity transaction) async {
+  Future<Result<TransactionEntity>> createTransaction(
+    TransactionEntity transaction,
+  ) async {
     try {
+      _validateTransaction(transaction);
       final now = DateTime.now().millisecondsSinceEpoch;
       final txId = transaction.id.isEmpty ? _uuid.v4() : transaction.id;
 
       await _db.transaction(() async {
-        // 1. Currency safety net: the stored amount must speak the account's
-        // currency. Iranian pairs convert exactly (×10); a foreign mismatch
-        // is refused instead of silently corrupting the balance.
-        final sourceAccount = await (_db.select(_db.accountsTable)
-              ..where((t) => t.id.equals(transaction.accountId)))
-            .getSingle();
+        // 1. Currency safety net: validate source account currency
+        final sourceAccount = await (_db.select(
+          _db.accountsTable,
+        )..where((t) => t.id.equals(transaction.accountId))).getSingle();
         final accountCurrency = Currency.fromCode(sourceAccount.currency);
         Money effectiveAmount = transaction.amount;
         if (effectiveAmount.currency != accountCurrency) {
@@ -139,6 +251,23 @@ class TransactionRepositoryImpl implements TransactionRepository {
           } else {
             throw StateError(
               'Currency mismatch: transaction ${effectiveAmount.currency.code} vs account ${accountCurrency.code}',
+            );
+          }
+        }
+
+        // Validate destination currency compatibility if transfer
+        if (transaction.type == TransactionType.transfer &&
+            transaction.destinationAccountId != null) {
+          final destAccount =
+              await (_db.select(_db.accountsTable)..where(
+                    (t) => t.id.equals(transaction.destinationAccountId!),
+                  ))
+                  .getSingle();
+          final destCurrency = Currency.fromCode(destAccount.currency);
+          if (transaction.amount.currency != destCurrency &&
+              !transaction.amount.isCompatibleWith(destCurrency)) {
+            throw StateError(
+              'Currency mismatch: transaction ${transaction.amount.currency.code} vs destination account ${destCurrency.code}',
             );
           }
         }
@@ -163,39 +292,18 @@ class TransactionRepositoryImpl implements TransactionRepository {
         );
         await _db.into(_db.transactionsTable).insert(companion);
 
-        // 3. Adjust account balances
-        int newSourceBalance = sourceAccount.currentBalanceMinor;
-        if (transaction.type == TransactionType.expense) {
-          newSourceBalance -= effectiveAmount.minorUnits;
-        } else if (transaction.type == TransactionType.income) {
-          newSourceBalance += effectiveAmount.minorUnits;
-        } else if (transaction.type == TransactionType.transfer) {
-          newSourceBalance -= effectiveAmount.minorUnits;
-
-          if (transaction.destinationAccountId != null) {
-            final destAccount = await (_db.select(_db.accountsTable)
-                  ..where((t) => t.id.equals(transaction.destinationAccountId!)))
-                .getSingle();
-            final newDestBalance = destAccount.currentBalanceMinor + effectiveAmount.minorUnits;
-            await (_db.update(_db.accountsTable)..where((t) => t.id.equals(destAccount.id))).write(
-              AccountsTableCompanion(
-                currentBalanceMinor: Value(newDestBalance),
-                updatedAt: Value(now),
-              ),
-            );
-          }
-        }
-
-        await (_db.update(_db.accountsTable)..where((t) => t.id.equals(sourceAccount.id))).write(
-          AccountsTableCompanion(
-            currentBalanceMinor: Value(newSourceBalance),
-            updatedAt: Value(now),
-          ),
+        // 3. Adjust account balances via unified helper
+        final insertedTx = transaction.copyWith(
+          id: txId,
+          amount: effectiveAmount,
         );
+        await _applyBalanceEffect(insertedTx, now: now, reverse: false);
 
-        // 4. Push to Outbox Sync Queue
+        // 4. Push to Outbox Sync Queue (with complete payload)
         final idempotencyKey = _uuid.v4();
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'transactions',
                 entityId: txId,
@@ -203,11 +311,17 @@ class TransactionRepositoryImpl implements TransactionRepository {
                 payloadJson: jsonEncode({
                   'id': txId,
                   'account_id': transaction.accountId,
+                  'destination_account_id': transaction.destinationAccountId,
+                  'category_id': transaction.categoryId,
                   'amount_minor': effectiveAmount.minorUnits,
                   'currency': effectiveAmount.currency.code,
                   'type': transaction.type.code,
                   'date': transaction.date.millisecondsSinceEpoch,
                   'description': transaction.description,
+                  'notes': transaction.notes,
+                  'is_business': transaction.isBusiness,
+                  'attachment_uri': transaction.attachmentUri,
+                  'version': 1,
                 }),
                 idempotencyKey: idempotencyKey,
                 queuedAt: now,
@@ -215,67 +329,46 @@ class TransactionRepositoryImpl implements TransactionRepository {
             );
       });
 
-      final created = await (_db.select(_db.transactionsTable)..where((t) => t.id.equals(txId))).getSingle();
+      final created = await (_db.select(
+        _db.transactionsTable,
+      )..where((t) => t.id.equals(txId))).getSingle();
       return Success(_toEntity(created));
     } catch (e) {
-      return DatabaseFailure('ثبت تراکنش انجام نشد. دوباره تلاش کنید.').asFailure();
+      if (e is ArgumentError) {
+        return DatabaseFailure(e.message.toString()).asFailure();
+      }
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
+      return DatabaseFailure('ثبت تراکنش انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
   @override
-  Future<Result<TransactionEntity>> updateTransaction(TransactionEntity transaction) async {
+  Future<Result<TransactionEntity>> updateTransaction(
+    TransactionEntity transaction,
+  ) async {
     try {
+      _validateTransaction(transaction);
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
         // 1. Load the existing row (must exist and not be soft-deleted)
-        final existing = await (_db.select(_db.transactionsTable)
-              ..where((t) => t.id.equals(transaction.id)))
-            .getSingleOrNull();
+        final existing = await (_db.select(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(transaction.id))).getSingleOrNull();
         if (existing == null || existing.deletedAt != null) {
           throw StateError('Transaction ${transaction.id} not found');
         }
         final old = _toEntity(existing);
 
-        // 2. Revert the old balance effect (mirrors softDeleteTransaction)
-        final oldSource = await (_db.select(_db.accountsTable)
-              ..where((t) => t.id.equals(old.accountId)))
-            .getSingle();
+        // 2. Revert the old balance effect
+        await _applyBalanceEffect(old, now: now, reverse: true);
 
-        int revertedSource = oldSource.currentBalanceMinor;
-        if (old.type == TransactionType.expense) {
-          revertedSource += old.amount.minorUnits;
-        } else if (old.type == TransactionType.income) {
-          revertedSource -= old.amount.minorUnits;
-        } else if (old.type == TransactionType.transfer) {
-          revertedSource += old.amount.minorUnits;
+        // 3. Apply the new balance effect
+        final newSource = await (_db.select(
+          _db.accountsTable,
+        )..where((t) => t.id.equals(transaction.accountId))).getSingle();
 
-          if (old.destinationAccountId != null) {
-            final oldDest = await (_db.select(_db.accountsTable)
-                  ..where((t) => t.id.equals(old.destinationAccountId!)))
-                .getSingle();
-            await (_db.update(_db.accountsTable)..where((t) => t.id.equals(oldDest.id))).write(
-              AccountsTableCompanion(
-                currentBalanceMinor: Value(oldDest.currentBalanceMinor - old.amount.minorUnits),
-                updatedAt: Value(now),
-              ),
-            );
-          }
-        }
-
-        await (_db.update(_db.accountsTable)..where((t) => t.id.equals(oldSource.id))).write(
-          AccountsTableCompanion(
-            currentBalanceMinor: Value(revertedSource),
-            updatedAt: Value(now),
-          ),
-        );
-
-        // 3. Apply the new balance effect (mirrors createTransaction)
-        final newSource = await (_db.select(_db.accountsTable)
-              ..where((t) => t.id.equals(transaction.accountId)))
-            .getSingle();
-
-        // Same currency safety net as createTransaction.
         final newAccountCurrency = Currency.fromCode(newSource.currency);
         Money effectiveAmount = transaction.amount;
         if (effectiveAmount.currency != newAccountCurrency) {
@@ -288,37 +381,31 @@ class TransactionRepositoryImpl implements TransactionRepository {
           }
         }
 
-        int newSourceBalance = newSource.currentBalanceMinor;
-        if (transaction.type == TransactionType.expense) {
-          newSourceBalance -= effectiveAmount.minorUnits;
-        } else if (transaction.type == TransactionType.income) {
-          newSourceBalance += effectiveAmount.minorUnits;
-        } else if (transaction.type == TransactionType.transfer) {
-          if (transaction.destinationAccountId == null) {
-            throw StateError('Transfer requires a destination account');
+        // Validate destination currency compatibility if transfer
+        if (transaction.type == TransactionType.transfer &&
+            transaction.destinationAccountId != null) {
+          final destAccount =
+              await (_db.select(_db.accountsTable)..where(
+                    (t) => t.id.equals(transaction.destinationAccountId!),
+                  ))
+                  .getSingle();
+          final destCurrency = Currency.fromCode(destAccount.currency);
+          if (transaction.amount.currency != destCurrency &&
+              !transaction.amount.isCompatibleWith(destCurrency)) {
+            throw StateError(
+              'Currency mismatch: transaction ${transaction.amount.currency.code} vs destination account ${destCurrency.code}',
+            );
           }
-          newSourceBalance -= effectiveAmount.minorUnits;
-
-          final newDest = await (_db.select(_db.accountsTable)
-                ..where((t) => t.id.equals(transaction.destinationAccountId!)))
-              .getSingle();
-          await (_db.update(_db.accountsTable)..where((t) => t.id.equals(newDest.id))).write(
-            AccountsTableCompanion(
-              currentBalanceMinor: Value(newDest.currentBalanceMinor + effectiveAmount.minorUnits),
-              updatedAt: Value(now),
-            ),
-          );
         }
 
-        await (_db.update(_db.accountsTable)..where((t) => t.id.equals(newSource.id))).write(
-          AccountsTableCompanion(
-            currentBalanceMinor: Value(newSourceBalance),
-            updatedAt: Value(now),
-          ),
-        );
+        final updatedTx = transaction.copyWith(amount: effectiveAmount);
+        await _applyBalanceEffect(updatedTx, now: now, reverse: false);
 
         // 4. Persist the edited values
-        await (_db.update(_db.transactionsTable)..where((t) => t.id.equals(transaction.id))).write(
+        final newVersion = existing.version + 1;
+        await (_db.update(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(transaction.id))).write(
           TransactionsTableCompanion(
             accountId: Value(transaction.accountId),
             destinationAccountId: Value(transaction.destinationAccountId),
@@ -332,13 +419,15 @@ class TransactionRepositoryImpl implements TransactionRepository {
             isBusiness: Value(transaction.isBusiness),
             attachmentUri: Value(transaction.attachmentUri),
             updatedAt: Value(now),
-            version: Value(transaction.version + 1),
+            version: Value(newVersion),
             syncStatus: const Value(2), // Pending update
           ),
         );
 
         // 5. Push to Outbox Sync Queue
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'transactions',
                 entityId: transaction.id,
@@ -347,11 +436,16 @@ class TransactionRepositoryImpl implements TransactionRepository {
                   'id': transaction.id,
                   'account_id': transaction.accountId,
                   'destination_account_id': transaction.destinationAccountId,
+                  'category_id': transaction.categoryId,
                   'amount_minor': effectiveAmount.minorUnits,
                   'currency': effectiveAmount.currency.code,
                   'type': transaction.type.code,
                   'date': transaction.date.millisecondsSinceEpoch,
                   'description': transaction.description,
+                  'notes': transaction.notes,
+                  'is_business': transaction.isBusiness,
+                  'attachment_uri': transaction.attachmentUri,
+                  'version': newVersion,
                 }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
@@ -359,10 +453,17 @@ class TransactionRepositoryImpl implements TransactionRepository {
             );
       });
 
-      final updated = await (_db.select(_db.transactionsTable)..where((t) => t.id.equals(transaction.id))).getSingle();
+      final updated = await (_db.select(
+        _db.transactionsTable,
+      )..where((t) => t.id.equals(transaction.id))).getSingle();
       return Success(_toEntity(updated));
     } catch (e) {
-      return DatabaseFailure('ویرایش تراکنش انجام نشد. دوباره تلاش کنید.').asFailure();
+      if (e is ArgumentError) {
+        return DatabaseFailure(e.message.toString()).asFailure();
+      }
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
+      return DatabaseFailure('ویرایش تراکنش انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -372,59 +473,40 @@ class TransactionRepositoryImpl implements TransactionRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final tx = await (_db.select(_db.transactionsTable)..where((t) => t.id.equals(id))).getSingle();
+        final tx = await (_db.select(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (tx == null || tx.deletedAt != null) {
+          // Idempotent: already deleted or not found
+          return;
+        }
         final txEntity = _toEntity(tx);
 
         // Revert account balances
-        final sourceAccount = await (_db.select(_db.accountsTable)
-              ..where((t) => t.id.equals(txEntity.accountId)))
-            .getSingle();
+        await _applyBalanceEffect(txEntity, now: now, reverse: true);
 
-        int revertedSource = sourceAccount.currentBalanceMinor;
-        if (txEntity.type == TransactionType.expense) {
-          revertedSource += txEntity.amount.minorUnits;
-        } else if (txEntity.type == TransactionType.income) {
-          revertedSource -= txEntity.amount.minorUnits;
-        } else if (txEntity.type == TransactionType.transfer) {
-          revertedSource += txEntity.amount.minorUnits;
-
-          if (txEntity.destinationAccountId != null) {
-            final destAccount = await (_db.select(_db.accountsTable)
-                  ..where((t) => t.id.equals(txEntity.destinationAccountId!)))
-                .getSingle();
-            final revertedDest = destAccount.currentBalanceMinor - txEntity.amount.minorUnits;
-            await (_db.update(_db.accountsTable)..where((t) => t.id.equals(destAccount.id))).write(
-              AccountsTableCompanion(
-                currentBalanceMinor: Value(revertedDest),
-                updatedAt: Value(now),
-              ),
-            );
-          }
-        }
-
-        await (_db.update(_db.accountsTable)..where((t) => t.id.equals(sourceAccount.id))).write(
-          AccountsTableCompanion(
-            currentBalanceMinor: Value(revertedSource),
-            updatedAt: Value(now),
-          ),
-        );
-
-        // Mark deleted
-        await (_db.update(_db.transactionsTable)..where((t) => t.id.equals(id))).write(
+        // Mark deleted & increment version
+        final newVersion = tx.version + 1;
+        await (_db.update(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(id))).write(
           TransactionsTableCompanion(
             deletedAt: Value(now),
             updatedAt: Value(now),
+            version: Value(newVersion),
             syncStatus: const Value(3), // Pending delete
           ),
         );
 
         // Enqueue deletion in outbox
-        await _db.into(_db.syncQueueTable).insert(
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
               SyncQueueTableCompanion.insert(
                 syncEntityName: 'transactions',
                 entityId: id,
                 operation: 'DELETE',
-                payloadJson: jsonEncode({'id': id}),
+                payloadJson: jsonEncode({'id': id, 'version': newVersion}),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -433,7 +515,8 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
       return const Success(null);
     } catch (e) {
-      return DatabaseFailure('حذف تراکنش انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('حذف تراکنش انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
     }
   }
 
@@ -443,61 +526,137 @@ class TransactionRepositoryImpl implements TransactionRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       await _db.transaction(() async {
-        final tx = await (_db.select(_db.transactionsTable)..where((t) => t.id.equals(id))).getSingle();
+        final tx = await (_db.select(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (tx == null || tx.deletedAt == null) {
+          // Idempotent: already active or not found
+          return;
+        }
         final txEntity = _toEntity(tx);
 
         // Reapply account balances
-        final sourceAccount = await (_db.select(_db.accountsTable)
-              ..where((t) => t.id.equals(txEntity.accountId)))
-            .getSingle();
+        await _applyBalanceEffect(txEntity, now: now, reverse: false);
 
-        int rebalanced = sourceAccount.currentBalanceMinor;
-        if (txEntity.type == TransactionType.expense) {
-          rebalanced -= txEntity.amount.minorUnits;
-        } else if (txEntity.type == TransactionType.income) {
-          rebalanced += txEntity.amount.minorUnits;
-        } else if (txEntity.type == TransactionType.transfer) {
-          rebalanced -= txEntity.amount.minorUnits;
+        // Unset deletedAt & increment version
+        final newVersion = tx.version + 1;
+        await (_db.update(
+          _db.transactionsTable,
+        )..where((t) => t.id.equals(id))).write(
+          TransactionsTableCompanion(
+            deletedAt: const Value(null),
+            updatedAt: Value(now),
+            version: Value(newVersion),
+            syncStatus: const Value(2), // Pending update
+          ),
+        );
 
-          if (txEntity.destinationAccountId != null) {
-            final destAccount = await (_db.select(_db.accountsTable)
-                  ..where((t) => t.id.equals(txEntity.destinationAccountId!)))
-                .getSingle();
-            final destRebalanced = destAccount.currentBalanceMinor + txEntity.amount.minorUnits;
-            await (_db.update(_db.accountsTable)..where((t) => t.id.equals(destAccount.id))).write(
+        // Enqueue update in outbox
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'transactions',
+                entityId: id,
+                operation: 'UPDATE',
+                payloadJson: jsonEncode({
+                  'id': id,
+                  'account_id': tx.accountId,
+                  'destination_account_id': tx.destinationAccountId,
+                  'category_id': tx.categoryId,
+                  'amount_minor': tx.amountMinor,
+                  'currency': tx.currency,
+                  'type': tx.type,
+                  'date': tx.transactionDate,
+                  'description': tx.description,
+                  'notes': tx.notes,
+                  'is_business': tx.isBusiness,
+                  'attachment_uri': tx.attachmentUri,
+                  'version': newVersion,
+                  'deleted_at': null,
+                }),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      return const Success(null);
+    } catch (e) {
+      return DatabaseFailure('بازگردانی تراکنش انجام نشد. دوباره تلاش کنید.')
+          .asFailure();
+    }
+  }
+
+  @override
+  Future<Result<void>> recomputeBalances() async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _db.transaction(() async {
+        final accounts = await _db.select(_db.accountsTable).get();
+        final activeTxs = await (_db.select(
+          _db.transactionsTable,
+        )..where((t) => t.deletedAt.isNull())).get();
+
+        for (final account in accounts) {
+          final accountCurrency = Currency.fromCode(account.currency);
+          int computedBalance = account.initialBalanceMinor;
+
+          for (final tx in activeTxs) {
+            final txCurrency = Currency.fromCode(tx.currency);
+            final txAmount = Money.fromMinor(tx.amountMinor, txCurrency);
+
+            if (tx.accountId == account.id) {
+              Money effectiveAmount = txAmount;
+              if (effectiveAmount.currency != accountCurrency &&
+                  effectiveAmount.isCompatibleWith(accountCurrency)) {
+                effectiveAmount = effectiveAmount.normalizeTo(accountCurrency);
+              }
+
+              if (tx.type == 'expense' || tx.type == 'debtPayment') {
+                computedBalance -= effectiveAmount.minorUnits;
+              } else if (tx.type == 'income' ||
+                  tx.type == 'receivablePayment') {
+                computedBalance += effectiveAmount.minorUnits;
+              } else if (tx.type == 'transfer') {
+                computedBalance -= effectiveAmount.minorUnits;
+              }
+            }
+
+            if (tx.destinationAccountId == account.id &&
+                tx.type == 'transfer') {
+              Money effectiveAmount = txAmount;
+              if (effectiveAmount.currency != accountCurrency &&
+                  effectiveAmount.isCompatibleWith(accountCurrency)) {
+                effectiveAmount = effectiveAmount.normalizeTo(accountCurrency);
+              }
+              computedBalance += effectiveAmount.minorUnits;
+            }
+          }
+
+          if (computedBalance != account.currentBalanceMinor) {
+            await (_db.update(
+              _db.accountsTable,
+            )..where((t) => t.id.equals(account.id))).write(
               AccountsTableCompanion(
-                currentBalanceMinor: Value(destRebalanced),
+                currentBalanceMinor: Value(computedBalance),
                 updatedAt: Value(now),
               ),
             );
           }
         }
-
-        await (_db.update(_db.accountsTable)..where((t) => t.id.equals(sourceAccount.id))).write(
-          AccountsTableCompanion(
-            currentBalanceMinor: Value(rebalanced),
-            updatedAt: Value(now),
-          ),
-        );
-
-        // Unset deletedAt
-        await (_db.update(_db.transactionsTable)..where((t) => t.id.equals(id))).write(
-          TransactionsTableCompanion(
-            deletedAt: const Value(null),
-            updatedAt: Value(now),
-            syncStatus: const Value(1),
-          ),
-        );
       });
-
       return const Success(null);
     } catch (e) {
-      return DatabaseFailure('بازگردانی تراکنش انجام نشد. دوباره تلاش کنید.').asFailure();
+      return DatabaseFailure('محاسبه مجدد مانده حساب‌ها انجام نشد.')
+          .asFailure();
     }
   }
 
   @override
-  Future<Result<List<TransactionEntity>>> getRecentTransactions({int limit = 10}) async {
+  Future<Result<List<TransactionEntity>>> getRecentTransactions({
+    int limit = 10,
+  }) async {
     try {
       final query = _db.select(_db.transactionsTable)
         ..where((t) => t.deletedAt.isNull())
