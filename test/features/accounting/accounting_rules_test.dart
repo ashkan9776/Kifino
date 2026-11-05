@@ -13,6 +13,11 @@ import 'package:kifino/features/accounting/domain/entities/accounting_transactio
 void main() {
   late AppDatabase db;
   late AccountingRepositoryImpl repo;
+  // REAL seeded subject ids — the close/open flow only sees postings made
+  // against existing subjects (phantom string ids used to make this file's
+  // close test vacuous).
+  late String cashId; // 011 صندوق
+  late String salesId; // 060 فروش
 
   AccountingDocumentEntity balancedDoc({
     String title = 'سند تست',
@@ -32,7 +37,7 @@ void main() {
         AccountingTransactionEntity(
           id: '',
           documentId: '',
-          subjectId: '011', // صندوق
+          subjectId: cashId, // صندوق
           debit: Money.fromMinor(100000),
           credit: Money.fromMinor(0),
           description: 'بدهکار',
@@ -43,7 +48,7 @@ void main() {
         AccountingTransactionEntity(
           id: '',
           documentId: '',
-          subjectId: '060', // فروش
+          subjectId: salesId, // فروش
           debit: Money.fromMinor(0),
           credit: Money.fromMinor(100000),
           description: 'بستانکار',
@@ -59,6 +64,8 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     repo = AccountingRepositoryImpl(db);
     await repo.seedChartOfAccountsIfNotExists();
+    cashId = (await repo.getSubjectByCode('011'))!.id;
+    salesId = (await repo.getSubjectByCode('060'))!.id;
   });
 
   tearDown(() async => db.close());
@@ -149,8 +156,10 @@ void main() {
 
   group('Phase 1 — audit trail', () {
     test('logs create, approve, update and delete with snapshots', () async {
+      // Draft → approve: the real lifecycle. (approveDocument is now
+      // idempotent for already-approved documents and logs nothing.)
       final created = await repo.createDocument(
-        balancedDoc(title: 'سند حسابرسی'),
+        balancedDoc(title: 'سند حسابرسی', status: 'draft'),
       );
       await repo.approveDocument(created.id);
       await repo.updateDocument(
@@ -242,6 +251,7 @@ void main() {
     test('closing produces balanced closing voucher, next year and opening voucher', () async {
       // Revenue + expense documents inside the current fiscal year.
       final now = DateTime.now();
+      final expenseId = (await repo.getSubjectByCode('040001'))!.id;
       await repo.createDocument(balancedDoc(title: 'فروش', date: now));
       await repo.createDocument(
         balancedDoc(title: 'هزینه').copyWith(
@@ -249,7 +259,7 @@ void main() {
             AccountingTransactionEntity(
               id: '',
               documentId: '',
-              subjectId: '040001',
+              subjectId: expenseId,
               debit: Money.fromMinor(40000),
               credit: Money.fromMinor(0),
               description: 'هزینه',
@@ -260,7 +270,7 @@ void main() {
             AccountingTransactionEntity(
               id: '',
               documentId: '',
-              subjectId: '011',
+              subjectId: cashId,
               debit: Money.fromMinor(0),
               credit: Money.fromMinor(40000),
               description: 'پرداخت',

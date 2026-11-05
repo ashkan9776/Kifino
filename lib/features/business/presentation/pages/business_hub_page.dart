@@ -103,7 +103,24 @@ class _BusinessHubPageState extends State<BusinessHubPage>
             icon: const Icon(Icons.add),
             label: Text(_getFabLabel(l10n)),
           ),
-          body: BlocBuilder<BusinessBloc, BusinessState>(
+          body: BlocListener<BusinessBloc, BusinessState>(
+            listenWhen: (prev, curr) =>
+                curr is BusinessInvoiceVoucherPending &&
+                prev is! BusinessInvoiceVoucherPending,
+            listener: (context, state) {
+              if (state is BusinessInvoiceVoucherPending) {
+                // Accounting failed but the business data is intact — warn
+                // without blocking (the hub keeps rendering via Loaded).
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.warningMessage),
+                    backgroundColor: AppColors.warning,
+                    duration: const Duration(seconds: 5),
+                  ),
+                );
+              }
+            },
+            child: BlocBuilder<BusinessBloc, BusinessState>(
             builder: (context, state) {
               if (state is BusinessLoading) {
                 return const Padding(
@@ -322,6 +339,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                 ),
               );
             },
+          ),
           ),
         ),
       ),

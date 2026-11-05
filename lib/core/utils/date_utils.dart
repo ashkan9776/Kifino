@@ -252,3 +252,17 @@ DateTime endOfJalaliMonth(DateTime dateTime) {
       : JalaliDate(j.year, j.month + 1, 1).toDateTime();
   return firstOfNext.subtract(const Duration(seconds: 1));
 }
+
+/// Start of the Jalali year containing [dateTime] — 1 فروردین.
+DateTime startOfJalaliYear(DateTime dateTime) {
+  final j = JalaliDate.fromDateTime(dateTime);
+  return JalaliDate(j.year, 1, 1).toDateTime();
+}
+
+/// End of the Jalali year containing [dateTime] — last second of اسفند.
+DateTime endOfJalaliYear(DateTime dateTime) {
+  final jy = JalaliDate.fromDateTime(dateTime).year;
+  return JalaliDate(jy + 1, 1, 1)
+      .toDateTime()
+      .subtract(const Duration(seconds: 1));
+}

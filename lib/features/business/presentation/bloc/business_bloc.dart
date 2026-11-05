@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/money.dart';
 
 import 'package:rxdart/rxdart.dart';
 
@@ -125,17 +126,11 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
             error: e,
             stackTrace: st,
           );
-          final isPeriodClosed =
-              e.toString().contains('بسته شده است') ||
-              e.toString().contains('closed');
-          final warning = isPeriodClosed
-              ? 'فاکتور ثبت شد، اما دوره مالی این تاریخ بسته است و سند حسابداری صادر نشد (سند ناقص).'
-              : 'فاکتور ثبت شد اما صدور سند حسابداری ناموفق بود: $e (سند ناقص).';
-          emit(
-            BusinessInvoiceVoucherPending(
-              invoice: invoice,
-              warningMessage: warning,
-            ),
+          await _emitVoucherPending(
+            emit,
+            invoice: invoice,
+            error: e,
+            contextVerb: 'ثبت',
           );
         }
       },
@@ -151,9 +146,35 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
       event.invoiceId,
       event.paymentAmount,
     );
-    result.fold(
-      onSuccess: (_) {},
-      onFailure: (failure) => emit(BusinessError(failure.message)),
+    await result.fold(
+      onSuccess: (_) async {
+        // The money moved in the business tables; mirror it in the ledger:
+        // DR bank/cash — CR receivable (sale) or DR payable — CR bank/cash
+        // (purchase). A missing voucher would leave the counterparty
+        // outstanding forever even after full settlement.
+        try {
+          final invoice = await _businessRepository
+              .getInvoiceById(event.invoiceId);
+          await invoice.fold(
+            onSuccess: (inv) async {
+              await _autoVoucherService.generateInvoicePaymentVoucher(
+                inv,
+                amount: event.paymentAmount,
+              );
+            },
+            onFailure: (f) async => AppLogger.warning(
+              'سند پرداخت فاکتور ${event.invoiceId} صادر نشد: ${f.message}',
+            ),
+          );
+        } catch (e, st) {
+          AppLogger.warning(
+            'خطا در صدور سند پرداخت برای فاکتور ${event.invoiceId}: $e',
+            error: e,
+            stackTrace: st,
+          );
+        }
+      },
+      onFailure: (failure) async => emit(BusinessError(failure.message)),
     );
   }
 
@@ -165,10 +186,83 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
       event.invoiceId,
       event.status,
     );
-    result.fold(
-      onSuccess: (_) {},
-      onFailure: (failure) => emit(BusinessError(failure.message)),
+    await result.fold(
+      onSuccess: (_) async {
+        // Re-activating a cancelled invoice: the cancel voided the voucher
+        // and reversed business effects — the repo re-applied the effects,
+        // so the ledger needs the voucher back.
+        if (event.status != InvoiceStatus.cancelled) {
+          final previous = state;
+          final oldInvoice = previous is BusinessLoaded
+              ? previous.invoices
+                    .where((i) => i.id == event.invoiceId)
+                    .firstOrNull
+              : null;
+          final wasCancelled =
+              oldInvoice?.status == InvoiceStatus.cancelled;
+          if (wasCancelled && oldInvoice != null) {
+            try {
+              await _autoVoucherService.generateInvoiceVoucher(
+                oldInvoice.copyWith(status: event.status),
+              );
+            } catch (e, st) {
+              AppLogger.warning(
+                'خطا در صدور مجدد سند فاکتور ${event.invoiceId}: $e',
+                error: e,
+                stackTrace: st,
+              );
+            }
+          }
+        }
+      },
+      onFailure: (failure) async => emit(BusinessError(failure.message)),
     );
+  }
+
+  /// Emits the voucher-pending state while KEEPING the loaded data visible —
+  /// the pending state extends [BusinessLoaded], so the hub never blanks.
+  Future<void> _emitVoucherPending(
+    Emitter<BusinessState> emit, {
+    required InvoiceEntity invoice,
+    required Object error,
+    required String contextVerb,
+  }) async {
+    final isPeriodClosed =
+        error.toString().contains('بسته شده است') ||
+        error.toString().contains('closed');
+    final warning = isPeriodClosed
+        ? 'فاکتور $contextVerb شد، اما دوره مالی این تاریخ بسته است و سند حسابداری صادر نشد (سند ناقص).'
+        : 'فاکتور $contextVerb شد اما صدور سند حسابداری ناموفق بود: $error (سند ناقص).';
+    final current = state;
+    if (current is BusinessLoaded) {
+      emit(
+        BusinessInvoiceVoucherPending(
+          invoice: invoice,
+          warningMessage: warning,
+          metrics: current.metrics,
+          invoices: current.invoices,
+          products: current.products,
+          contacts: current.contacts,
+        ),
+      );
+    } else {
+      emit(
+        BusinessInvoiceVoucherPending(
+          invoice: invoice,
+          warningMessage: warning,
+          metrics: const BusinessMetricsEntity(
+            totalSales: Money.zero(Currency.toman),
+            unpaidReceivables: Money.zero(Currency.toman),
+            activeProductsCount: 0,
+            lowStockCount: 0,
+            totalInvoicesCount: 0,
+          ),
+          invoices: const [],
+          products: const [],
+          contacts: const [],
+        ),
+      );
+    }
   }
 
   @override

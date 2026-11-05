@@ -805,11 +805,13 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
   // ── Invoice side-effects unification (P0-3) ──
   Future<void> _voidLinkedVouchers(String invoiceId, int now) async {
+    // Invoice voucher + every payment voucher issued against the invoice
+    // (referenceType 'invoice-payment', referenceId = invoice id).
     final vouchers =
         await (_db.select(_db.accountingDocumentsTable)..where(
               (t) =>
-                  t.referenceType.equals('invoice') &
                   t.referenceId.equals(invoiceId) &
+                  t.referenceType.isIn(const ['invoice', 'invoice-payment']) &
                   t.deletedAt.isNull(),
             ))
             .get();

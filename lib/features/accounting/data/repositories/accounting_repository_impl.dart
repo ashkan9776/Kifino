@@ -45,15 +45,18 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final now = DateTime.now();
     if (existingFiscalYear == null) {
       fiscalYearId = _uuid.v4();
+      // The seeded year must follow the Jalali calendar (1 فروردین تا پایان
+      // اسفند) — a Gregorian-aligned default period mislocks every document
+      // date in a Persian-first app.
       await _db
           .into(_db.fiscalYearsTable)
           .insert(
             FiscalYearsTableCompanion.insert(
               id: fiscalYearId,
               title: 'سال مالی جاری',
-              yearNumber: JalaliDate.fromDateTime(DateTime.now()).year,
-              startDate: DateTime(now.year, 1, 1).millisecondsSinceEpoch,
-              endDate: DateTime(now.year, 12, 29).millisecondsSinceEpoch,
+              yearNumber: JalaliDate.fromDateTime(now).year,
+              startDate: startOfJalaliYear(now).millisecondsSinceEpoch,
+              endDate: endOfJalaliYear(now).millisecondsSinceEpoch,
               isClosed: const Value(false),
               isActive: const Value(true),
               createdAt: now.millisecondsSinceEpoch,
@@ -384,9 +387,26 @@ class AccountingRepositoryImpl implements AccountingRepository {
     List<DocumentDetailTag> details = const [],
   }) async {
     final docId = document.id.isEmpty ? _uuid.v4() : document.id;
+
+    // Manual documents never carry a fiscal year — resolve it from the
+    // document date (falling back to the active year) so they are sequenced
+    // per-year and visible in every year-scoped report instead of floating
+    // with a null year (which also caused duplicate document numbers).
+    var fiscalYearId = document.fiscalYearId;
+    if (fiscalYearId == null) {
+      final years = await getFiscalYears();
+      for (final fy in years) {
+        if (dateWithinFiscalYear(document.date, fy)) {
+          fiscalYearId = fy.id;
+          break;
+        }
+      }
+      fiscalYearId ??= (await getActiveFiscalYear())?.id;
+    }
+
     final docNumber = document.number > 0
         ? document.number
-        : await getNextDocumentNumber(document.fiscalYearId);
+        : await getNextDocumentNumber(fiscalYearId);
     final now = DateTime.now();
 
     // Integrity lock: only drafts may register unbalanced; official statuses
@@ -395,6 +415,19 @@ class AccountingRepositoryImpl implements AccountingRepository {
       throw StateError(
         'سند ناموازنه قابل ثبت نیست. مجموع بدهکار و بستانکار برابر نیست.',
       );
+    }
+    if (document.status != DocumentStatus.draft &&
+        document.transactions.isEmpty) {
+      throw StateError('سند بدون ردیف تراکنش قابل تأیید نیست.');
+    }
+    // Each row must carry exactly one side; a both-sides row silently
+    // inflates both turnover columns of the trial balance.
+    for (final tx in document.transactions) {
+      if (tx.debit.minorUnits > 0 && tx.credit.minorUnits > 0) {
+        throw StateError(
+          'هر ردیف سند باید فقط یک طرف بدهکار یا بستانکار داشته باشد.',
+        );
+      }
     }
     await _ensurePeriodOpen(document.date);
 
@@ -413,7 +446,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
               isManual: Value(document.isManual),
               referenceType: Value(document.referenceType),
               referenceId: Value(document.referenceId),
-              fiscalYearId: Value(document.fiscalYearId),
+              fiscalYearId: Value(fiscalYearId),
               approvedAt: Value(document.approvedAt?.millisecondsSinceEpoch),
               createdAt: now.millisecondsSinceEpoch,
               updatedAt: now.millisecondsSinceEpoch,
@@ -475,6 +508,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
         'سند ناموازنه قابل تأیید نیست. مجموع بدهکار و بستانکار برابر نیست.',
       );
     }
+    // Both the document's CURRENT date and its NEW date must sit in open
+    // periods — otherwise an edit could silently rewrite a closed year.
+    await _ensurePeriodOpen(existing.date);
     await _ensurePeriodOpen(document.date);
     final beforeJson = _documentSnapshotJson(
       existing.id,
@@ -553,6 +589,14 @@ class AccountingRepositoryImpl implements AccountingRepository {
   Future<void> approveDocument(String documentId) async {
     final doc = await getDocumentById(documentId);
     if (doc == null) throw StateError('سند حسابداری پیدا نشد.');
+    // A posted document is immutable — approving it again must not silently
+    // downgrade it back to approved (which would reopen edit/delete paths).
+    if (doc.status == DocumentStatus.posted) {
+      throw StateError('سند قطعی‌شده دیگر قابل تأیید یا تغییر نیست.');
+    }
+    if (doc.status == DocumentStatus.approved) {
+      return; // Idempotent re-approval: no duplicate audit spam.
+    }
     if (!doc.isBalanced) {
       throw StateError(
         'سند متوازن نیست. مجموع بدهکار و بستانکار باید برابر باشد.',
@@ -615,17 +659,25 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   // ─── Reports ───
 
+  /// Reports (journal/ledger/trial balance/statements) must only see FINAL
+  /// documents. Drafts are work-in-progress — an unbalanced draft in the
+  /// trial balance would break the debit==credit identity.
+  static bool _isFinalDoc(AccountingDocumentEntity d) =>
+      d.status == DocumentStatus.approved || d.status == DocumentStatus.posted;
+
   @override
   Future<List<AccountingTransactionEntity>> getJournalTransactions({
     DateTime? startDate,
     DateTime? endDate,
     String? fiscalYearId,
   }) async {
-    final docs = await getDocuments(
+    final docs = (await getDocuments(
       startDate: startDate,
       endDate: endDate,
       fiscalYearId: fiscalYearId,
-    );
+    ))
+        .where(_isFinalDoc)
+        .toList();
 
     final List<AccountingTransactionEntity> allTxs = [];
     for (final doc in docs.reversed) {
@@ -652,10 +704,12 @@ class AccountingRepositoryImpl implements AccountingRepository {
     // Opening balance (transactions prior to startDate)
     int openingMinor = 0;
     if (startDate != null) {
-      final priorDocs = await getDocuments(
+      final priorDocs = (await getDocuments(
         endDate: startDate.subtract(const Duration(milliseconds: 1)),
         fiscalYearId: fiscalYearId,
-      );
+      ))
+          .where(_isFinalDoc)
+          .toList();
       for (final doc in priorDocs) {
         for (final tx in doc.transactions) {
           if (targetIds.contains(tx.subjectId)) {
@@ -666,11 +720,13 @@ class AccountingRepositoryImpl implements AccountingRepository {
     }
 
     // Period documents
-    final periodDocs = await getDocuments(
+    final periodDocs = (await getDocuments(
       startDate: startDate,
       endDate: endDate,
       fiscalYearId: fiscalYearId,
-    );
+    ))
+        .where(_isFinalDoc)
+        .toList();
     // Sort ascending for ledger
     final sortedDocs = periodDocs.reversed.toList();
 
@@ -726,15 +782,21 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   Set<String> _getDescendantSubjectIds(
     String parentId,
-    List<AccountingSubjectEntity> all,
-  ) {
+    List<AccountingSubjectEntity> all, [
+    Set<String>? ancestors,
+  ]) {
+    // Guard against a malformed parent cycle: a subject already on the
+    // recursion path contributes nothing new and must not loop forever.
+    ancestors ??= <String>{};
+    if (!ancestors.add(parentId)) return <String>{};
     final set = <String>{};
     for (final s in all) {
       if (s.parentId == parentId) {
         set.add(s.id);
-        set.addAll(_getDescendantSubjectIds(s.id, all));
+        set.addAll(_getDescendantSubjectIds(s.id, all, ancestors));
       }
     }
+    ancestors.remove(parentId);
     return set;
   }
 
@@ -748,7 +810,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     final allSubjects = await getAllSubjects();
     final targetSubjects = allSubjects.where((s) => s.level == level).toList();
 
-    final allDocs = await getDocuments(fiscalYearId: fiscalYearId);
+    final allDocs = (await getDocuments(fiscalYearId: fiscalYearId))
+        .where(_isFinalDoc)
+        .toList();
 
     final List<TrialBalanceEntry> entries = [];
 
@@ -868,7 +932,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
               amount: Money.fromMinor(balance.abs()),
             ),
           );
-        } else if (code.startsWith('030') || code.startsWith('068')) {
+        } else if (code.startsWith('030') ||
+            code.startsWith('067') ||
+            code.startsWith('068')) {
           equityItems.add(
             StatementItem(
               subject: entry.subject,
@@ -936,7 +1002,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor((-periodNet).clamp(0, 999999999999999)),
+            amount: Money.fromMinor((-periodNet)),
           ),
         );
       } else if (code.startsWith('061')) {
@@ -944,7 +1010,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor(periodNet.clamp(0, 999999999999999)),
+            amount: Money.fromMinor(periodNet),
           ),
         );
       } else if (code.startsWith('070') || code.startsWith('041')) {
@@ -952,7 +1018,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor(periodNet.clamp(0, 999999999999999)),
+            amount: Money.fromMinor(periodNet),
           ),
         );
       } else if (code.startsWith('040')) {
@@ -960,7 +1026,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor(periodNet.clamp(0, 999999999999999)),
+            amount: Money.fromMinor(periodNet),
           ),
         );
       } else if (code.startsWith('050')) {
@@ -968,7 +1034,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor((-periodNet).clamp(0, 999999999999999)),
+            amount: Money.fromMinor((-periodNet)),
           ),
         );
       } else if (code.startsWith('066')) {
@@ -976,7 +1042,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           StatementItem(
             subject: entry.subject,
             title: entry.subject.name,
-            amount: Money.fromMinor(periodNet.clamp(0, 999999999999999)),
+            amount: Money.fromMinor(periodNet),
           ),
         );
       }
@@ -1093,18 +1159,36 @@ class AccountingRepositoryImpl implements AccountingRepository {
   // ─── Phase 1: integrity, audit, floating details, fiscal close/open ───
 
   /// Throws when [date] falls inside a CLOSED fiscal year. Documents in open
-  /// or unassigned periods pass.
+  /// or unassigned periods pass. The closed window is inclusive of the whole
+  /// last day — the first day of the NEXT year must stay registrable.
   Future<void> _ensurePeriodOpen(DateTime date) async {
     final years = await getFiscalYears();
     for (final fy in years) {
-      if (fy.isClosed &&
-          !date.isBefore(fy.startDate) &&
-          !date.isAfter(fy.endDate.add(const Duration(days: 1)))) {
+      if (!fy.isClosed) continue;
+      final endOfLastDay = DateTime(
+        fy.endDate.year,
+        fy.endDate.month,
+        fy.endDate.day,
+        23,
+        59,
+        59,
+        999,
+      );
+      if (!date.isBefore(fy.startDate) && !date.isAfter(endOfLastDay)) {
         throw StateError(
           'دوره مالی ${fy.title} بسته شده است و ثبت در آن مجاز نیست.',
         );
       }
     }
+  }
+
+  /// End-of-day helper matching [_ensurePeriodOpen]'s inclusive boundary.
+  static DateTime _endOfDay(DateTime d) =>
+      DateTime(d.year, d.month, d.day, 23, 59, 59, 999);
+
+  /// True when [date] falls inside [fy] (whole last day inclusive).
+  bool dateWithinFiscalYear(DateTime date, FiscalYearEntity fy) {
+    return !date.isBefore(fy.startDate) && !date.isAfter(_endOfDay(fy.endDate));
   }
 
   String _documentSnapshotJson(
@@ -1387,7 +1471,14 @@ class AccountingRepositoryImpl implements AccountingRepository {
     DateTime? endDate,
   }) async {
     final ledgers = await getDetailLedgers();
-    final ledger = ledgers.where((l) => l.ledger.id == ledgerId).first.ledger;
+    final ledgerMatches = ledgers
+        .where((l) => l.ledger.id == ledgerId)
+        .map((l) => l.ledger)
+        .toList();
+    if (ledgerMatches.isEmpty) {
+      throw StateError('دفتر تفصیلی پیدا نشد.');
+    }
+    final ledger = ledgerMatches.first;
     DetailValueEntity? value;
     for (final l in ledgers) {
       for (final v in l.values) {
@@ -1410,7 +1501,11 @@ class AccountingRepositoryImpl implements AccountingRepository {
                   _db.accountingDocumentDetailLinksTable.ledgerId.equals(
                     ledgerId,
                   ) &
-                  _db.accountingDocumentsTable.status.equals('approved') &
+                  // Final documents only — posted must count too, and drafts
+                  // must not (same rule as every other report).
+                  _db.accountingDocumentsTable.status.isIn(
+                    const ['approved', 'posted'],
+                  ) &
                   _db.accountingDocumentsTable.deletedAt.isNull(),
             ))
             .get();
@@ -1468,6 +1563,31 @@ class AccountingRepositoryImpl implements AccountingRepository {
     );
   }
 
+  /// Direct signed net (debit − credit) per subject over a document range,
+  /// FINAL documents only, counted once per posting (no hierarchy rollup).
+  Future<Map<String, int>> _directNetsForRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? fiscalYearId,
+  }) async {
+    final docs = (await getDocuments(
+      startDate: startDate,
+      endDate: endDate,
+      fiscalYearId: fiscalYearId,
+    ))
+        .where(_isFinalDoc)
+        .toList();
+    final nets = <String, int>{};
+    for (final doc in docs) {
+      for (final tx in doc.transactions) {
+        nets[tx.subjectId] =
+            (nets[tx.subjectId] ?? 0) +
+                (tx.debit.minorUnits - tx.credit.minorUnits);
+      }
+    }
+    return nets;
+  }
+
   @override
   Future<AccountingDocumentEntity> closeFiscalYearWithDocuments(
     String fiscalYearId,
@@ -1479,6 +1599,20 @@ class AccountingRepositoryImpl implements AccountingRepository {
     if (fy.isClosed) throw StateError('این سال مالی قبلاً بسته شده است.');
 
     final now = DateTime.now();
+    final subjects = await getAllSubjects();
+
+    // One pass over the year's FINAL documents: DIRECT net per subject —
+    // no descendant aggregation. Aggregating kols AND their moein children
+    // counts every balance twice; leaf-only aggregation drops postings made
+    // directly on a kol. Direct nets partition every posting exactly once,
+    // so Σ over ALL subjects is zero by the double-entry identity — which
+    // makes BOTH the closing and the opening voucher balanced by
+    // construction.
+    final netBySubject = await _directNetsForRange(
+      startDate: fy.startDate,
+      endDate: fy.endDate,
+      fiscalYearId: fiscalYearId,
+    );
 
     // Balanced closing voucher: temporary accounts → accumulated P/L.
     final closingDoc = AccountingDocumentEntity(
@@ -1497,31 +1631,22 @@ class AccountingRepositoryImpl implements AccountingRepository {
       transactions: const [],
     );
 
-    // Gather temporary-account balances (revenues 06x, expenses 04x/05x/07x).
-    final subjects = await getAllSubjects();
-    final temporary = subjects.where((s) => !s.isPermanent).toList();
     final rows = <AccountingTransactionEntity>[];
     int netMinor = 0;
-
-    for (final subject in temporary) {
-      final report = await getLedgerReport(
-        subjectId: subject.id,
-        startDate: fy.startDate,
-        endDate: fy.endDate,
-        fiscalYearId: fiscalYearId,
-      );
-      final net = report.closingBalance.minorUnits;
+    for (final subject in subjects) {
+      if (subject.isPermanent) continue;
+      final net = netBySubject[subject.id] ?? 0;
       if (net == 0) continue;
       netMinor += net;
-      // Closing a debit balance (expense): credit the account. Closing a
-      // credit balance (revenue): debit the account.
+      // net > 0 = debit balance (expense) → CREDIT it to zero it out.
+      // net < 0 = credit balance (revenue) → DEBIT it.
       rows.add(
         AccountingTransactionEntity(
           id: _uuid.v4(),
           documentId: closingDoc.id,
           subjectId: subject.id,
-          debit: Money.fromMinor(net > 0 ? net : 0),
-          credit: Money.fromMinor(net < 0 ? -net : 0),
+          debit: Money.fromMinor(net < 0 ? -net : 0),
+          credit: Money.fromMinor(net > 0 ? net : 0),
           description: 'بستن حساب ${subject.name}',
           rowOrder: rows.length + 1,
           createdAt: now,
@@ -1530,7 +1655,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
       );
     }
 
-    // Accumulated profit/loss lands on equity (030).
+    // Accumulated profit/loss lands on equity (030): loss (netMinor > 0)
+    // debits equity, profit (netMinor < 0) credits it — balancing the rows
+    // above (D − C = −netMinor).
     final plSubject =
         await getSubjectByCode('030001') ?? await getSubjectByCode('030');
     if (plSubject != null && netMinor != 0) {
@@ -1549,94 +1676,110 @@ class AccountingRepositoryImpl implements AccountingRepository {
       );
     }
 
-    final balancedClosing = closingDoc.copyWith(transactions: rows);
-    final savedClosing = await createDocument(balancedClosing);
-    await approveDocument(savedClosing.id);
+    AccountingDocumentEntity? savedClosing;
+    await _db.transaction(() async {
+      // The whole close is atomic: closing voucher, next fiscal year,
+      // opening voucher and the close/activate flags succeed or roll back
+      // together — no orphan documents, no half-open year.
+      if (rows.isNotEmpty) {
+        savedClosing = await createDocument(
+          closingDoc.copyWith(transactions: rows),
+        );
+        await approveDocument(savedClosing!.id);
+      }
 
-    // Create the next fiscal year and its opening voucher.
-    final nextStart = fy.endDate.add(const Duration(days: 1));
-    final nextEnd = DateTime(
-      nextStart.year + 1,
-      nextStart.month,
-      nextStart.day,
-    ).subtract(const Duration(days: 1));
-    final nextId = _uuid.v4();
-    final nextYear = FiscalYearEntity(
-      id: nextId,
-      title: 'سال مالی ${fy.yearNumber + 1}',
-      yearNumber: fy.yearNumber + 1,
-      startDate: nextStart,
-      endDate: nextEnd,
-      createdAt: now,
-      updatedAt: now,
-    );
-    await createFiscalYear(nextYear);
+      // Create the next fiscal year aligned to the same calendar as the one
+      // being closed (Jalali-aligned years stay Jalali-aligned).
+      final nextStart = fy.endDate.add(const Duration(days: 1));
+      final nextEnd = endOfJalaliYear(nextStart);
+      final nextId = _uuid.v4();
+      final nextYear = FiscalYearEntity(
+        id: nextId,
+        title: 'سال مالی ${fy.yearNumber + 1}',
+        yearNumber: fy.yearNumber + 1,
+        startDate: nextStart,
+        endDate: nextEnd,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await createFiscalYear(nextYear);
 
-    final openingRows = <AccountingTransactionEntity>[];
-    for (final subject in subjects) {
-      if (!subject.isPermanent) continue;
-      final report = await getLedgerReport(
-        subjectId: subject.id,
+      // Opening balances read AFTER the closing voucher is saved, so equity
+      // (030001) already carries the period's P/L transfer. Direct nets of
+      // PERMANENT subjects only — their sum is exactly zero post-close
+      // (Σ temporary was folded into 030001), so the opening voucher is
+      // balanced by construction.
+      final postCloseNets = await _directNetsForRange(
         startDate: fy.startDate,
         endDate: fy.endDate,
         fiscalYearId: fiscalYearId,
       );
-      final net = report.closingBalance.minorUnits;
-      if (net == 0) continue;
-      openingRows.add(
-        AccountingTransactionEntity(
-          id: _uuid.v4(),
-          documentId: 'opening-$nextId',
-          subjectId: subject.id,
-          debit: Money.fromMinor(net > 0 ? net : 0),
-          credit: Money.fromMinor(net < 0 ? -net : 0),
-          description: 'مانده افتتاحیه ${subject.name}',
-          rowOrder: openingRows.length + 1,
+      final openingRows = <AccountingTransactionEntity>[];
+      for (final subject in subjects) {
+        if (!subject.isPermanent) continue;
+        final net = postCloseNets[subject.id] ?? 0;
+        if (net == 0) continue;
+        openingRows.add(
+          AccountingTransactionEntity(
+            id: _uuid.v4(),
+            documentId: 'opening-$nextId',
+            subjectId: subject.id,
+            debit: Money.fromMinor(net > 0 ? net : 0),
+            credit: Money.fromMinor(net < 0 ? -net : 0),
+            description: 'مانده افتتاحیه ${subject.name}',
+            rowOrder: openingRows.length + 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+
+      if (openingRows.isNotEmpty) {
+        final openingDoc = AccountingDocumentEntity(
+          id: 'opening-$nextId',
+          number: await getNextDocumentNumber(nextId),
+          date: nextStart,
+          title: 'سند افتتاحیه ${nextYear.title}',
+          status: DocumentStatus.approved,
+          isManual: false,
+          referenceType: 'opening',
+          referenceId: nextId,
+          fiscalYearId: nextId,
+          approvedAt: now,
           createdAt: now,
           updatedAt: now,
+          transactions: openingRows,
+        );
+        await createDocument(openingDoc);
+        await approveDocument(openingDoc.id);
+      }
+
+      // Mark the old year closed with its closing document, activate the new
+      // one — AFTER the opening voucher exists, so the new period's first
+      // day is already registrable when the lock engages.
+      await (_db.update(
+        _db.fiscalYearsTable,
+      )..where((tbl) => tbl.id.equals(fiscalYearId))).write(
+        FiscalYearsTableCompanion(
+          isClosed: const Value(true),
+          isActive: const Value(false),
+          closingDocumentId: Value(savedClosing?.id),
+          updatedAt: Value(now.millisecondsSinceEpoch),
         ),
       );
-    }
+      await setActiveFiscalYear(nextId);
+      await (_db.update(
+        _db.fiscalYearsTable,
+      )..where((tbl) => tbl.id.equals(nextId))).write(
+        FiscalYearsTableCompanion(
+          openingDocumentId: openingRows.isNotEmpty
+              ? Value('opening-$nextId')
+              : const Value(null),
+          updatedAt: Value(now.millisecondsSinceEpoch),
+        ),
+      );
+    });
 
-    final openingDoc = AccountingDocumentEntity(
-      id: 'opening-$nextId',
-      number: await getNextDocumentNumber(nextId),
-      date: nextStart,
-      title: 'سند افتتاحیه ${nextYear.title}',
-      status: DocumentStatus.approved,
-      isManual: false,
-      referenceType: 'opening',
-      referenceId: nextId,
-      fiscalYearId: nextId,
-      approvedAt: now,
-      createdAt: now,
-      updatedAt: now,
-      transactions: openingRows,
-    );
-    await createDocument(openingDoc);
-    await approveDocument(openingDoc.id);
-
-    // Mark the old year closed with its closing document, activate the new one.
-    await (_db.update(
-      _db.fiscalYearsTable,
-    )..where((tbl) => tbl.id.equals(fiscalYearId))).write(
-      FiscalYearsTableCompanion(
-        isClosed: const Value(true),
-        isActive: const Value(false),
-        closingDocumentId: Value(savedClosing.id),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-      ),
-    );
-    await setActiveFiscalYear(nextId);
-    await (_db.update(
-      _db.fiscalYearsTable,
-    )..where((tbl) => tbl.id.equals(nextId))).write(
-      FiscalYearsTableCompanion(
-        openingDocumentId: Value(openingDoc.id),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-      ),
-    );
-
-    return savedClosing;
+    return savedClosing ?? closingDoc;
   }
 }

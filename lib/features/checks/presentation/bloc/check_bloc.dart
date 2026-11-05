@@ -207,8 +207,16 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
         switch (newStatus) {
           case CheckStatus.cleared:
             // Ensure deposited first in collection, then cleared into bank
-            await _autoVoucherService.generateChequeVoucher(check, 'deposit');
-            await _autoVoucherService.generateChequeVoucher(check, 'clear');
+            await _autoVoucherService.generateChequeVoucher(
+              check,
+              'deposit',
+              eventDate: DateTime.now(),
+            );
+            await _autoVoucherService.generateChequeVoucher(
+              check,
+              'clear',
+              eventDate: DateTime.now(),
+            );
             break;
           case CheckStatus.transferred:
             if (oldStatus == CheckStatus.cleared) {
@@ -217,7 +225,11 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
                 event: 'clear',
               );
             }
-            await _autoVoucherService.generateChequeVoucher(check, 'deposit');
+            await _autoVoucherService.generateChequeVoucher(
+              check,
+              'deposit',
+              eventDate: DateTime.now(),
+            );
             break;
           case CheckStatus.pending:
             await _autoVoucherService.voidVoucherFor(check.id, event: 'clear');
@@ -242,7 +254,11 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
 
         switch (newStatus) {
           case CheckStatus.cleared:
-            await _autoVoucherService.generateChequeVoucher(check, 'clear');
+            await _autoVoucherService.generateChequeVoucher(
+              check,
+              'clear',
+              eventDate: DateTime.now(),
+            );
             break;
           case CheckStatus.pending:
           case CheckStatus.bounced:
@@ -266,7 +282,11 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
     String eventCode,
   ) async {
     try {
-      await _autoVoucherService.generateChequeVoucher(check, eventCode);
+      await _autoVoucherService.generateChequeVoucher(
+        check,
+        eventCode,
+        eventDate: DateTime.now(),
+      );
     } catch (e, st) {
       AppLogger.warning(
         'خطا در صدور سند حسابداری چک ${check.id} (رویداد $eventCode): $e',
