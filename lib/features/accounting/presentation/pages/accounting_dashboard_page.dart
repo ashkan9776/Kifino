@@ -398,84 +398,84 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           return AppCard(
             padding: const EdgeInsets.all(16),
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isBalanced
+                              ? Icons.check_circle
+                              : Icons.warning_amber_rounded,
+                          color: isBalanced ? colors.income : colors.expense,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'تراز کل سیستم مالی',
+                          style: AppTypography.titleSmall,
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isBalanced ? colors.income : colors.expense)
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isBalanced ? 'کاملاً تراز است' : 'دارای اختلاف',
+                        style: TextStyle(
+                          color: isBalanced ? colors.income : colors.expense,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  children: [
+                    // Expanded keeps large amounts from colliding on
+                    // narrow screens — AppMoneyText ellipsizes inside.
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            isBalanced
-                                ? Icons.check_circle
-                                : Icons.warning_amber_rounded,
-                            color: isBalanced ? colors.income : colors.expense,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            'تراز کل سیستم مالی',
-                            style: AppTypography.titleSmall,
+                            'مجموع گردش بدهکار:',
+                            style: AppTypography.bodySmall,
                           ),
+                          const SizedBox(height: 4),
+                          AppMoneyText(money: state.report.sumTotalDebit),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: (isBalanced ? colors.income : colors.expense)
-                              .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isBalanced ? 'کاملاً تراز است' : 'دارای اختلاف',
-                          style: TextStyle(
-                            color: isBalanced ? colors.income : colors.expense,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'مجموع گردش بستانکار:',
+                            style: AppTypography.bodySmall,
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          AppMoneyText(money: state.report.sumTotalCredit),
+                        ],
                       ),
-                    ],
-                  ),
-                  const Divider(height: 20),
-                  Row(
-                    children: [
-                      // Expanded keeps large amounts from colliding on
-                      // narrow screens — AppMoneyText ellipsizes inside.
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'مجموع گردش بدهکار:',
-                              style: AppTypography.bodySmall,
-                            ),
-                            const SizedBox(height: 4),
-                            AppMoneyText(money: state.report.sumTotalDebit),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'مجموع گردش بستانکار:',
-                              style: AppTypography.bodySmall,
-                            ),
-                            const SizedBox(height: 4),
-                            AppMoneyText(money: state.report.sumTotalCredit),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           );
         }
 
@@ -517,100 +517,100 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         return AppCard(
           padding: const EdgeInsets.all(16),
           child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.trending_up,
-                        color: AppColors.primary,
-                        size: 20,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.trending_up,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'سود و زیان دوره',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'سود و زیان دوره',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.bold,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: netColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'ماه جاری',
+                      style: TextStyle(
+                        color: netColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('درآمد:', style: AppTypography.bodySmall),
+                        const SizedBox(height: 4),
+                        AppMoneyText(money: revenue),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('هزینه:', style: AppTypography.bodySmall),
+                        const SizedBox(height: 4),
+                        AppMoneyText(money: expense),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'سود (زیان) خالص:',
+                          style: AppTypography.bodySmall,
                         ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: netColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'ماه جاری',
-                        style: TextStyle(
-                          color: netColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: 4),
+                        AppMoneyText(
+                          money: net,
+                          style: AppTypography.moneyTile.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                const Divider(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('درآمد:', style: AppTypography.bodySmall),
-                          const SizedBox(height: 4),
-                          AppMoneyText(money: revenue),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text('هزینه:', style: AppTypography.bodySmall),
-                          const SizedBox(height: 4),
-                          AppMoneyText(money: expense),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'سود (زیان) خالص:',
-                            style: AppTypography.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          AppMoneyText(
-                            money: net,
-                            style: AppTypography.moneyTile.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -663,9 +663,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    TextNormalizer.toPersianDigits(
-                      overdue.length.toString(),
-                    ),
+                    TextNormalizer.toPersianDigits(overdue.length.toString()),
                     style: TextStyle(
                       color: colors.expense,
                       fontSize: 11,
@@ -710,11 +708,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: Icon(
-                Icons.receipt_long,
-                color: colors.expense,
-                size: 20,
-              ),
+              child: Icon(Icons.receipt_long, color: colors.expense, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -731,34 +725,34 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   Text(
                     invoice.contactName ?? 'بدون طرف حساب',
                     style: AppTypography.bodySmall.copyWith(
-                        color: colors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      color: colors.textSecondary,
                     ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AppMoneyText(
-                    money: invoice.remainingBalance,
-                    style: AppTypography.moneyTile,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${TextNormalizer.toPersianDigits(daysOverdue.toString())} روز تأخیر',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: colors.expense,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AppMoneyText(
+                  money: invoice.remainingBalance,
+                  style: AppTypography.moneyTile,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${TextNormalizer.toPersianDigits(daysOverdue.toString())} روز تأخیر',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: colors.expense,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -779,30 +773,28 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           final docs = state.documents.take(5).toList();
           if (docs.isEmpty) {
             return AppCard(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        size: 40,
-                        color: colors.textSecondary,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'هنوز سند حسابداری ثبت نشده است',
-                        style: AppTypography.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            context.push('/accounting/documents/create'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('ثبت اولین سند حسابداری'),
-                      ),
-                    ],
-                  ),
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 40,
+                      color: colors.textSecondary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'هنوز سند حسابداری ثبت نشده است',
+                      style: AppTypography.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          context.push('/accounting/documents/create'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('ثبت اولین سند حسابداری'),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -830,82 +822,83 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       padding: const EdgeInsets.only(bottom: 8),
       child: AppCard(
         onTap: () => _showDocumentDetailsModal(context, doc, colors),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: (doc.isBalanced ? colors.primary : colors.expense)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '#${doc.number}',
-                  style: TextStyle(
-                    color: doc.isBalanced ? colors.primary : colors.expense,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: (doc.isBalanced ? colors.primary : colors.expense)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      doc.title,
-                      style: AppTypography.titleSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${jalali.day} ${jalali.monthName} ${jalali.year} • ${doc.transactions.length} آرتیکل',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                  ],
+              alignment: Alignment.center,
+              child: Text(
+                '#${doc.number}',
+                style: TextStyle(
+                  color: doc.isBalanced ? colors.primary : colors.expense,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppMoneyText(
-                    money: doc.totalDebit,
-                    style: AppTypography.moneyTile,
+                  Text(
+                    doc.title,
+                    style: AppTypography.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: doc.status == DocumentStatus.approved
-                          ? colors.income.withValues(alpha: 0.15)
-                          : colors.warning.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      doc.status.titleFa,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: doc.status == DocumentStatus.approved
-                            ? colors.income
-                            : colors.warning,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    '${jalali.day} ${jalali.monthName} ${jalali.year} • ${doc.transactions.length} آرتیکل',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AppMoneyText(
+                  money: doc.totalDebit,
+                  style: AppTypography.moneyTile,
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: doc.status == DocumentStatus.approved
+                        ? colors.income.withValues(alpha: 0.15)
+                        : colors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    doc.status.titleFa,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: doc.status == DocumentStatus.approved
+                          ? colors.income
+                          : colors.warning,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
