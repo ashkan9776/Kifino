@@ -212,6 +212,73 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
+  /// Fixed-height 2-column grid used by BOTH dashboard grids.
+  /// `childAspectRatio` made cell height depend on screen width — wider
+  /// phones produced shorter cells and overflowing titles; [mainAxisExtent]
+  /// pins the height in logical pixels instead.
+  Widget _buildModuleGrid(List<_ModuleItem> items) {
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        mainAxisExtent: 128,
+      ),
+      itemBuilder: (context, index) =>
+          _buildModuleCard(items[index], context.customColors),
+    );
+  }
+
+  /// One overflow-proof module card shared by both grids. [AppCard] applies
+  /// its own 16px padding, so no nested Padding on top of it — the old
+  /// 16+12 stacking left ~104px of a ~160px cell for text, which made long
+  /// titles («حساب‌های سند خودکار») spill out of the card.
+  Widget _buildModuleCard(_ModuleItem item, KifinoColorsExtension colors) {
+    return AppCard(
+      onTap: () => context.push(item.route),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(item.icon, color: item.color, size: 20),
+          ),
+          const Spacer(),
+          Text(
+            item.title,
+            style: AppTypography.titleSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              height: 1.25,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            item.subtitle,
+            style: AppTypography.bodySmall.copyWith(
+              color: colors.textSecondary,
+              fontSize: 10,
+              height: 1.35,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildModulesGrid(BuildContext context, KifinoColorsExtension colors) {
     final modules = [
       _ModuleItem(
@@ -258,61 +325,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       ),
     ];
 
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: modules.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.45,
-      ),
-      itemBuilder: (context, index) {
-        final item = modules[index];
-        return AppCard(
-          onTap: () => context.push(item.route),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(item.icon, color: item.color, size: 22),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: AppTypography.titleSmall.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: colors.textSecondary,
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return _buildModuleGrid(modules);
   }
 
   Widget _buildQuickAccessGrid(
@@ -364,61 +377,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       ),
     ];
 
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.45,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return AppCard(
-          onTap: () => context.push(item.route),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(item.icon, color: item.color, size: 22),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: AppTypography.titleSmall.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: colors.textSecondary,
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return _buildModuleGrid(items);
   }
 
   Widget _buildEquilibriumCard(KifinoColorsExtension colors) {
@@ -435,10 +394,10 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
 
         if (state is TrialBalanceLoaded) {
           final isBalanced = state.report.isBalanced;
+          // AppCard already pads 16 — no nested Padding (was 32px/side).
           return AppCard(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+            padding: const EdgeInsets.all(16),
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -483,35 +442,40 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                   ),
                   const Divider(height: 20),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'مجموع گردش بدهکار:',
-                            style: AppTypography.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          AppMoneyText(money: state.report.sumTotalDebit),
-                        ],
+                      // Expanded keeps large amounts from colliding on
+                      // narrow screens — AppMoneyText ellipsizes inside.
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'مجموع گردش بدهکار:',
+                              style: AppTypography.bodySmall,
+                            ),
+                            const SizedBox(height: 4),
+                            AppMoneyText(money: state.report.sumTotalDebit),
+                          ],
+                        ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'مجموع گردش بستانکار:',
-                            style: AppTypography.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          AppMoneyText(money: state.report.sumTotalCredit),
-                        ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'مجموع گردش بستانکار:',
+                              style: AppTypography.bodySmall,
+                            ),
+                            const SizedBox(height: 4),
+                            AppMoneyText(money: state.report.sumTotalCredit),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
           );
         }
 
@@ -551,9 +515,8 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         final netColor = net.isNegative ? colors.expense : colors.income;
 
         return AppCard(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+          padding: const EdgeInsets.all(16),
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -601,46 +564,53 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                 ),
                 const Divider(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('درآمد:', style: AppTypography.bodySmall),
-                        const SizedBox(height: 4),
-                        AppMoneyText(money: revenue),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('درآمد:', style: AppTypography.bodySmall),
+                          const SizedBox(height: 4),
+                          AppMoneyText(money: revenue),
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text('هزینه:', style: AppTypography.bodySmall),
-                        const SizedBox(height: 4),
-                        AppMoneyText(money: expense),
-                      ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text('هزینه:', style: AppTypography.bodySmall),
+                          const SizedBox(height: 4),
+                          AppMoneyText(money: expense),
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'سود (زیان) خالص:',
-                          style: AppTypography.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        AppMoneyText(
-                          money: net,
-                          style: AppTypography.moneyTile.copyWith(
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'سود (زیان) خالص:',
+                            style: AppTypography.bodySmall,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          AppMoneyText(
+                            money: net,
+                            style: AppTypography.moneyTile.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-          ),
-        );
+          );
       },
     );
   }
@@ -667,42 +637,41 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.deepOrange,
-                      size: 18,
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.deepOrange,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'فاکتورهای سررسیدشده',
+                    style: AppTypography.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.expense.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    TextNormalizer.toPersianDigits(
+                      overdue.length.toString(),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'فاکتورهای سررسیدشده',
-                      style: AppTypography.titleMedium,
+                    style: TextStyle(
+                      color: colors.expense,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.expense.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        TextNormalizer.toPersianDigits(
-                          overdue.length.toString(),
-                        ),
-                        style: TextStyle(
-                          color: colors.expense,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.push('/business'),
@@ -730,39 +699,38 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
       padding: const EdgeInsets.only(bottom: 8),
       child: AppCard(
         onTap: () => context.push('/business'),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colors.expense.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.receipt_long,
-                  color: colors.expense,
-                  size: 20,
-                ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.expense.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${invoice.type.titleFa} #${TextNormalizer.toPersianDigits(invoice.invoiceNumber)}',
-                      style: AppTypography.titleSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      invoice.contactName ?? 'بدون طرف حساب',
-                      style: AppTypography.bodySmall.copyWith(
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.receipt_long,
+                color: colors.expense,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${invoice.type.titleFa} #${TextNormalizer.toPersianDigits(invoice.invoiceNumber)}',
+                    style: AppTypography.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    invoice.contactName ?? 'بدون طرف حساب',
+                    style: AppTypography.bodySmall.copyWith(
                         color: colors.textSecondary,
                       ),
                       maxLines: 1,
@@ -791,7 +759,6 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
               ),
             ],
           ),
-        ),
       ),
     );
   }
