@@ -31,6 +31,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     on<BusinessInvoiceCreateSubmitted>(_onInvoiceCreateSubmitted);
     on<BusinessInvoicePaymentSubmitted>(_onInvoicePaymentSubmitted);
     on<BusinessInvoiceStatusUpdated>(_onInvoiceStatusUpdated);
+    on<BusinessQuoteConverted>(_onQuoteConverted);
   }
 
   Future<void> _onWatchDataStarted(
@@ -118,6 +119,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     final result = await _businessRepository.createInvoice(event.invoice);
     await result.fold(
       onSuccess: (invoice) async {
+        if (invoice.type == InvoiceType.quote) return; // no voucher for quotes
         try {
           await _autoVoucherService.generateInvoiceVoucher(invoice);
         } catch (e, st) {
@@ -171,6 +173,35 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
             'خطا در صدور سند پرداخت برای فاکتور ${event.invoiceId}: $e',
             error: e,
             stackTrace: st,
+          );
+        }
+      },
+      onFailure: (failure) async => emit(BusinessError(failure.message)),
+    );
+  }
+
+  Future<void> _onQuoteConverted(
+    BusinessQuoteConverted event,
+    Emitter<BusinessState> emit,
+  ) async {
+    final result = await _businessRepository.convertQuoteToInvoice(
+      event.quoteId,
+    );
+    await result.fold(
+      onSuccess: (sale) async {
+        try {
+          await _autoVoucherService.generateInvoiceVoucher(sale);
+        } catch (e, st) {
+          AppLogger.warning(
+            'خطا در صدور سند فاکتور تبدیل‌شده ${sale.invoiceNumber}: $e',
+            error: e,
+            stackTrace: st,
+          );
+          await _emitVoucherPending(
+            emit,
+            invoice: sale,
+            error: e,
+            contextVerb: 'تبدیل',
           );
         }
       },

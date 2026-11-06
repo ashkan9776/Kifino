@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/minimal_xlsx_writer.dart';
+import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
 
@@ -196,6 +197,127 @@ class AccountingExportService {
     }
     rows.add(['', 'سود (زیان) خالص', report.netProfit.minorUnits]);
     return _save('income-statement', [XlsxSheetData('صورت سود و زیان', rows)]);
+  }
+
+
+  /// ─── دفاتر قانونی (فرمت سازمان امور مالیاتی) ───
+  ///
+  /// The tax org's electronic-books format requires, per transaction line:
+  /// ledger (kol) code+name, sub-ledger (moein) code+name, detail (تفصیلی)
+  /// code+name, debit/credit, document date/number/description. Exported as
+  /// XLSX ready for the دفاتر الکترونیکی portal upload.
+
+  /// Latest FINAL document date ≤ [fiscalYearId]'s end → the «شمول» date
+  /// for the legal journal. Kifino documents carry a single date, so both
+  /// شمول and موضوع columns share it.
+  Future<String> exportLegalJournal({String? fiscalYearId}) async {
+    final docs = (await _repository.getDocuments(fiscalYearId: fiscalYearId))
+        .where((d) =>
+            d.status == DocumentStatus.approved ||
+            d.status == DocumentStatus.posted)
+        .toList();
+    final subjects = await _repository.getAllSubjects();
+    String codeOf(String id) =>
+        subjects.where((s) => s.id == id).firstOrNull?.code ?? '';
+    String nameOf(String id) =>
+        subjects.where((s) => s.id == id).firstOrNull?.name ?? '';
+
+    final rows = <List<Object>>[
+      [
+        'ردیف',
+        'تاریخ شمول',
+        'تاریخ موضوع',
+        'شماره سند',
+        'شرح سند',
+        'کد کل',
+        'عنوان کل',
+        'کد معین',
+        'عنوان معین',
+        'کد تفصیلی',
+        'شرح تفصیلی',
+        'بدهکار',
+        'بستانکار',
+        'شرح آرتیکل',
+      ],
+    ];
+    var rowIndex = 1;
+    for (final doc in docs.reversed) {
+      for (final tx in doc.transactions) {
+        final kolCode = codeOf(tx.subjectId);
+        // Kol = 3-digit prefix; moein = 6-digit — derive the kol name by
+        // prefix match when the posting is at moein level.
+        String kolName = '';
+        if (kolCode.length >= 3) {
+          final matches = subjects.where(
+            (s) => s.code == kolCode.substring(0, 3) && s.level == AccountingSubjectLevel.kol,
+          );
+          kolName = matches.isEmpty ? '' : matches.first.name;
+        }
+        rows.add([
+          rowIndex++,
+          AppDateFormatter.formatShort(doc.date, locale: 'fa'),
+          AppDateFormatter.formatShort(doc.date, locale: 'fa'),
+          doc.number,
+          doc.title,
+          kolCode.length > 3 ? kolCode.substring(0, 3) : kolCode,
+          kolName,
+          kolCode.length > 3 ? kolCode : '',
+          kolCode.length > 3 ? nameOf(tx.subjectId) : '',
+          tx.detailSubjectId ?? '',
+          tx.detailSubjectName ?? '',
+          tx.debit.minorUnits,
+          tx.credit.minorUnits,
+          tx.description,
+        ]);
+      }
+    }
+    return _save('legal-journal', [
+      XlsxSheetData('دفتر روزنامه قانونی', rows),
+    ]);
+  }
+
+  /// Legal GENERAL LEDGER: one row per moein account — kol/moein codes and
+  /// names, period turns, and closing debit/credit balances.
+  Future<String> exportLegalLedger({String? fiscalYearId}) async {
+    final report = await _repository.getTrialBalanceReport(
+      level: AccountingSubjectLevel.moein,
+      fiscalYearId: fiscalYearId,
+    );
+    final rows = <List<Object>>[
+      [
+        'کد کل',
+        'عنوان کل',
+        'کد معین',
+        'عنوان معین',
+        'گردش بدهکار',
+        'گردش بستانکار',
+        'مانده بدهکار',
+        'مانده بستانکار',
+      ],
+    ];
+    for (final e in report.entries) {
+      final code = e.subject.code;
+      final kolCode = code.length > 3 ? code.substring(0, 3) : code;
+      String kolName = '';
+      if (code.length > 3) {
+        final matches = (await _repository.getAllSubjects()).where(
+          (s) => s.code == kolCode && s.level == AccountingSubjectLevel.kol,
+        );
+        kolName = matches.isEmpty ? '' : matches.first.name;
+      }
+      final net = e.netMinorUnits; // + debit / − credit
+      rows.add([
+        kolCode,
+        kolName,
+        code,
+        e.subject.name,
+        e.periodDebit.minorUnits,
+        e.periodCredit.minorUnits,
+        net > 0 ? net : 0,
+        net < 0 ? -net : 0,
+      ]);
+    }
+    return _save('legal-ledger', [XlsxSheetData('دفتر کل قانونی', rows)]);
   }
 
   Future<String> _save(String baseName, List<XlsxSheetData> sheets) async {

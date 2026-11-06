@@ -138,10 +138,13 @@ class AutoVoucherService {
   }
 
   /// Automatically generates balanced double-entry accounting document for an invoice
-  Future<AccountingDocumentEntity> generateInvoiceVoucher(
+  Future<AccountingDocumentEntity?> generateInvoiceVoucher(
     InvoiceEntity invoice, {
     String? fiscalYearId,
   }) async {
+    // Quotes never hit the ledger (no stock, no balance, no voucher).
+    if (invoice.type == InvoiceType.quote) return null;
+
     // Idempotency: one invoice ↔ one voucher.
     if (await _hasVoucherFor(invoice.id)) {
       throw StateError('برای این فاکتور قبلاً سند حسابداری صادر شده است.');

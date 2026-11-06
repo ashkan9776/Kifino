@@ -68,6 +68,15 @@ class _BusinessHubPageState extends State<BusinessHubPage>
         child: Scaffold(
           appBar: AppBar(
             title: Text(l10n.isPersian ? 'مدیریت کسب‌وکار' : 'Business Hub'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.hourglass_top_rounded),
+                tooltip: l10n.isPersian
+                    ? 'گزارش سنی مطالبات'
+                    : 'Aging report',
+                onPressed: () => context.push('/business/aging'),
+              ),
+            ],
             bottom: TabBar(
               controller: _tabController,
               indicatorColor: AppColors.income,
@@ -520,7 +529,8 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                             );
                           },
                         ),
-                        if (!isPaid)
+                        if (!isPaid &&
+                            invoice.type != InvoiceType.quote)
                           TextButton.icon(
                             icon: const Icon(Icons.payment_outlined, size: 16),
                             label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
@@ -540,6 +550,34 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                             ),
                             onPressed: () =>
                                 _showSalesReturnSheet(context, invoice),
+                          ),
+                        if (invoice.type == InvoiceType.quote)
+                          TextButton.icon(
+                            icon: const Icon(
+                              Icons.receipt_long_outlined,
+                              size: 16,
+                            ),
+                            label: Text(
+                              l10n.isPersian
+                                  ? 'تبدیل به فاکتور'
+                                  : 'To invoice',
+                            ),
+                            onPressed: () {
+                              final bloc = context.read<BusinessBloc>();
+                              final messenger = ScaffoldMessenger.of(context);
+                              bloc.add(
+                                BusinessQuoteConverted(quoteId: invoice.id),
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    l10n.isPersian
+                                        ? 'پیش‌فاکتور به فاکتور فروش تبدیل شد.'
+                                        : 'Quote converted to a sale invoice.',
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         if (invoice.type == InvoiceType.sale && !isPaid)
                           TextButton.icon(
@@ -1252,6 +1290,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
     final priceController = TextEditingController(text: '5000000');
     final qtyController = TextEditingController(text: '1');
     String selectedContactId = state.contacts.first.id;
+    bool quoteMode = false;
 
     showModalBottomSheet(
       context: context,
@@ -1272,6 +1311,23 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AppSheetHeader(title: 'صدور فاکتور فروش سریع'),
+                    const SizedBox(height: AppSpacing.md),
+                    SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(value: false, label: Text('فاکتور فروش')),
+                        ButtonSegment(value: true, label: Text('پیش‌فاکتور')),
+                      ],
+                      selected: {quoteMode},
+                      onSelectionChanged: (val) {
+                        setModalState(() {
+                          quoteMode = val.first;
+                          final prefix = quoteMode ? 'QT' : 'INV';
+                          invoiceNumberController.text =
+                              '$prefix-${DateTime.now().millisecondsSinceEpoch % 100000}';
+                        });
+                      },
+                      showSelectedIcon: false,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: invoiceNumberController,
@@ -1370,7 +1426,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                           id: '',
                           invoiceNumber: invoiceNumberController.text.trim(),
                           contactId: selectedContactId,
-                          type: InvoiceType.sale,
+                          type: quoteMode
+                              ? InvoiceType.quote
+                              : InvoiceType.sale,
                           status: InvoiceStatus.sent,
                           issueDate: now,
                           dueDate: now.add(const Duration(days: 14)),

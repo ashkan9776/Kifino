@@ -3,6 +3,7 @@ import '../../../../core/utils/money.dart';
 import '../entities/business_metrics_entity.dart';
 import '../entities/contact_entity.dart';
 import '../entities/inventory_log_entity.dart';
+import '../entities/aging_report_entity.dart';
 import '../entities/invoice_entity.dart';
 import '../entities/product_card_entity.dart';
 import '../entities/product_entity.dart';
@@ -32,6 +33,18 @@ abstract interface class BusinessRepository {
   // Invoices
   Stream<List<InvoiceEntity>> watchInvoices({InvoiceType? type});
   Future<Result<List<InvoiceEntity>>> getInvoices({InvoiceType? type});
+
+  /// Converts a quote (پیش‌فاکتور) into a real SALE invoice: header copied,
+  /// items re-created, effects (stock + customer balance) applied via the
+  /// regular sale path, quote left intact for reference.
+  Future<Result<InvoiceEntity>> convertQuoteToInvoice(String quoteId);
+
+  /// گزارش سنی — open invoices bucketed by days past due, per contact.
+  /// [receivables] true → sale invoices (what customers owe); false →
+  /// purchase invoices (what we owe suppliers).
+  Future<Result<List<ContactAgingEntry>>> getAgingReport({
+    required bool receivables,
+  });
   Future<Result<InvoiceEntity>> getInvoiceById(String id);
   Future<Result<InvoiceEntity>> createInvoice(InvoiceEntity invoice);
   Future<Result<InvoiceEntity>> updateInvoice(InvoiceEntity invoice);

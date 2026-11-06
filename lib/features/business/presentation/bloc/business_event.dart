@@ -89,6 +89,14 @@ final class BusinessInvoicePaymentSubmitted extends BusinessEvent {
   List<Object?> get props => [invoiceId, paymentAmount];
 }
 
+final class BusinessQuoteConverted extends BusinessEvent {
+  final String quoteId;
+  const BusinessQuoteConverted({required this.quoteId});
+
+  @override
+  List<Object?> get props => [quoteId];
+}
+
 final class BusinessInvoiceStatusUpdated extends BusinessEvent {
   final String invoiceId;
   final InvoiceStatus status;

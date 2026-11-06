@@ -37,6 +37,7 @@ import '../../features/accounting/presentation/pages/ledger_page.dart';
 import '../../features/accounting/presentation/pages/treasury_page.dart';
 import '../../features/accounting/presentation/pages/trial_balance_page.dart';
 import '../../features/accounting/presentation/pages/financial_statements_page.dart';
+import '../../features/business/presentation/pages/aging_report_page.dart';
 import '../../features/business/presentation/pages/product_card_page.dart';
 import '../../core/design_system/showcase/design_system_showcase_page.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -281,6 +282,11 @@ class AppRouter {
             accountId: extra is String ? extra : '',
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/business/aging',
+        builder: (context, state) => const AgingReportPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

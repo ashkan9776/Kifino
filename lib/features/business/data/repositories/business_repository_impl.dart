@@ -10,6 +10,7 @@ import '../../../../core/utils/money.dart';
 import '../../domain/entities/business_metrics_entity.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../../domain/entities/inventory_log_entity.dart';
+import '../../domain/entities/aging_report_entity.dart';
 import '../../domain/entities/invoice_entity.dart';
 import '../../domain/entities/product_card_entity.dart';
 import '../../domain/entities/product_entity.dart';
@@ -1442,6 +1443,99 @@ class BusinessRepositoryImpl implements BusinessRepository {
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('ویرایش وضعیت فاکتور انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<InvoiceEntity>> convertQuoteToInvoice(String quoteId) async {
+    try {
+      final now = DateTime.now();
+      final quote = await getInvoiceById(quoteId);
+      final q = quote.dataOrNull;
+      if (q == null) {
+        return DatabaseFailure('پیش‌فاکتور پیدا نشد.').asFailure();
+      }
+      if (q.type != InvoiceType.quote) {
+        return DatabaseFailure('این سند پیش‌فاکتور نیست.').asFailure();
+      }
+
+      final converted = InvoiceEntity(
+        id: '',
+        invoiceNumber:
+            'S-${q.invoiceNumber}-${now.millisecondsSinceEpoch % 1000}',
+        contactId: q.contactId,
+        contactName: q.contactName,
+        type: InvoiceType.sale,
+        status: InvoiceStatus.sent,
+        issueDate: now,
+        dueDate: now.add(const Duration(days: 14)),
+        subtotal: q.subtotal,
+        discount: q.discount,
+        tax: q.tax,
+        total: q.total,
+        paidAmount: Money.zero(q.total.currency),
+        items: q.items
+            .map(
+              (it) => InvoiceItemEntity(
+                id: '',
+                invoiceId: '',
+                productId: it.productId,
+                description: it.description,
+                quantity: it.quantity,
+                unitPrice: it.unitPrice,
+                discount: it.discount,
+                tax: it.tax,
+                total: it.total,
+              ),
+            )
+            .toList(),
+        notes: 'تبدیل از پیش‌فاکتور ${q.invoiceNumber} (${q.id})',
+        createdAt: now,
+        updatedAt: now,
+      );
+      return await createInvoice(converted);
+    } catch (e) {
+      return DatabaseFailure('تبدیل پیش‌فاکتور انجام نشد.').asFailure();
+    }
+  }
+
+  @override
+  Future<Result<List<ContactAgingEntry>>> getAgingReport({
+    required bool receivables,
+  }) async {
+    try {
+      final invoicesRes = await getInvoices();
+      final invoices = invoicesRes.dataOrNull ?? const <InvoiceEntity>[];
+      final targetType =
+          receivables ? InvoiceType.sale : InvoiceType.purchase;
+      final now = DateTime.now();
+      final byContact = <String, ContactAgingEntry>{};
+
+      for (final inv in invoices) {
+        if (inv.type != targetType) continue;
+        if (inv.isFullyPaid) continue;
+        if (inv.status == InvoiceStatus.cancelled ||
+            inv.status == InvoiceStatus.draft) {
+          continue;
+        }
+        final remaining = inv.remainingBalance.minorUnits;
+        if (remaining <= 0) continue;
+
+        final daysPastDue = now.difference(inv.dueDate).inDays;
+        final name = inv.contactName ?? 'بدون نام';
+        final existing = byContact[inv.contactId] ??
+            ContactAgingEntry(contactId: inv.contactId, contactName: name);
+        byContact[inv.contactId] = existing.addBucket(
+          daysPastDue: daysPastDue,
+          amountMinor: remaining,
+        );
+      }
+
+      final entries = byContact.values.toList()
+        ..sort((a, b) => b.totalMinor.compareTo(a.totalMinor));
+      return Success(entries);
+    } catch (e) {
+      return DatabaseFailure('گزارش سنی ساخته نشد.').asFailure();
     }
   }
 
