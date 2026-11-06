@@ -176,6 +176,41 @@ void main() {
       },
     );
 
+    test(
+      'payRemaining followed by deletePayment of one installment does not delete the other installment ledger transaction',
+      () async {
+        await seedAccountAndInstallment(paid: 10);
+        final res = await repo.payRemaining('inst-1');
+        expect(res.isSuccess, isTrue);
+
+        final history = await repo.getPaymentHistory('inst-1');
+        expect(history.length, equals(2));
+        final payment12 = history.firstWhere((p) => p.installmentIndex == 12);
+        final payment11 = history.firstWhere((p) => p.installmentIndex == 11);
+
+        // Delete payment 12
+        final delRes = await repo.deletePayment(payment12.id);
+        expect(delRes.isSuccess, isTrue);
+
+        // Payment 11's ledger transaction MUST still exist and not be soft-deleted!
+        final tx11 = await (db.select(db.transactionsTable)
+              ..where((tbl) => tbl.id.equals(payment11.ledgerTransactionId!)))
+            .getSingleOrNull();
+        expect(tx11, isNotNull);
+        expect(
+          tx11!.deletedAt,
+          isNull,
+          reason: 'Payment 11 ledger transaction must remain active',
+        );
+
+        // Account balance should be: 100M - 20M (payment 11) = 80M
+        final account = await (db.select(db.accountsTable)
+              ..where((t) => t.id.equals('acc-1')))
+            .getSingle();
+        expect(account.currentBalanceMinor, equals(80000000));
+      },
+    );
+
     test('deletePayment after completion reverts plan to ongoing', () async {
       await seedAccountAndInstallment(paid: 12);
       await (db.update(db.installmentsTable)

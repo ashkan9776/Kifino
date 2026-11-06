@@ -77,5 +77,39 @@ void main() {
       final list = await repository.getDebts();
       expect(list.dataOrNull!.isEmpty, isTrue);
     });
+
+    test('addPayment rejects non-positive amounts and non-existent/deleted debts', () async {
+      final debt = DebtEntity(
+        id: 'debt-edge',
+        contactName: 'تست خطا',
+        type: DebtType.debt,
+        totalAmount: const Money(minorUnits: 1000000, currency: Currency.irr),
+        createdAt: now,
+        updatedAt: now,
+      );
+      await repository.createDebt(debt);
+
+      // Zero amount fails
+      final zeroRes = await repository.addPayment(
+        'debt-edge',
+        const Money(minorUnits: 0, currency: Currency.irr),
+      );
+      expect(zeroRes.isFailure, isTrue);
+
+      // Non-existent id fails
+      final missingRes = await repository.addPayment(
+        'non-existent',
+        const Money(minorUnits: 1000, currency: Currency.irr),
+      );
+      expect(missingRes.isFailure, isTrue);
+
+      // Deleted debt fails
+      await repository.deleteDebt('debt-edge');
+      final deletedRes = await repository.addPayment(
+        'debt-edge',
+        const Money(minorUnits: 1000, currency: Currency.irr),
+      );
+      expect(deletedRes.isFailure, isTrue);
+    });
   });
 }

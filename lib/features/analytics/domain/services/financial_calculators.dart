@@ -26,10 +26,16 @@ class CashFlowCalculator {
     int expenseMinor = 0;
 
     for (final tx in transactions) {
+      final txCurrency = tx.amount.currency;
+      if (!txCurrency.isCompatibleWith(currency)) continue;
+      final effectiveAmount = txCurrency == currency
+          ? tx.amount
+          : tx.amount.normalizeTo(currency);
+
       if (tx.type == TransactionType.income) {
-        incomeMinor += tx.amount.minorUnits;
+        incomeMinor += effectiveAmount.minorUnits;
       } else if (tx.type == TransactionType.expense) {
-        expenseMinor += tx.amount.minorUnits;
+        expenseMinor += effectiveAmount.minorUnits;
       }
     }
 

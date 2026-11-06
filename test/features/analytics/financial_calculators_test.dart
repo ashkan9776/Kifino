@@ -54,6 +54,75 @@ void main() {
         equals(100000),
       ); // 3,000,000 / 30
     });
+
+    test('Normalizes compatible Iranian currencies and ignores foreign currencies in cash flow', () {
+      final transactions = <TransactionEntity>[
+        TransactionEntity(
+          id: 'tx-toman',
+          accountId: 'acc-1',
+          categoryId: 'cat-income',
+          amount: const Money(
+            minorUnits: 1000000, // 1,000,000 Tomans = 10,000,000 Rials
+            currency: Currency.toman,
+          ),
+          type: TransactionType.income,
+          description: 'حقوق تومان',
+          date: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        TransactionEntity(
+          id: 'tx-rial',
+          accountId: 'acc-1',
+          categoryId: 'cat-food',
+          amount: const Money(
+            minorUnits: 5000000, // 5,000,000 Rials
+            currency: Currency.irr,
+          ),
+          type: TransactionType.expense,
+          description: 'خرید ریال',
+          date: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        TransactionEntity(
+          id: 'tx-usd',
+          accountId: 'acc-usd',
+          categoryId: 'cat-other',
+          amount: const Money(
+            minorUnits: 5000, // $50.00
+            currency: Currency.usd,
+          ),
+          type: TransactionType.expense,
+          description: 'خرید ارزی',
+          date: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ];
+
+      // Calculate in IRR: 1,000,000 Toman income becomes 10,000,000 IRR. Expense is 5,000,000 IRR. USD is ignored.
+      final resultIrr = CashFlowCalculator.calculate(
+        transactions: transactions,
+        currency: Currency.irr,
+        daysCount: 10,
+      );
+
+      expect(resultIrr.totalIncome.minorUnits, equals(10000000));
+      expect(resultIrr.totalExpense.minorUnits, equals(5000000));
+      expect(resultIrr.netCashFlow.minorUnits, equals(5000000));
+
+      // Calculate in Toman: 5,000,000 IRR expense becomes 500,000 Toman. Income is 1,000,000 Toman.
+      final resultToman = CashFlowCalculator.calculate(
+        transactions: transactions,
+        currency: Currency.toman,
+        daysCount: 10,
+      );
+
+      expect(resultToman.totalIncome.minorUnits, equals(1000000));
+      expect(resultToman.totalExpense.minorUnits, equals(500000));
+      expect(resultToman.netCashFlow.minorUnits, equals(500000));
+    });
   });
 
   group('RunwayCalculator Tests', () {

@@ -113,7 +113,7 @@ class DebtRepositoryImpl implements DebtRepository {
 
       return Success(debt.copyWith(id: dId));
     } catch (e) {
-      return DatabaseFailure('ثبت بدهی انجام نشد./receivable: $e').asFailure();
+      return DatabaseFailure('ثبت بدهی/طلب انجام نشد.').asFailure();
     }
   }
 
@@ -127,8 +127,11 @@ class DebtRepositoryImpl implements DebtRepository {
           _db.debtsReceivablesTable,
         )..where((t) => t.id.equals(id))).getSingleOrNull();
 
-        if (existing == null) {
-          throw Exception('Debt not found');
+        if (existing == null || existing.deletedAt != null) {
+          throw StateError('بدهی/طلب پیدا نشد.');
+        }
+        if (paymentAmount.minorUnits <= 0) {
+          throw ArgumentError('مبلغ پرداخت باید بیشتر از صفر باشد.');
         }
 
         final newPaidMinor =
@@ -164,6 +167,8 @@ class DebtRepositoryImpl implements DebtRepository {
 
       return const Success(null);
     } catch (e) {
+      if (e is ArgumentError) return DatabaseFailure(e.message.toString()).asFailure();
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
       return DatabaseFailure('ثبت پرداخت انجام نشد. دوباره تلاش کنید.')
           .asFailure();
     }

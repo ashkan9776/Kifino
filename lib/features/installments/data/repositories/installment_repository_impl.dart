@@ -300,46 +300,49 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
           );
         }
 
-        // One summary expense transaction for the early payoff.
-        final txId = _uuid.v4();
-        await _db
-            .into(_db.transactionsTable)
-            .insert(
-              TransactionsTableCompanion.insert(
-                id: txId,
-                accountId: inst.accountId,
-                type: 'expense',
-                amountMinor: remainingMinor,
-                currency: inst.currency,
-                transactionDate: now,
-                description: TextNormalizer.auto(
-                  'تسویه کامل ${inst.title} — $remainingCount قسط باقی‌مانده',
-                ),
-                createdAt: now,
-                updatedAt: now,
-                syncStatus: const Value(1),
-              ),
-            );
-        await _db
-            .into(_db.syncQueueTable)
-            .insert(
-              SyncQueueTableCompanion.insert(
-                syncEntityName: 'transactions',
-                entityId: txId,
-                operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$txId","account_id":"${inst.accountId}","amount_minor":$remainingMinor,"type":"expense"}',
-                idempotencyKey: _uuid.v4(),
-                queuedAt: now,
-              ),
-            );
-
-        // History rows for every settled قسط.
+        // Dedicated expense transaction & history row for every settled قسط.
+        // 1:1 ledger pairing guarantees that deleting one payment later reverts
+        // only that specific installment's transaction without destroying the
+        // transactions of the other settled installments.
         for (
           var i = inst.paidInstallmentsCount + 1;
           i <= inst.numberOfInstallments;
           i++
         ) {
+          final txId = _uuid.v4();
+          await _db
+              .into(_db.transactionsTable)
+              .insert(
+                TransactionsTableCompanion.insert(
+                  id: txId,
+                  accountId: inst.accountId,
+                  type: 'expense',
+                  amountMinor: inst.installmentAmountMinor,
+                  currency: inst.currency,
+                  transactionDate: now,
+                  description: TextNormalizer.auto(
+                    'تسویه قسط ${inst.title} — $i از ${inst.numberOfInstallments}',
+                  ),
+                  createdAt: now,
+                  updatedAt: now,
+                  syncStatus: const Value(1),
+                ),
+              );
+
+          await _db
+              .into(_db.syncQueueTable)
+              .insert(
+                SyncQueueTableCompanion.insert(
+                  syncEntityName: 'transactions',
+                  entityId: txId,
+                  operation: 'INSERT',
+                  payloadJson:
+                      '{"id":"$txId","account_id":"${inst.accountId}","amount_minor":${inst.installmentAmountMinor},"type":"expense"}',
+                  idempotencyKey: _uuid.v4(),
+                  queuedAt: now,
+                ),
+              );
+
           await _db
               .into(_db.installmentPaymentsTable)
               .insert(
