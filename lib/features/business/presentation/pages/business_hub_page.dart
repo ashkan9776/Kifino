@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
@@ -525,6 +526,20 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                             label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
                             onPressed: () =>
                                 _showPaymentSheet(context, invoice),
+                          ),
+                        if (invoice.type == InvoiceType.sale &&
+                            !isCancelled &&
+                            !invoice.isFullyPaid)
+                          TextButton.icon(
+                            icon: const Icon(
+                              Icons.assignment_return_outlined,
+                              size: 16,
+                            ),
+                            label: Text(
+                              l10n.isPersian ? 'برگشت از فروش' : 'Return',
+                            ),
+                            onPressed: () =>
+                                _showSalesReturnSheet(context, invoice),
                           ),
                         if (invoice.type == InvoiceType.sale && !isPaid)
                           TextButton.icon(
@@ -1436,6 +1451,141 @@ class _BusinessHubPageState extends State<BusinessHubPage>
         ),
       ),
     );
+  }
+
+  /// برگشت از فروش — full-quantity credit note against a sale invoice:
+  /// stock re-enters, the customer's balance is credited and a mirror
+  /// voucher (DR برگشت از فروش / CR مشتری) is issued automatically through
+  /// the regular invoice-create path.
+  void _showSalesReturnSheet(BuildContext context, InvoiceEntity invoice) {
+    final l10n = context.l10n;
+    final isFa = l10n.isPersian;
+    final alreadyReturned = invoice.type == InvoiceType.salesReturn;
+
+    if (alreadyReturned) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isFa ? 'این خودش برگشت از فروش است.' : 'This is already a return.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final total = invoice.remainingBalance;
+    // Capture before the dialog — no context use across the async gap.
+    final businessBloc = context.read<BusinessBloc>();
+    final messenger = ScaffoldMessenger.of(context);
+    showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isFa ? 'برگشت از فروش' : 'Sales return'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isFa
+                  ? 'کل اقلام فاکتور ${invoice.invoiceNumber} به انبار برمی‌گردد و مبلغ ${TextNormalizer.auto(total.format())} به حساب مشتری بستانکار می‌شود.'
+                  : 'All items of ${invoice.invoiceNumber} return to stock and ${total.format()} is credited to the customer.',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...invoice.items.map(
+              (it) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        it.description,
+                        style: AppTypography.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '${TextNormalizer.auto(it.quantity.toStringAsFixed(0))} ${isFa ? 'عدد' : 'x'}',
+                      style: AppTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              isFa
+                  ? 'سند حسابداری معکوس نیز خودکار صادر می‌شود. این عمل قابل بازگشت خودکار نیست.'
+                  : 'A mirrored voucher is issued automatically. This cannot be auto-reverted.',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.warning,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+            child: Text(isFa ? 'ثبت برگشت' : 'Create return'),
+          ),
+        ],
+      ),
+    ).then((confirmed) {
+      if (confirmed != true) return;
+      final now = DateTime.now();
+      final returnInvoice = InvoiceEntity(
+        id: '',
+        invoiceNumber:
+            'RET-${invoice.invoiceNumber}-${TextNormalizer.toPersianDigits((now.millisecondsSinceEpoch % 1000).toString())}',
+        contactId: invoice.contactId,
+        contactName: invoice.contactName,
+        type: InvoiceType.salesReturn,
+        status: InvoiceStatus.paid,
+        issueDate: now,
+        dueDate: now,
+        subtotal: invoice.subtotal,
+        discount: invoice.discount,
+        tax: invoice.tax,
+        total: invoice.total,
+        paidAmount: invoice.total,
+        items: invoice.items
+            .map(
+              (it) => InvoiceItemEntity(
+                id: '',
+                invoiceId: '',
+                productId: it.productId,
+                description: it.description,
+                quantity: it.quantity,
+                unitPrice: it.unitPrice,
+                discount: it.discount,
+                tax: it.tax,
+                total: it.total,
+              ),
+            )
+            .toList(),
+        notes: 'برگشت فاکتور ${invoice.invoiceNumber} (${invoice.id})',
+        createdAt: now,
+        updatedAt: now,
+      );
+      businessBloc.add(BusinessInvoiceCreateSubmitted(returnInvoice));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            isFa
+                ? 'برگشت از فروش ثبت شد؛ موجودی و حساب مشتری اصلاح شد.'
+                : 'Return recorded; stock and customer balance updated.',
+          ),
+        ),
+      );
+    });
   }
 
   void _showPaymentSheet(BuildContext context, InvoiceEntity invoice) {

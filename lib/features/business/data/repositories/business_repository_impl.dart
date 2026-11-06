@@ -737,13 +737,17 @@ class BusinessRepositoryImpl implements BusinessRepository {
             }
           }
 
-          // 3b. Deduct product inventory if sale invoice
-          if (invoice.type == InvoiceType.sale && item.productId != null) {
+          // 3b. Sale deducts, sales-return adds back (avg-cost stays put —
+          // goods re-enter at the same weighted average they left at).
+          if ((invoice.type == InvoiceType.sale ||
+                  invoice.type == InvoiceType.salesReturn) &&
+              item.productId != null) {
             final product = await (_db.select(
               _db.productsTable,
             )..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
             if (product != null) {
-              final newStock = (product.currentStock - item.quantity).clamp(
+              final isReturn = invoice.type == InvoiceType.salesReturn;
+              final newStock = (product.currentStock + (isReturn ? item.quantity : -item.quantity)).clamp(
                 0.0,
                 99999999.0,
               );
@@ -762,11 +766,19 @@ class BusinessRepositoryImpl implements BusinessRepository {
                     InventoryLogsTableCompanion.insert(
                       id: _uuid.v4(),
                       productId: product.id,
-                      changeQuantity: -item.quantity,
-                      movementType: InventoryMovementType.sale.code,
+                      changeQuantity: isReturn ? item.quantity : -item.quantity,
+                      movementType: isReturn
+                          ? InventoryMovementType.returned.code
+                          : InventoryMovementType.sale.code,
                       referenceId: Value(invId),
-                      costPerUnitMinor: Value(product.purchasePriceMinor),
-                      notes: Value('فاکتور فروش $invId'),
+                      costPerUnitMinor: Value(
+                        isReturn
+                            ? product.avgCostMinor
+                            : product.purchasePriceMinor,
+                      ),
+                      notes: Value(
+                        isReturn ? 'برگشت از فروش $invId' : 'فاکتور فروش $invId',
+                      ),
                       createdAt: now,
                       updatedAt: now,
                     ),
@@ -775,21 +787,40 @@ class BusinessRepositoryImpl implements BusinessRepository {
           }
         }
 
-        // 4. Update contact balance if sale invoice
+        // 4. Contact balance: sale charges, sales-return credits. A return
+        // ALWAYS credits the full total — regardless of how much of the
+        // original invoice was paid (a credit note nets against the debt,
+        // possibly pushing the balance negative = refund owed).
         if (invoice.type == InvoiceType.sale &&
             invoice.remainingBalance.minorUnits > 0) {
           final contact = await (_db.select(
             _db.businessContactsTable,
           )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
           if (contact != null) {
-            final newBalance =
-                contact.outstandingBalanceMinor +
-                invoice.remainingBalance.minorUnits;
+            final delta = invoice.remainingBalance.minorUnits;
+            final newBalance = contact.outstandingBalanceMinor + delta;
             await (_db.update(
               _db.businessContactsTable,
             )..where((t) => t.id.equals(contact.id))).write(
               BusinessContactsTableCompanion(
                 outstandingBalanceMinor: Value(newBalance),
+                updatedAt: Value(now),
+              ),
+            );
+          }
+        }
+        if (invoice.type == InvoiceType.salesReturn) {
+          final contact = await (_db.select(
+            _db.businessContactsTable,
+          )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
+          if (contact != null) {
+            await (_db.update(
+              _db.businessContactsTable,
+            )..where((t) => t.id.equals(contact.id))).write(
+              BusinessContactsTableCompanion(
+                outstandingBalanceMinor: Value(
+                  contact.outstandingBalanceMinor - invoice.total.minorUnits,
+                ),
                 updatedAt: Value(now),
               ),
             );
@@ -926,6 +957,63 @@ class BusinessRepositoryImpl implements BusinessRepository {
           );
         }
       }
+    } else if (invoiceType == InvoiceType.salesReturn.code) {
+      // Reversing a RETURN (edit/cancel): stock goes back out, the customer
+      // owes the amount again.
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final restored = (product.currentStock - item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(restored),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: -item.quantity,
+                movementType: InventoryMovementType.sale.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(product.avgCostMinor),
+                notes: Value('$reason برگشت از فروش'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      // A return credited the FULL total — reversing re-charges it all.
+      final creditAmount = totalMinor;
+      if (creditAmount > 0) {
+        final contact = await (_db.select(
+          _db.businessContactsTable,
+        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
+        if (contact != null) {
+          await (_db.update(
+            _db.businessContactsTable,
+          )..where((tbl) => tbl.id.equals(contact.id))).write(
+            BusinessContactsTableCompanion(
+              outstandingBalanceMinor:
+                  Value(contact.outstandingBalanceMinor + creditAmount),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+      }
     } else if (invoiceType == InvoiceType.purchase.code) {
       for (final item in items) {
         if (item.productId == null) continue;
@@ -974,6 +1062,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
     required int remainingMinor,
     required List<InvoiceItemEntity> items,
     required int now,
+    int totalMinor = 0,
     String reason = 'فاکتور',
   }) async {
     if (type == InvoiceType.sale) {
@@ -1024,6 +1113,63 @@ class BusinessRepositoryImpl implements BusinessRepository {
             BusinessContactsTableCompanion(
               outstandingBalanceMinor: Value(
                 contact.outstandingBalanceMinor + remainingMinor,
+              ),
+              updatedAt: Value(now),
+            ),
+          );
+        }
+      }
+    } else if (type == InvoiceType.salesReturn) {
+      // Edit-path application of a RETURN: stock comes back in (avg cost
+      // untouched — goods re-enter at the average they left at) and the
+      // customer's outstanding goes DOWN (can go negative = we owe them).
+      for (final item in items) {
+        if (item.productId == null) continue;
+        final product = await (_db.select(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(item.productId!))).getSingleOrNull();
+        if (product == null) continue;
+
+        final newStock = (product.currentStock + item.quantity).clamp(
+          0.0,
+          99999999.0,
+        );
+        await (_db.update(
+          _db.productsTable,
+        )..where((tbl) => tbl.id.equals(product.id))).write(
+          ProductsTableCompanion(
+            currentStock: Value(newStock),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.inventoryLogsTable)
+            .insert(
+              InventoryLogsTableCompanion.insert(
+                id: _uuid.v4(),
+                productId: product.id,
+                changeQuantity: item.quantity,
+                movementType: InventoryMovementType.returned.code,
+                referenceId: Value(invoiceId),
+                costPerUnitMinor: Value(product.avgCostMinor),
+                notes: Value('$reason برگشت از فروش'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      if (totalMinor > 0) {
+        final contact = await (_db.select(
+          _db.businessContactsTable,
+        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
+        if (contact != null) {
+          await (_db.update(
+            _db.businessContactsTable,
+          )..where((tbl) => tbl.id.equals(contact.id))).write(
+            BusinessContactsTableCompanion(
+              outstandingBalanceMinor: Value(
+                contact.outstandingBalanceMinor - totalMinor,
               ),
               updatedAt: Value(now),
             ),
@@ -1135,6 +1281,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
             remainingMinor: invoice.remainingBalance.minorUnits,
             items: invoice.items,
             now: now,
+            totalMinor: invoice.total.minorUnits,
             reason: 'اصلاح فاکتور',
           );
         }

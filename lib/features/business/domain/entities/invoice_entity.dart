@@ -5,7 +5,8 @@ import '../../../../core/utils/money.dart';
 enum InvoiceType {
   sale('sale'),
   purchase('purchase'),
-  quote('quote');
+  quote('quote'),
+  salesReturn('salesReturn');
 
   final String code;
   const InvoiceType(this.code);
@@ -14,13 +15,17 @@ enum InvoiceType {
     return InvoiceType.values.firstWhere(
       (e) => e.code == code,
       orElse: () => InvoiceType.sale,
+      // sale is the safe fallback for unknown/legacy codes.
     );
   }
+
+  bool get isReturn => this == InvoiceType.salesReturn;
 
   String get titleFa => switch (this) {
     InvoiceType.sale => 'فاکتور فروش',
     InvoiceType.purchase => 'فاکتور خرید',
     InvoiceType.quote => 'پیش‌فاکتور',
+    InvoiceType.salesReturn => 'برگشت از فروش',
   };
 }
 

@@ -31,7 +31,12 @@ class AutoVoucherService {
   /// purchased) contribute 0 — their COGS legs are simply omitted.
   Future<int> _computeCogsMinor(InvoiceEntity invoice) async {
     final repo = businessRepository;
-    if (repo == null || invoice.type != InvoiceType.sale) return 0;
+    // Sale AND sales-return both move inventory at the weighted average.
+    if (repo == null ||
+        (invoice.type != InvoiceType.sale &&
+            invoice.type != InvoiceType.salesReturn)) {
+      return 0;
+    }
     final productIds = invoice.items
         .map((i) => i.productId)
         .whereType<String>()
@@ -182,6 +187,133 @@ class AutoVoucherService {
 
     // Required subjects must exist with a Persian message — a raw null-check
     // crash tells the user nothing about what to fix.
+    if (invoice.type == InvoiceType.salesReturn) {
+      // برگشت از فروش (credit note): mirror of the sale voucher.
+      // DR برگشت از فروش(subtotal) + DR VAT(tax) / CR customer(total)
+      // + DR inventory(avg) / CR COGS(avg) — stock re-enters at the same
+      // weighted average it left at.
+      final returnSubject = await _accountingRepository.getSubjectByCode(
+        cfg.salesReturnCode,
+      );
+      if (returnSubject == null) {
+        throw StateError(
+          'سرفصل برگشت از فروش (${cfg.salesReturnCode}) یافت نشد. کدینگ حسابداری را بازبینی کنید.',
+        );
+      }
+      if (customerSubject == null) {
+        throw StateError(
+          'سرفصل حساب‌های دریافتنی (${cfg.receivableCode}) یافت نشد. کدینگ حسابداری را بازبینی کنید.',
+        );
+      }
+
+      txs.add(
+        AccountingTransactionEntity(
+          id: _uuid.v4(),
+          documentId: docId,
+          subjectId: returnSubject.id,
+          subject: returnSubject,
+          debit: invoice.subtotal,
+          credit: const Money.zero(),
+          description:
+              'برگشت از فروش طبق فاکتور شماره ${invoice.invoiceNumber}',
+          rowOrder: order++,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      if (invoice.tax.minorUnits > 0 && vatOutputSubject != null) {
+        txs.add(
+          AccountingTransactionEntity(
+            id: _uuid.v4(),
+            documentId: docId,
+            subjectId: vatOutputSubject.id,
+            subject: vatOutputSubject,
+            debit: invoice.tax,
+            credit: const Money.zero(),
+            description:
+                'برگشت مالیات ارزش افزوده فاکتور شماره ${invoice.invoiceNumber}',
+            rowOrder: order++,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+      txs.add(
+        AccountingTransactionEntity(
+          id: _uuid.v4(),
+          documentId: docId,
+          subjectId: customerSubject.id,
+          subject: customerSubject,
+          detailSubjectId: invoice.contactId,
+          detailSubjectName: invoice.contactName,
+          debit: const Money.zero(),
+          credit: invoice.total,
+          description:
+              'بستانکاری مشتری بابت برگشت فاکتور شماره ${invoice.invoiceNumber}',
+          rowOrder: order++,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      // Stock re-entry legs at the weighted-average cost.
+      final cogsMinor = await _computeCogsMinor(invoice);
+      if (cogsMinor > 0 && inventorySubject != null) {
+        final cogsSubject = await _accountingRepository.getSubjectByCode(
+          cfg.cogsCode,
+        );
+        if (cogsSubject != null) {
+          txs.add(
+            AccountingTransactionEntity(
+              id: _uuid.v4(),
+              documentId: docId,
+              subjectId: inventorySubject.id,
+              subject: inventorySubject,
+              debit: Money.fromMinor(cogsMinor),
+              credit: const Money.zero(),
+              description:
+                  'بازگشت کالا به موجودی طبق برگشت فاکتور شماره ${invoice.invoiceNumber}',
+              rowOrder: order++,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+          txs.add(
+            AccountingTransactionEntity(
+              id: _uuid.v4(),
+              documentId: docId,
+              subjectId: cogsSubject.id,
+              subject: cogsSubject,
+              debit: const Money.zero(),
+              credit: Money.fromMinor(cogsMinor),
+              description:
+                  'برگشت بهای تمام‌شده طبق برگشت فاکتور شماره ${invoice.invoiceNumber}',
+              rowOrder: order++,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+        }
+      }
+
+      final doc = AccountingDocumentEntity(
+        id: docId,
+        number: docNumber,
+        date: invoice.issueDate,
+        title: 'سند برگشت از فروش شماره ${invoice.invoiceNumber}',
+        status: DocumentStatus.approved,
+        isManual: false,
+        referenceType: 'invoice',
+        referenceId: invoice.id,
+        fiscalYearId: resolvedFiscalYearId,
+        approvedAt: now,
+        transactions: txs,
+        createdAt: now,
+        updatedAt: now,
+      );
+      return _accountingRepository.createDocument(doc);
+    }
+
     if (invoice.type == InvoiceType.sale) {
       if (customerSubject == null) {
         throw StateError(
