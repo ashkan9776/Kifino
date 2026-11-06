@@ -79,6 +79,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) {
         await m.addColumn(assetsTable, assetsTable.customTypeName);
       }
+      if (from < 9) {
+        // Phase 1 COGS: weighted-average unit cost per product.
+        await m.addColumn(productsTable, productsTable.avgCostMinor);
+      }
       if (from < 6) {
         // Warehouse light (Phase 3): secondary unit + conversion factor.
         await m.addColumn(productsTable, productsTable.secondaryUnit);

@@ -60,6 +60,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
       conversionFactor: data.conversionFactor,
       purchasePrice: Money.fromMinor(data.purchasePriceMinor, currency),
       sellingPrice: Money.fromMinor(data.sellingPriceMinor, currency),
+      avgCostMinor: data.avgCostMinor,
       currentStock: data.currentStock,
       lowStockThreshold: data.lowStockThreshold,
       supplierId: data.supplierId,
@@ -695,11 +696,25 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 0.0,
                 99999999.0,
               );
+              // Weighted-average cost: (stockBefore×avg + qty×unitCost) ÷
+              // total. Negative pre-purchase stock clamps to 0 so it cannot
+              // skew the average.
+              final stockBefore = product.currentStock > 0
+                  ? product.currentStock
+                  : 0.0;
+              final totalQty = stockBefore + item.quantity;
+              final newAvgMinor = totalQty > 0
+                  ? ((stockBefore * product.avgCostMinor +
+                            item.quantity * item.unitPrice.minorUnits) /
+                        totalQty)
+                      .round()
+                  : item.unitPrice.minorUnits;
               await (_db.update(
                 _db.productsTable,
               )..where((t) => t.id.equals(product.id))).write(
                 ProductsTableCompanion(
                   currentStock: Value(newStock),
+                  avgCostMinor: Value(newAvgMinor),
                   updatedAt: Value(now),
                 ),
               );
@@ -990,7 +1005,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 changeQuantity: -item.quantity,
                 movementType: InventoryMovementType.sale.code,
                 referenceId: Value(invoiceId),
-                costPerUnitMinor: Value(product.purchasePriceMinor),
+                costPerUnitMinor: Value(product.avgCostMinor),
                 notes: Value('$reason فروش'),
                 createdAt: now,
                 updatedAt: now,
@@ -1027,11 +1042,25 @@ class BusinessRepositoryImpl implements BusinessRepository {
           0.0,
           99999999.0,
         );
+        // Weighted-average cost: (stockBefore×avg + qty×unitCost) ÷ total.
+        // Negative pre-purchase stock is clamped to 0 so it cannot skew the
+        // average downward.
+        final stockBefore = product.currentStock > 0
+            ? product.currentStock
+            : 0.0;
+        final totalQty = stockBefore + item.quantity;
+        final newAvgMinor = totalQty > 0
+            ? ((stockBefore * product.avgCostMinor +
+                      item.quantity * item.unitPrice.minorUnits) /
+                  totalQty)
+                .round()
+            : item.unitPrice.minorUnits;
         await (_db.update(
           _db.productsTable,
         )..where((tbl) => tbl.id.equals(product.id))).write(
           ProductsTableCompanion(
             currentStock: Value(newStock),
+            avgCostMinor: Value(newAvgMinor),
             updatedAt: Value(now),
           ),
         );

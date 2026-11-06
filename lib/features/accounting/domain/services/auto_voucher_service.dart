@@ -3,6 +3,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/money.dart';
 import '../../../business/domain/entities/invoice_entity.dart';
+import '../../../business/domain/entities/product_entity.dart';
+import '../../../business/domain/repositories/business_repository.dart';
 import '../../../checks/domain/entities/check_entity.dart';
 import '../entities/accounting_document_entity.dart';
 import '../entities/accounting_transaction_entity.dart';
@@ -12,13 +14,41 @@ import 'voucher_settings_service.dart';
 class AutoVoucherService {
   final AccountingRepository _accountingRepository;
   final VoucherSettingsService settingsService;
+  /// Optional so existing constructions (tests) keep compiling — the app
+  /// registers it so sale vouchers can carry the COGS leg.
+  final BusinessRepository? businessRepository;
   final Uuid _uuid;
 
   AutoVoucherService(
     this._accountingRepository, {
     required this.settingsService,
+    this.businessRepository,
     Uuid? uuid,
   }) : _uuid = uuid ?? const Uuid();
+
+  /// Weighted-average COGS of a sale invoice: Σ (qty × product avgCostMinor)
+  /// over product-backed line items. Products without an avg (never
+  /// purchased) contribute 0 — their COGS legs are simply omitted.
+  Future<int> _computeCogsMinor(InvoiceEntity invoice) async {
+    final repo = businessRepository;
+    if (repo == null || invoice.type != InvoiceType.sale) return 0;
+    final productIds = invoice.items
+        .map((i) => i.productId)
+        .whereType<String>()
+        .toSet();
+    if (productIds.isEmpty) return 0;
+    final productsResult = await repo.getProducts();
+    final products = productsResult.dataOrNull ?? const <ProductEntity>[];
+    int cogs = 0;
+    for (final item in invoice.items) {
+      final pid = item.productId;
+      if (pid == null) continue;
+      final product = products.where((p) => p.id == pid).firstOrNull;
+      if (product == null) continue;
+      cogs += (item.quantity * product.avgCostMinor).round();
+    }
+    return cogs;
+  }
 
   /// Vouchers are linked to their invoice or check via referenceType+referenceId;
   /// this lookup makes generation idempotent.
@@ -234,6 +264,49 @@ class AutoVoucherService {
             updatedAt: now,
           ),
         );
+      }
+
+      // 5+6. COGS pair — the sale posts a COMPLETE pair: DR بهای تمام‌شده /
+      // CR موجودی کالا at the weighted-average cost. Without it the
+      // inventory account never moves on sales and the P&L has no cost of
+      // goods. Omitted when the product has never been purchased (avg 0).
+      final cogsMinor = await _computeCogsMinor(invoice);
+      if (cogsMinor > 0 && inventorySubject != null) {
+        final cogsSubject = await _accountingRepository.getSubjectByCode(
+          cfg.cogsCode,
+        );
+        if (cogsSubject != null) {
+          txs.add(
+            AccountingTransactionEntity(
+              id: _uuid.v4(),
+              documentId: docId,
+              subjectId: cogsSubject.id,
+              subject: cogsSubject,
+              debit: Money.fromMinor(cogsMinor),
+              credit: const Money.zero(),
+              description:
+                  'بهای تمام‌شده کالای فروش‌رفته طبق فاکتور شماره ${invoice.invoiceNumber}',
+              rowOrder: order++,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+          txs.add(
+            AccountingTransactionEntity(
+              id: _uuid.v4(),
+              documentId: docId,
+              subjectId: inventorySubject.id,
+              subject: inventorySubject,
+              debit: const Money.zero(),
+              credit: Money.fromMinor(cogsMinor),
+              description:
+                  'خروج کالا از موجودی طبق فاکتور شماره ${invoice.invoiceNumber}',
+              rowOrder: order++,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+        }
       }
     } else {
       // Purchase Invoice

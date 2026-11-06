@@ -21,6 +21,7 @@ class VoucherAccountSettings {
   final String notesInCollectionCode; // اسناد در جریان وصول (014001)
   final String notesPayableCode; // اسناد پرداختنی (020001)
   final String bankCode; // موجودی بانک (010)
+  final String cogsCode; // بهای تمام شده کالای فروش رفته (070001)
 
   const VoucherAccountSettings({
     this.salesCode = '060001',
@@ -36,6 +37,7 @@ class VoucherAccountSettings {
     this.notesInCollectionCode = '014001',
     this.notesPayableCode = '020001',
     this.bankCode = '010',
+    this.cogsCode = '070001',
   });
 
   static const VoucherAccountSettings defaults = VoucherAccountSettings();
@@ -54,6 +56,7 @@ class VoucherAccountSettings {
     String? notesInCollectionCode,
     String? notesPayableCode,
     String? bankCode,
+    String? cogsCode,
   }) {
     return VoucherAccountSettings(
       salesCode: salesCode ?? this.salesCode,
@@ -70,6 +73,7 @@ class VoucherAccountSettings {
           notesInCollectionCode ?? this.notesInCollectionCode,
       notesPayableCode: notesPayableCode ?? this.notesPayableCode,
       bankCode: bankCode ?? this.bankCode,
+      cogsCode: cogsCode ?? this.cogsCode,
     );
   }
 
@@ -87,6 +91,7 @@ class VoucherAccountSettings {
     'notesInCollectionCode': notesInCollectionCode,
     'notesPayableCode': notesPayableCode,
     'bankCode': bankCode,
+    'cogsCode': cogsCode,
   };
 
   factory VoucherAccountSettings.fromMap(Map<String, dynamic> map) {
@@ -110,6 +115,7 @@ class VoucherAccountSettings {
       notesPayableCode:
           map['notesPayableCode'] as String? ?? d.notesPayableCode,
       bankCode: map['bankCode'] as String? ?? d.bankCode,
+      cogsCode: map['cogsCode'] as String? ?? d.cogsCode,
     );
   }
 

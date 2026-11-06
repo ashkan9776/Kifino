@@ -10240,6 +10240,18 @@ class $ProductsTableTable extends ProductsTable
         requiredDuringInsert: false,
         defaultValue: const Constant(5.0),
       );
+  static const VerificationMeta _avgCostMinorMeta = const VerificationMeta(
+    'avgCostMinor',
+  );
+  @override
+  late final GeneratedColumn<int> avgCostMinor = GeneratedColumn<int>(
+    'avg_cost_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _supplierIdMeta = const VerificationMeta(
     'supplierId',
   );
@@ -10323,6 +10335,7 @@ class $ProductsTableTable extends ProductsTable
     currency,
     currentStock,
     lowStockThreshold,
+    avgCostMinor,
     supplierId,
     createdAt,
     updatedAt,
@@ -10446,6 +10459,15 @@ class $ProductsTableTable extends ProductsTable
         ),
       );
     }
+    if (data.containsKey('avg_cost_minor')) {
+      context.handle(
+        _avgCostMinorMeta,
+        avgCostMinor.isAcceptableOrUnknown(
+          data['avg_cost_minor']!,
+          _avgCostMinorMeta,
+        ),
+      );
+    }
     if (data.containsKey('supplier_id')) {
       context.handle(
         _supplierIdMeta,
@@ -10547,6 +10569,10 @@ class $ProductsTableTable extends ProductsTable
         DriftSqlType.double,
         data['${effectivePrefix}low_stock_threshold'],
       )!,
+      avgCostMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}avg_cost_minor'],
+      )!,
       supplierId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}supplier_id'],
@@ -10594,6 +10620,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
   final String currency;
   final double currentStock;
   final double lowStockThreshold;
+  final int avgCostMinor;
   final String? supplierId;
   final int createdAt;
   final int updatedAt;
@@ -10614,6 +10641,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     required this.currency,
     required this.currentStock,
     required this.lowStockThreshold,
+    required this.avgCostMinor,
     this.supplierId,
     required this.createdAt,
     required this.updatedAt,
@@ -10645,6 +10673,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     map['currency'] = Variable<String>(currency);
     map['current_stock'] = Variable<double>(currentStock);
     map['low_stock_threshold'] = Variable<double>(lowStockThreshold);
+    map['avg_cost_minor'] = Variable<int>(avgCostMinor);
     if (!nullToAbsent || supplierId != null) {
       map['supplier_id'] = Variable<String>(supplierId);
     }
@@ -10679,6 +10708,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       currency: Value(currency),
       currentStock: Value(currentStock),
       lowStockThreshold: Value(lowStockThreshold),
+      avgCostMinor: Value(avgCostMinor),
       supplierId: supplierId == null && nullToAbsent
           ? const Value.absent()
           : Value(supplierId),
@@ -10711,6 +10741,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       currency: serializer.fromJson<String>(json['currency']),
       currentStock: serializer.fromJson<double>(json['currentStock']),
       lowStockThreshold: serializer.fromJson<double>(json['lowStockThreshold']),
+      avgCostMinor: serializer.fromJson<int>(json['avgCostMinor']),
       supplierId: serializer.fromJson<String?>(json['supplierId']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -10736,6 +10767,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       'currency': serializer.toJson<String>(currency),
       'currentStock': serializer.toJson<double>(currentStock),
       'lowStockThreshold': serializer.toJson<double>(lowStockThreshold),
+      'avgCostMinor': serializer.toJson<int>(avgCostMinor),
       'supplierId': serializer.toJson<String?>(supplierId),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -10759,6 +10791,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     String? currency,
     double? currentStock,
     double? lowStockThreshold,
+    int? avgCostMinor,
     Value<String?> supplierId = const Value.absent(),
     int? createdAt,
     int? updatedAt,
@@ -10781,6 +10814,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     currency: currency ?? this.currency,
     currentStock: currentStock ?? this.currentStock,
     lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
+    avgCostMinor: avgCostMinor ?? this.avgCostMinor,
     supplierId: supplierId.present ? supplierId.value : this.supplierId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -10817,6 +10851,9 @@ class ProductData extends DataClass implements Insertable<ProductData> {
       lowStockThreshold: data.lowStockThreshold.present
           ? data.lowStockThreshold.value
           : this.lowStockThreshold,
+      avgCostMinor: data.avgCostMinor.present
+          ? data.avgCostMinor.value
+          : this.avgCostMinor,
       supplierId: data.supplierId.present
           ? data.supplierId.value
           : this.supplierId,
@@ -10846,6 +10883,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           ..write('currency: $currency, ')
           ..write('currentStock: $currentStock, ')
           ..write('lowStockThreshold: $lowStockThreshold, ')
+          ..write('avgCostMinor: $avgCostMinor, ')
           ..write('supplierId: $supplierId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -10871,6 +10909,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
     currency,
     currentStock,
     lowStockThreshold,
+    avgCostMinor,
     supplierId,
     createdAt,
     updatedAt,
@@ -10895,6 +10934,7 @@ class ProductData extends DataClass implements Insertable<ProductData> {
           other.currency == this.currency &&
           other.currentStock == this.currentStock &&
           other.lowStockThreshold == this.lowStockThreshold &&
+          other.avgCostMinor == this.avgCostMinor &&
           other.supplierId == this.supplierId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -10917,6 +10957,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
   final Value<String> currency;
   final Value<double> currentStock;
   final Value<double> lowStockThreshold;
+  final Value<int> avgCostMinor;
   final Value<String?> supplierId;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -10938,6 +10979,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     this.currency = const Value.absent(),
     this.currentStock = const Value.absent(),
     this.lowStockThreshold = const Value.absent(),
+    this.avgCostMinor = const Value.absent(),
     this.supplierId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -10960,6 +11002,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     required String currency,
     this.currentStock = const Value.absent(),
     this.lowStockThreshold = const Value.absent(),
+    this.avgCostMinor = const Value.absent(),
     this.supplierId = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -10987,6 +11030,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     Expression<String>? currency,
     Expression<double>? currentStock,
     Expression<double>? lowStockThreshold,
+    Expression<int>? avgCostMinor,
     Expression<String>? supplierId,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -11010,6 +11054,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
       if (currency != null) 'currency': currency,
       if (currentStock != null) 'current_stock': currentStock,
       if (lowStockThreshold != null) 'low_stock_threshold': lowStockThreshold,
+      if (avgCostMinor != null) 'avg_cost_minor': avgCostMinor,
       if (supplierId != null) 'supplier_id': supplierId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -11034,6 +11079,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     Value<String>? currency,
     Value<double>? currentStock,
     Value<double>? lowStockThreshold,
+    Value<int>? avgCostMinor,
     Value<String?>? supplierId,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -11056,6 +11102,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
       currency: currency ?? this.currency,
       currentStock: currentStock ?? this.currentStock,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
+      avgCostMinor: avgCostMinor ?? this.avgCostMinor,
       supplierId: supplierId ?? this.supplierId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -11108,6 +11155,9 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
     if (lowStockThreshold.present) {
       map['low_stock_threshold'] = Variable<double>(lowStockThreshold.value);
     }
+    if (avgCostMinor.present) {
+      map['avg_cost_minor'] = Variable<int>(avgCostMinor.value);
+    }
     if (supplierId.present) {
       map['supplier_id'] = Variable<String>(supplierId.value);
     }
@@ -11148,6 +11198,7 @@ class ProductsTableCompanion extends UpdateCompanion<ProductData> {
           ..write('currency: $currency, ')
           ..write('currentStock: $currentStock, ')
           ..write('lowStockThreshold: $lowStockThreshold, ')
+          ..write('avgCostMinor: $avgCostMinor, ')
           ..write('supplierId: $supplierId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -25809,6 +25860,7 @@ typedef $$ProductsTableTableCreateCompanionBuilder =
       required String currency,
       Value<double> currentStock,
       Value<double> lowStockThreshold,
+      Value<int> avgCostMinor,
       Value<String?> supplierId,
       required int createdAt,
       required int updatedAt,
@@ -25832,6 +25884,7 @@ typedef $$ProductsTableTableUpdateCompanionBuilder =
       Value<String> currency,
       Value<double> currentStock,
       Value<double> lowStockThreshold,
+      Value<int> avgCostMinor,
       Value<String?> supplierId,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -25912,6 +25965,11 @@ class $$ProductsTableTableFilterComposer
 
   ColumnFilters<double> get lowStockThreshold => $composableBuilder(
     column: $table.lowStockThreshold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get avgCostMinor => $composableBuilder(
+    column: $table.avgCostMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26020,6 +26078,11 @@ class $$ProductsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get avgCostMinor => $composableBuilder(
+    column: $table.avgCostMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get supplierId => $composableBuilder(
     column: $table.supplierId,
     builder: (column) => ColumnOrderings(column),
@@ -26113,6 +26176,11 @@ class $$ProductsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get avgCostMinor => $composableBuilder(
+    column: $table.avgCostMinor,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get supplierId => $composableBuilder(
     column: $table.supplierId,
     builder: (column) => column,
@@ -26180,6 +26248,7 @@ class $$ProductsTableTableTableManager
                 Value<String> currency = const Value.absent(),
                 Value<double> currentStock = const Value.absent(),
                 Value<double> lowStockThreshold = const Value.absent(),
+                Value<int> avgCostMinor = const Value.absent(),
                 Value<String?> supplierId = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -26201,6 +26270,7 @@ class $$ProductsTableTableTableManager
                 currency: currency,
                 currentStock: currentStock,
                 lowStockThreshold: lowStockThreshold,
+                avgCostMinor: avgCostMinor,
                 supplierId: supplierId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -26224,6 +26294,7 @@ class $$ProductsTableTableTableManager
                 required String currency,
                 Value<double> currentStock = const Value.absent(),
                 Value<double> lowStockThreshold = const Value.absent(),
+                Value<int> avgCostMinor = const Value.absent(),
                 Value<String?> supplierId = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -26245,6 +26316,7 @@ class $$ProductsTableTableTableManager
                 currency: currency,
                 currentStock: currentStock,
                 lowStockThreshold: lowStockThreshold,
+                avgCostMinor: avgCostMinor,
                 supplierId: supplierId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -230,6 +230,8 @@ class ServiceLocator {
       () => AutoVoucherService(
         sl<AccountingRepository>(),
         settingsService: VoucherSettingsService(sl<SharedPreferences>()),
+        // Sale vouchers need product avg-cost data for the COGS legs.
+        businessRepository: sl<BusinessRepository>(),
       ),
     );
     sl.registerLazySingleton<AccountingExportService>(

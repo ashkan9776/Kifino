@@ -13,6 +13,10 @@ class ProductEntity extends Equatable {
   final int conversionFactor;
   final Money purchasePrice;
   final Money sellingPrice;
+  /// Weighted-average unit cost (minor units) — updated on purchases, used
+  /// by the sale voucher's COGS leg. Kept as raw minor units so a 0 default
+  /// reads as «never purchased».
+  final int avgCostMinor;
   final double currentStock;
   final double lowStockThreshold;
   final String? supplierId;
@@ -32,6 +36,7 @@ class ProductEntity extends Equatable {
     this.conversionFactor = 1,
     required this.purchasePrice,
     required this.sellingPrice,
+    this.avgCostMinor = 0,
     this.currentStock = 0.0,
     this.lowStockThreshold = 5.0,
     this.supplierId,
@@ -61,6 +66,7 @@ class ProductEntity extends Equatable {
     String? unit,
     Money? purchasePrice,
     Money? sellingPrice,
+    int? avgCostMinor,
     double? currentStock,
     double? lowStockThreshold,
     String? supplierId,
@@ -79,6 +85,7 @@ class ProductEntity extends Equatable {
       secondaryUnit: secondaryUnit,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       sellingPrice: sellingPrice ?? this.sellingPrice,
+      avgCostMinor: avgCostMinor ?? this.avgCostMinor,
       currentStock: currentStock ?? this.currentStock,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       supplierId: supplierId ?? this.supplierId,
@@ -99,6 +106,7 @@ class ProductEntity extends Equatable {
     unit,
     purchasePrice,
     sellingPrice,
+    avgCostMinor,
     currentStock,
     lowStockThreshold,
     supplierId,

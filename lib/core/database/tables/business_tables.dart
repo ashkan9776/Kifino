@@ -47,6 +47,9 @@ class ProductsTable extends Table {
   TextColumn get currency => text()();
   RealColumn get currentStock => real().withDefault(const Constant(0.0))();
   RealColumn get lowStockThreshold => real().withDefault(const Constant(5.0))();
+  // Weighted-average unit cost — maintained at purchase time, consumed by
+  // the sale voucher's COGS leg (070) so the sale posts a complete pair.
+  IntColumn get avgCostMinor => integer().withDefault(const Constant(0))();
   TextColumn get supplierId => text().nullable()();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
