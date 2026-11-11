@@ -125,9 +125,11 @@ class KifinoApp extends StatelessWidget {
                       ..add(const WatchBudgetsStarted()),
               ),
               BlocProvider<DebtBloc>(
-                create: (context) =>
-                    DebtBloc(sl<DebtRepository>(), sl<NotificationService>())
-                      ..add(const WatchDebtsStarted()),
+                create: (context) => DebtBloc(
+                  sl<DebtRepository>(),
+                  sl<NotificationService>(),
+                  transactionRepository: sl<TransactionRepository>(),
+                )..add(const WatchDebtsStarted()),
               ),
               BlocProvider<InstallmentBloc>(
                 create: (context) => InstallmentBloc(

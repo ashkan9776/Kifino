@@ -18,6 +18,9 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
+import '../../../ai_assistant/domain/entities/parsed_transaction_draft.dart';
+import '../../../ai_assistant/domain/services/iranian_bank_sms_parser.dart';
+import '../../../ai_assistant/domain/services/persian_nlp_transaction_parser.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/category_repository.dart';
@@ -138,6 +141,165 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
         _isLoadingDeps = false;
       });
     }
+  }
+
+  Future<void> _pasteBankSms() async {
+    final l10n = context.l10n;
+    final clipData = await Clipboard.getData(Clipboard.kTextPlain);
+    final raw = clipData?.text?.trim() ?? '';
+    if (!mounted) return;
+
+    if (raw.isNotEmpty) {
+      final parsed =
+          IranianBankSmsParser.parse(raw, accounts: _accounts) ??
+          PersianNlpTransactionParser.parse(raw, accounts: _accounts);
+      if (parsed != null) {
+        _applyParsedDraft(parsed);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isPersian
+                  ? 'اطلاعات پیامک بانکی با موفقیت جایگذاری شد'
+                  : 'Bank SMS fields populated from clipboard',
+            ),
+            backgroundColor: AppColors.incomeLight,
+          ),
+        );
+        return;
+      }
+    }
+
+    await _showManualSmsDialog(initialText: raw);
+  }
+
+  Future<void> _showManualSmsDialog({String initialText = ''}) async {
+    final l10n = context.l10n;
+    final smsController = TextEditingController(text: initialText);
+    try {
+      final submitted = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(
+            l10n.isPersian
+                ? 'چسباندن پیامک بانکی'
+                : 'Paste Bank SMS',
+          ),
+          content: TextField(
+            controller: smsController,
+            maxLines: 5,
+            decoration: InputDecoration(
+              hintText: l10n.isPersian
+                  ? 'متن پیامک تراکنش بانکی (برداشت/واریز) را اینجا وارد کنید...'
+                  : 'Paste bank transaction SMS here...',
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(ctx).pop(smsController.text.trim()),
+              child: Text(
+                l10n.isPersian ? 'تحلیل و پر کردن فرم' : 'Parse & Fill',
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted || submitted == null || submitted.isEmpty) return;
+
+      final parsed =
+          IranianBankSmsParser.parse(submitted, accounts: _accounts) ??
+          PersianNlpTransactionParser.parse(submitted, accounts: _accounts);
+
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isPersian
+                  ? 'مبلغ معتبری در متن پیامک پیدا نشد.'
+                  : 'Could not extract a valid transaction from text.',
+            ),
+            backgroundColor: AppColors.expenseLight,
+          ),
+        );
+        return;
+      }
+
+      _applyParsedDraft(parsed);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.isPersian
+                ? 'اطلاعات پیامک بانکی با موفقیت جایگذاری شد'
+                : 'Bank SMS fields populated',
+          ),
+          backgroundColor: AppColors.incomeLight,
+        ),
+      );
+    } finally {
+      smsController.dispose();
+    }
+  }
+
+  void _applyParsedDraft(ParsedTransactionDraft draft) {
+    final nextTypeIndex = switch (draft.type) {
+      TransactionType.income => 1,
+      TransactionType.transfer => 2,
+      _ => 0,
+    };
+
+    String? nextAccountId = _selectedAccountId;
+    if (draft.matchedAccountId != null &&
+        _accounts.any((a) => a.id == draft.matchedAccountId)) {
+      nextAccountId = draft.matchedAccountId;
+    }
+    nextAccountId ??= _accounts.isNotEmpty ? _accounts.first.id : null;
+
+    AccountEntity? targetAcc;
+    if (nextAccountId != null) {
+      targetAcc = _accounts.where((a) => a.id == nextAccountId).firstOrNull;
+    }
+
+    Money resolvedMoney = draft.amount;
+    if (targetAcc != null &&
+        resolvedMoney.currency != targetAcc.currency &&
+        resolvedMoney.isCompatibleWith(targetAcc.currency)) {
+      resolvedMoney = resolvedMoney.normalizeTo(targetAcc.currency);
+    }
+
+    String? matchedCatId;
+    if (nextTypeIndex != 2) {
+      final catType = nextTypeIndex == 0
+          ? CategoryType.expense
+          : CategoryType.income;
+      final hint = draft.suggestedCategory?.trim();
+      if (hint != null && hint.isNotEmpty) {
+        for (final cat in _categories) {
+          if (cat.type == catType &&
+              (cat.name == hint || cat.name.contains(hint))) {
+            matchedCatId = cat.id;
+            break;
+          }
+        }
+      }
+      matchedCatId ??= _defaultCategoryIdFor(nextTypeIndex);
+    }
+
+    setState(() {
+      _selectedTypeIndex = nextTypeIndex;
+      _selectedAccountId = nextAccountId;
+      _selectedCategoryId = matchedCatId;
+      _selectedDate = draft.date;
+      _amountMinor = resolvedMoney.minorUnits;
+      _amountNotifier.value = _amountMinor;
+      _noteController.text = draft.description;
+    });
+    HapticFeedback.lightImpact();
   }
 
   /// Refreshes categories after returning from the custom-categories manager,
@@ -321,6 +483,22 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                         child: ListView(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           children: [
+                            if (!isEditing) ...[
+                              OutlinedButton.icon(
+                                onPressed: _pasteBankSms,
+                                icon: const Icon(
+                                  Icons.content_paste_go_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  l10n.isPersian
+                                      ? 'چسباندن پیامک بانکی از کلیپبورد'
+                                      : 'Paste bank SMS from clipboard',
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                            ],
+
                             // Segmented Control
                             SegmentedButton<int>(
                               segments: [

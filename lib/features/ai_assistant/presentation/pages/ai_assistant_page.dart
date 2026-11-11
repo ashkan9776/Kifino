@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -101,6 +102,26 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       AiAssistantQuerySubmitted(query, isPersian: l10n.isPersian),
     );
     _scrollToBottom();
+  }
+
+  Future<void> _pasteBankSmsFromClipboard() async {
+    final l10n = context.l10n;
+    final clipData = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipData?.text?.trim() ?? '';
+    if (!mounted) return;
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.isPersian
+                ? 'کلیپبورد خالی است. ابتدا پیامک بانکی را کپی کنید.'
+                : 'Clipboard is empty.',
+          ),
+        ),
+      );
+      return;
+    }
+    _handleSend(text);
   }
 
   @override
@@ -276,6 +297,13 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                 child: SafeArea(
                   child: Row(
                     children: [
+                      IconButton(
+                        tooltip: l10n.isPersian
+                            ? 'چسباندن پیامک بانکی از کلیپبورد'
+                            : 'Paste bank SMS from clipboard',
+                        icon: const Icon(Icons.content_paste_go_rounded),
+                        onPressed: _pasteBankSmsFromClipboard,
+                      ),
                       Expanded(
                         child: TextField(
                           controller: _textController,
@@ -633,7 +661,18 @@ class _DraftTransactionCardState extends State<_DraftTransactionCard> {
   Future<void> _loadAccounts() async {
     final result = await sl<AccountRepository>().getAccounts();
     if (!mounted) return;
-    setState(() => _accounts = result.dataOrNull ?? const <AccountEntity>[]);
+    final loaded = result.dataOrNull ?? const <AccountEntity>[];
+    String? preferredId = _selectedAccountId;
+    if (preferredId == null && widget.draft.matchedAccountId != null) {
+      if (loaded.any((a) => a.id == widget.draft.matchedAccountId)) {
+        preferredId = widget.draft.matchedAccountId;
+      }
+    }
+    preferredId ??= loaded.isNotEmpty ? loaded.first.id : null;
+    setState(() {
+      _accounts = loaded;
+      _selectedAccountId = preferredId;
+    });
   }
 
   @override
@@ -732,6 +771,48 @@ class _DraftTransactionCardState extends State<_DraftTransactionCard> {
                 ),
               ),
             ),
+          if (draft.bankName != null || draft.remainingBalance != null) ...[
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: 4,
+              children: [
+                if (draft.bankName != null)
+                  Text(
+                    draft.accountHintDigits != null
+                        ? '${draft.bankName} (*${TextNormalizer.auto(draft.accountHintDigits!)})'
+                        : draft.bankName!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                if (draft.remainingBalance != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'مانده پیامک: ',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
+                        ),
+                      ),
+                      AppMoneyText(
+                        money: draft.remainingBalance!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? AppColors.darkSubtext
+                              : AppColors.lightSubtext,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           DropdownButtonFormField<String>(
             initialValue: _selectedAccountId,

@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
+import '../../../transactions/domain/entities/transaction_entity.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../domain/entities/goal_entity.dart';
 import '../../domain/repositories/goal_repository.dart';
 
@@ -38,9 +41,10 @@ final class GoalCreateSubmitted extends GoalEvent {
 final class GoalContributeSubmitted extends GoalEvent {
   final String id;
   final Money amount;
-  const GoalContributeSubmitted(this.id, this.amount);
+  final String? accountId;
+  const GoalContributeSubmitted(this.id, this.amount, {this.accountId});
   @override
-  List<Object?> get props => [id, amount];
+  List<Object?> get props => [id, amount, accountId];
 }
 
 final class GoalDeleteSubmitted extends GoalEvent {
@@ -107,11 +111,15 @@ final class GoalOperationSuccess extends GoalLoaded {
 // Bloc
 class GoalBloc extends Bloc<GoalEvent, GoalState> {
   final GoalRepository _repository;
+  final TransactionRepository? transactionRepository;
   StreamSubscription<List<GoalEntity>>? _subscription;
   List<GoalEntity> _lastGoals = const [];
   bool _hasLoaded = false;
 
-  GoalBloc(this._repository) : super(GoalInitial()) {
+  GoalBloc(
+    this._repository, {
+    this.transactionRepository,
+  }) : super(GoalInitial()) {
     on<WatchGoalsStarted>(_onWatchStarted);
     on<_GoalsUpdated>(_onGoalsUpdated);
     on<GoalCreateSubmitted>(_onCreateSubmitted);
@@ -215,18 +223,38 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     Emitter<GoalState> emit,
   ) async {
     final result = await _repository.contributeToGoal(event.id, event.amount);
-    result.fold(
-      onSuccess: (goal) {
+    await result.fold(
+      onSuccess: (goal) async {
         _lastGoals = [
           for (final g in _lastGoals) g.id == goal.id ? goal : g,
         ];
+        if (event.accountId != null &&
+            event.accountId!.isNotEmpty &&
+            transactionRepository != null) {
+          final now = DateTime.now();
+          final tx = TransactionEntity(
+            id: const Uuid().v4(),
+            accountId: event.accountId!,
+            amount: event.amount,
+            type: TransactionType.expense,
+            date: now,
+            description: 'پس‌انداز برای هدف: ${goal.name}',
+            createdAt: now,
+            updatedAt: now,
+          );
+          final txResult = await transactionRepository!.createTransaction(tx);
+          if (txResult.isFailure) {
+            _emitFailurePreservingLoaded(emit, txResult.failureOrNull!.message);
+            return;
+          }
+        }
         if (goal.isAchieved) {
           _emitSuccess(emit, 'Goal achieved', op: 'achieve');
         } else {
           _emitSuccess(emit, 'Contribution saved', op: 'contribute');
         }
       },
-      onFailure: (failure) =>
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }

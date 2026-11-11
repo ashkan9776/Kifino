@@ -5,6 +5,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/text_normalizer.dart';
@@ -17,8 +18,13 @@ import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';
+import '../../../../core/widgets/optional_account_selector.dart';
+import '../../../accounts/domain/entities/account_entity.dart';
+import '../../../accounts/domain/repositories/account_repository.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../domain/entities/goal_entity.dart';
+import '../../domain/repositories/goal_repository.dart';
 import '../bloc/goal_bloc.dart';
 import '../widgets/edit_goal_sheet.dart';
 
@@ -171,6 +177,10 @@ class GoalsPage extends StatelessWidget {
   void _showContributeSheet(BuildContext context, GoalEntity goal) {
     final l10n = context.l10n;
     int amountMinor = 0;
+    String? selectedAccountId;
+    final accountsFuture = sl.isRegistered<AccountRepository>()
+        ? sl<AccountRepository>().getAccounts()
+        : Future.value(const Success(<AccountEntity>[]));
 
     showModalBottomSheet(
       context: context,
@@ -235,6 +245,17 @@ class GoalsPage extends StatelessWidget {
                       onAmountMinorChanged: (value) =>
                           setModalState(() => amountMinor = value),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    OptionalAccountSelector(
+                      accountsFuture: accountsFuture,
+                      compatibleCurrency: goal.targetAmount.currency,
+                      selectedAccountId: selectedAccountId,
+                      label: l10n.isPersian
+                          ? 'برداشت از حساب (اختیاری)'
+                          : 'Withdraw from account (optional)',
+                      onChanged: (val) =>
+                          setModalState(() => selectedAccountId = val),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                     AppButton(
                       label: l10n.isPersian ? 'ثبت پس‌انداز' : 'Add savings',
@@ -247,6 +268,7 @@ class GoalsPage extends StatelessWidget {
                                     amountMinor,
                                     goal.targetAmount.currency,
                                   ),
+                                  accountId: selectedAccountId,
                                 ),
                               );
                               Navigator.pop(bottomSheetContext);
@@ -311,7 +333,12 @@ class GoalsPage extends StatelessWidget {
     final l10n = context.l10n;
 
     return BlocProvider<GoalBloc>(
-      create: (_) => GoalBloc(sl())..add(const WatchGoalsStarted()),
+      create: (_) => GoalBloc(
+        sl<GoalRepository>(),
+        transactionRepository: sl.isRegistered<TransactionRepository>()
+            ? sl<TransactionRepository>()
+            : null,
+      )..add(const WatchGoalsStarted()),
       child: BlocListener<GoalBloc, GoalState>(
         listener: (context, state) {
           if (state is GoalOperationSuccess) {

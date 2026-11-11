@@ -11,6 +11,10 @@ class ParsedTransactionDraft extends Equatable {
   final String? suggestedCategory;
   final DateTime date;
   final double confidence;
+  final String? matchedAccountId;
+  final String? bankName;
+  final Money? remainingBalance;
+  final String? accountHintDigits;
 
   const ParsedTransactionDraft({
     required this.originalText,
@@ -20,6 +24,10 @@ class ParsedTransactionDraft extends Equatable {
     this.suggestedCategory,
     required this.date,
     required this.confidence,
+    this.matchedAccountId,
+    this.bankName,
+    this.remainingBalance,
+    this.accountHintDigits,
   });
 
   @override
@@ -31,5 +39,9 @@ class ParsedTransactionDraft extends Equatable {
     suggestedCategory,
     date,
     confidence,
+    matchedAccountId,
+    bankName,
+    remainingBalance,
+    accountHintDigits,
   ];
 }

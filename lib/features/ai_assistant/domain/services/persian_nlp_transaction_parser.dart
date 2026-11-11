@@ -1,8 +1,10 @@
 import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/text_normalizer.dart';
+import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 import '../entities/parsed_transaction_draft.dart';
+import 'iranian_bank_sms_parser.dart';
 
 /// Which currency the user actually spoke, detected from keywords.
 enum _SpokenCurrency { toman, rial, usd, eur }
@@ -258,10 +260,20 @@ class PersianNlpTransactionParser {
   static ParsedTransactionDraft? parse(
     String rawInput, {
     Currency? targetCurrency,
+    List<AccountEntity>? accounts,
   }) {
     final resolvedTarget = targetCurrency ?? AppCurrency.base;
     final cleanInput = TextNormalizer.normalizePersian(rawInput).trim();
     if (cleanInput.isEmpty) return null;
+
+    if (IranianBankSmsParser.looksLikeBankSms(cleanInput)) {
+      final smsDraft = IranianBankSmsParser.parse(
+        cleanInput,
+        targetCurrency: resolvedTarget,
+        accounts: accounts,
+      );
+      if (smsDraft != null) return smsDraft;
+    }
 
     final normalizedDigits = TextNormalizer.toLatinDigits(cleanInput);
     final lower = normalizedDigits.toLowerCase();

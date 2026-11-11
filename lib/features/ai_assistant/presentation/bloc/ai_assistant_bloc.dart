@@ -100,11 +100,13 @@ class AiAssistantBloc extends Bloc<AiAssistantEvent, AiAssistantState> {
       await Future.delayed(replyDelay);
     }
 
-    // 1. Try parsing as a transaction draft — normalized to the base currency
-    // so "۴۵ هزار تومن" and "۴۵۰,۰۰۰ ریال" land as the SAME amount.
+    // 1. Try parsing as a bank SMS or natural-language transaction draft —
+    // normalized to the base currency so Toman/Rial align automatically.
+    final accountsResult = await accountRepository.getAccounts();
     final draft = PersianNlpTransactionParser.parse(
       event.query,
       targetCurrency: _baseCurrency,
+      accounts: accountsResult.dataOrNull,
     );
     if (draft != null && draft.amount.minorUnits > 0) {
       final botMsg = AiChatMessage(

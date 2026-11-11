@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../../notifications/domain/entities/app_notification_entity.dart';
 import '../../../notifications/domain/services/notification_service.dart';
+import '../../../transactions/domain/entities/transaction_entity.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../domain/entities/debt_entity.dart';
 import '../../domain/repositories/debt_repository.dart';
 
@@ -41,9 +44,14 @@ final class DebtCreateSubmitted extends DebtEvent {
 final class DebtPaymentSubmitted extends DebtEvent {
   final String id;
   final Money amount;
-  const DebtPaymentSubmitted({required this.id, required this.amount});
+  final String? accountId;
+  const DebtPaymentSubmitted({
+    required this.id,
+    required this.amount,
+    this.accountId,
+  });
   @override
-  List<Object?> get props => [id, amount];
+  List<Object?> get props => [id, amount, accountId];
 }
 
 final class DebtDeleteSubmitted extends DebtEvent {
@@ -97,11 +105,16 @@ final class DebtFailure extends DebtState {
 class DebtBloc extends Bloc<DebtEvent, DebtState> {
   final DebtRepository _repository;
   final NotificationService _notifications;
+  final TransactionRepository? transactionRepository;
   StreamSubscription<List<DebtEntity>>? _subscription;
   List<DebtEntity> _lastDebts = const [];
   bool _hasLoaded = false;
 
-  DebtBloc(this._repository, this._notifications) : super(DebtInitial()) {
+  DebtBloc(
+    this._repository,
+    this._notifications, {
+    this.transactionRepository,
+  }) : super(DebtInitial()) {
     on<WatchDebtsStarted>(_onWatchStarted);
     on<_DebtsUpdated>(_onDebtsUpdated);
     on<DebtCreateSubmitted>(_onCreateSubmitted);
@@ -206,6 +219,36 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
             .firstOrNull;
         if (updated != null && updated.isSettled) {
           await _notifications.cancelScheduled(event.id);
+        }
+
+        if (event.accountId != null &&
+            event.accountId!.isNotEmpty &&
+            transactionRepository != null) {
+          final debtInfo =
+              updated ??
+              _lastDebts.where((d) => d.id == event.id).firstOrNull;
+          final isDebt = (debtInfo?.type ?? DebtType.debt) == DebtType.debt;
+          final contact = debtInfo?.contactName ?? '';
+          final description = contact.isNotEmpty
+              ? (isDebt ? 'پرداخت بدهی به $contact' : 'دریافت طلب از $contact')
+              : (isDebt ? 'پرداخت بدهی' : 'دریافت طلب');
+          final now = DateTime.now();
+          final tx = TransactionEntity(
+            id: const Uuid().v4(),
+            accountId: event.accountId!,
+            amount: event.amount,
+            type: isDebt
+                ? TransactionType.debtPayment
+                : TransactionType.receivablePayment,
+            date: now,
+            description: description,
+            createdAt: now,
+            updatedAt: now,
+          );
+          final txResult = await transactionRepository!.createTransaction(tx);
+          if (txResult.isFailure) {
+            _emitFailurePreservingLoaded(emit, txResult.failureOrNull!.message);
+          }
         }
       },
       onFailure: (failure) async =>

@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
@@ -16,6 +18,9 @@ import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';
+import '../../../../core/widgets/optional_account_selector.dart';
+import '../../../accounts/domain/entities/account_entity.dart';
+import '../../../accounts/domain/repositories/account_repository.dart';
 import '../../domain/entities/debt_entity.dart';
 import '../bloc/debt_bloc.dart';
 import '../widgets/edit_debt_sheet.dart';
@@ -217,6 +222,10 @@ class _DebtsPageState extends State<DebtsPage> {
   void _showPaymentDialog(BuildContext context, DebtEntity debt) {
     final l10n = context.l10n;
     final amountController = TextEditingController();
+    final accountsFuture = sl.isRegistered<AccountRepository>()
+        ? sl<AccountRepository>().getAccounts()
+        : Future.value(const Success(<AccountEntity>[]));
+    String? selectedAccountId;
 
     showModalBottomSheet(
       context: context,
@@ -226,89 +235,109 @@ class _DebtsPageState extends State<DebtsPage> {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
 
-        return AppBottomSheet(
-          child: Container(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.lg,
-              right: AppSpacing.lg,
-              top: AppSpacing.lg,
-              bottom: AppSpacing.lg,
-            ),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceVariant
-                  : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppSheetHeader(
-                  title:
-                      '${l10n.isPersian ? 'ثبت پرداخت برای' : 'Record Payment for'} ${debt.contactName}',
+        return StatefulBuilder(
+          builder: (sheetCtx, setModalState) {
+            return AppBottomSheet(
+              child: Container(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.lg,
+                  right: AppSpacing.lg,
+                  top: AppSpacing.lg,
+                  bottom: AppSpacing.lg,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Text('${l10n.remaining}: '),
-                    AppMoneyText(
-                      money: debt.remainingAmount,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  autofocus: true,
-                  inputFormatters: [
-                    PersianThousandsSeparatorTextInputFormatter(
-                      enabled: isFaLocale(context),
-                    ),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l10n.isPersian
-                        ? 'مبلغ پرداختی'
-                        : 'Payment Amount',
-                    prefixIcon: const Icon(Icons.payment_rounded),
-                    suffixText: l10n.isPersian ? 'تومان' : '',
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                AppButton(
-                  label: l10n.confirm,
-                  onPressed: () {
-                    final amountVal =
-                        int.tryParse(
-                          normalizeNumericInput(amountController.text),
-                        ) ??
-                        0;
-                    if (amountVal > 0) {
-                      context.read<DebtBloc>().add(
-                        DebtPaymentSubmitted(
-                          id: debt.id,
-                          amount: Money.fromMinor(
-                            amountVal,
-                            debt.totalAmount.currency,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSheetHeader(
+                      title:
+                          '${l10n.isPersian ? 'ثبت پرداخت برای' : 'Record Payment for'} ${debt.contactName}',
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        Text('${l10n.remaining}: '),
+                        AppMoneyText(
+                          money: debt.remainingAmount,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                      Navigator.pop(bottomSheetContext);
-                    }
-                  },
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                      inputFormatters: [
+                        PersianThousandsSeparatorTextInputFormatter(
+                          enabled: isFaLocale(context),
+                        ),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l10n.isPersian
+                            ? 'مبلغ پرداختی'
+                            : 'Payment Amount',
+                        prefixIcon: const Icon(Icons.payment_rounded),
+                        suffixText: l10n.isPersian ? 'تومان' : '',
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OptionalAccountSelector(
+                      accountsFuture: accountsFuture,
+                      compatibleCurrency: debt.totalAmount.currency,
+                      selectedAccountId: selectedAccountId,
+                      label: debt.type == DebtType.debt
+                          ? (l10n.isPersian
+                                ? 'برداشت از حساب (اختیاری)'
+                                : 'Deduct from account (optional)')
+                          : (l10n.isPersian
+                                ? 'واریز به حساب (اختیاری)'
+                                : 'Deposit to account (optional)'),
+                      onChanged: (val) =>
+                          setModalState(() => selectedAccountId = val),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      label: l10n.confirm,
+                      onPressed: () {
+                        final amountVal =
+                            int.tryParse(
+                              normalizeNumericInput(amountController.text),
+                            ) ??
+                            0;
+                        if (amountVal > 0) {
+                          context.read<DebtBloc>().add(
+                            DebtPaymentSubmitted(
+                              id: debt.id,
+                              amount: Money.fromMinor(
+                                amountVal,
+                                debt.totalAmount.currency,
+                              ),
+                              accountId: selectedAccountId,
+                            ),
+                          );
+                          Navigator.pop(bottomSheetContext);
+                        }
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
-    );
+    ).whenComplete(amountController.dispose);
   }
 
   @override
