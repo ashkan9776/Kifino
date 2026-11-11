@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../domain/entities/asset_entity.dart';
 import '../../domain/repositories/asset_repository.dart';
@@ -97,6 +98,8 @@ final class AssetFailure extends AssetState {
 class AssetBloc extends Bloc<AssetEvent, AssetState> {
   final AssetRepository _repository;
   StreamSubscription<List<AssetEntity>>? _subscription;
+  List<AssetEntity> _lastAssets = const [];
+  bool _hasLoaded = false;
 
   AssetBloc(this._repository) : super(AssetInitial()) {
     on<WatchAssetsStarted>(_onWatchStarted);
@@ -118,18 +121,32 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
   }
 
   void _onAssetsUpdated(_AssetsUpdated event, Emitter<AssetState> emit) {
+    _lastAssets = event.assets;
+    _hasLoaded = true;
+    emit(_computeLoaded(event.assets));
+  }
+
+  AssetLoaded _computeLoaded(List<AssetEntity> assets) {
+    final baseCurrency = AppCurrency.base;
     int totalCostMinor = 0;
     int totalValuationMinor = 0;
-    const currency = Currency.irr;
 
-    for (final a in event.assets) {
+    for (final a in assets) {
       if (a.isDeleted) continue;
-      totalCostMinor += a.costBasis.minorUnits;
-      totalValuationMinor += a.currentValue.minorUnits;
+      if (a.costBasis.isCompatibleWith(baseCurrency)) {
+        totalCostMinor += a.costBasis.currency == baseCurrency
+            ? a.costBasis.minorUnits
+            : a.costBasis.normalizeTo(baseCurrency).minorUnits;
+      }
+      if (a.currentValue.isCompatibleWith(baseCurrency)) {
+        totalValuationMinor += a.currentValue.currency == baseCurrency
+            ? a.currentValue.minorUnits
+            : a.currentValue.normalizeTo(baseCurrency).minorUnits;
+      }
     }
 
-    final totalCost = Money.fromMinor(totalCostMinor, currency);
-    final totalValuation = Money.fromMinor(totalValuationMinor, currency);
+    final totalCost = Money.fromMinor(totalCostMinor, baseCurrency);
+    final totalValuation = Money.fromMinor(totalValuationMinor, baseCurrency);
     final totalProfitLoss = totalValuation - totalCost;
 
     double pnlPercent = 0.0;
@@ -138,15 +155,20 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
           ((totalValuationMinor - totalCostMinor) / totalCostMinor) * 100;
     }
 
-    emit(
-      AssetLoaded(
-        assets: event.assets,
-        totalCostBasis: totalCost,
-        totalCurrentValuation: totalValuation,
-        totalProfitLoss: totalProfitLoss,
-        profitLossPercent: double.parse(pnlPercent.toStringAsFixed(1)),
-      ),
+    return AssetLoaded(
+      assets: assets,
+      totalCostBasis: totalCost,
+      totalCurrentValuation: totalValuation,
+      totalProfitLoss: totalProfitLoss,
+      profitLossPercent: double.parse(pnlPercent.toStringAsFixed(1)),
     );
+  }
+
+  void _emitFailurePreservingLoaded(Emitter<AssetState> emit, String message) {
+    emit(AssetFailure(message));
+    if (_hasLoaded) {
+      emit(_computeLoaded(_lastAssets));
+    }
   }
 
   Future<void> _onCreateSubmitted(
@@ -156,7 +178,8 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     final result = await _repository.createAsset(event.asset);
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(AssetFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -170,7 +193,8 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     );
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(AssetFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -181,7 +205,8 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     final result = await _repository.deleteAsset(event.id);
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(AssetFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 

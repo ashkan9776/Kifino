@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../../notifications/domain/entities/app_notification_entity.dart';
 import '../../../notifications/domain/services/notification_service.dart';
@@ -97,6 +98,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
   final DebtRepository _repository;
   final NotificationService _notifications;
   StreamSubscription<List<DebtEntity>>? _subscription;
+  List<DebtEntity> _lastDebts = const [];
+  bool _hasLoaded = false;
 
   DebtBloc(this._repository, this._notifications) : super(DebtInitial()) {
     on<WatchDebtsStarted>(_onWatchStarted);
@@ -118,31 +121,47 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
   }
 
   void _onDebtsUpdated(_DebtsUpdated event, Emitter<DebtState> emit) {
+    _lastDebts = event.debts;
+    _hasLoaded = true;
+    emit(_computeLoaded(event.debts));
+  }
+
+  DebtLoaded _computeLoaded(List<DebtEntity> debts) {
+    final baseCurrency = AppCurrency.base;
     int totalDebtMinor = 0;
     int totalReceivableMinor = 0;
-    const currency = Currency.irr;
 
-    for (final d in event.debts) {
+    for (final d in debts) {
       if (d.isSettled || d.isDeleted) continue;
+      final remaining = d.remainingAmount;
+      if (!remaining.isCompatibleWith(baseCurrency)) continue;
+      final normalizedMinor = remaining.currency == baseCurrency
+          ? remaining.minorUnits
+          : remaining.normalizeTo(baseCurrency).minorUnits;
       if (d.type == DebtType.debt) {
-        totalDebtMinor += d.remainingAmount.minorUnits;
+        totalDebtMinor += normalizedMinor;
       } else {
-        totalReceivableMinor += d.remainingAmount.minorUnits;
+        totalReceivableMinor += normalizedMinor;
       }
     }
 
-    final totalDebt = Money.fromMinor(totalDebtMinor, currency);
-    final totalReceivable = Money.fromMinor(totalReceivableMinor, currency);
+    final totalDebt = Money.fromMinor(totalDebtMinor, baseCurrency);
+    final totalReceivable = Money.fromMinor(totalReceivableMinor, baseCurrency);
     final net = totalReceivable - totalDebt;
 
-    emit(
-      DebtLoaded(
-        debts: event.debts,
-        totalDebtRemaining: totalDebt,
-        totalReceivableRemaining: totalReceivable,
-        netBalance: net,
-      ),
+    return DebtLoaded(
+      debts: debts,
+      totalDebtRemaining: totalDebt,
+      totalReceivableRemaining: totalReceivable,
+      netBalance: net,
     );
+  }
+
+  void _emitFailurePreservingLoaded(Emitter<DebtState> emit, String message) {
+    emit(DebtFailure(message));
+    if (_hasLoaded) {
+      emit(_computeLoaded(_lastDebts));
+    }
   }
 
   Future<void> _onCreateSubmitted(
@@ -151,8 +170,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
   ) async {
     final result = await _repository.createDebt(event.debt);
     result.fold(
-      onSuccess: (_) => _scheduleDueReminder(event.debt),
-      onFailure: (failure) => emit(DebtFailure(failure.message)),
+      onSuccess: (created) => _scheduleDueReminder(created),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -180,7 +200,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     final result = await _repository.addPayment(event.id, event.amount);
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(DebtFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -191,7 +212,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     final result = await _repository.deleteDebt(event.id);
     result.fold(
       onSuccess: (_) => _notifications.cancelScheduled(event.id),
-      onFailure: (failure) => emit(DebtFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 

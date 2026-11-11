@@ -327,7 +327,21 @@ class _DebtsPageState extends State<DebtsPage> {
             onPressed: () => _showAddDebtDialog(context),
             child: const Icon(Icons.add),
           ),
-          body: BlocBuilder<DebtBloc, DebtState>(
+          body: BlocConsumer<DebtBloc, DebtState>(
+            listenWhen: (prev, curr) => curr is DebtFailure,
+            listener: (context, state) {
+              if (state is DebtFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.isPersian
+                          ? 'خطا: ${state.message}'
+                          : 'Error: ${state.message}',
+                    ),
+                  ),
+                );
+              }
+            },
             builder: (context, state) {
               if (state is DebtLoading) {
                 return const Padding(

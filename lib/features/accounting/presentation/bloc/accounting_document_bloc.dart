@@ -113,6 +113,12 @@ class AccountingDocumentBloc
     extends Bloc<AccountingDocumentEvent, AccountingDocumentState> {
   final AccountingRepository _repository;
 
+  DateTime? _lastStartDate;
+  DateTime? _lastEndDate;
+  DocumentStatus? _lastStatus;
+  String? _lastFiscalYearId;
+  AccountingDocumentLoaded? _lastLoadedState;
+
   AccountingDocumentBloc(this._repository)
     : super(AccountingDocumentInitial()) {
     on<LoadAccountingDocuments>(_onLoad);
@@ -121,10 +127,28 @@ class AccountingDocumentBloc
     on<DeleteAccountingDocumentSubmitted>(_onDelete);
   }
 
+  LoadAccountingDocuments _reloadWithFilters() => LoadAccountingDocuments(
+    startDate: _lastStartDate,
+    endDate: _lastEndDate,
+    status: _lastStatus,
+    fiscalYearId: _lastFiscalYearId,
+  );
+
+  void _emitErrorPreservingLoaded(Emitter<AccountingDocumentState> emit, Object e) {
+    emit(AccountingDocumentError(_cleanError(e)));
+    if (_lastLoadedState != null) {
+      emit(_lastLoadedState!);
+    }
+  }
+
   Future<void> _onLoad(
     LoadAccountingDocuments event,
     Emitter<AccountingDocumentState> emit,
   ) async {
+    _lastStartDate = event.startDate;
+    _lastEndDate = event.endDate;
+    _lastStatus = event.status;
+    _lastFiscalYearId = event.fiscalYearId;
     emit(AccountingDocumentLoading());
     try {
       await _repository.seedChartOfAccountsIfNotExists();
@@ -134,17 +158,17 @@ class AccountingDocumentBloc
         status: event.status,
         fiscalYearId: event.fiscalYearId,
       );
-      emit(
-        AccountingDocumentLoaded(
-          documents: docs,
-          startDate: event.startDate,
-          endDate: event.endDate,
-          status: event.status,
-          fiscalYearId: event.fiscalYearId,
-        ),
+      final loaded = AccountingDocumentLoaded(
+        documents: docs,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        status: event.status,
+        fiscalYearId: event.fiscalYearId,
       );
+      _lastLoadedState = loaded;
+      emit(loaded);
     } catch (e) {
-      emit(AccountingDocumentError(_cleanError(e)));
+      _emitErrorPreservingLoaded(emit, e);
     }
   }
 
@@ -165,9 +189,9 @@ class AccountingDocumentBloc
           'سند حسابداری با موفقیت ثبت شد',
         ),
       );
-      add(const LoadAccountingDocuments());
+      add(_reloadWithFilters());
     } catch (e) {
-      emit(AccountingDocumentError(_cleanError(e)));
+      _emitErrorPreservingLoaded(emit, e);
     }
   }
 
@@ -178,9 +202,9 @@ class AccountingDocumentBloc
     try {
       await _repository.approveDocument(event.documentId);
       emit(const AccountingDocumentOperationSuccess('سند حسابداری تأیید شد'));
-      add(const LoadAccountingDocuments());
+      add(_reloadWithFilters());
     } catch (e) {
-      emit(AccountingDocumentError(_cleanError(e)));
+      _emitErrorPreservingLoaded(emit, e);
     }
   }
 
@@ -195,9 +219,9 @@ class AccountingDocumentBloc
           'سند حسابداری با موفقیت حذف شد',
         ),
       );
-      add(const LoadAccountingDocuments());
+      add(_reloadWithFilters());
     } catch (e) {
-      emit(AccountingDocumentError(_cleanError(e)));
+      _emitErrorPreservingLoaded(emit, e);
     }
   }
 

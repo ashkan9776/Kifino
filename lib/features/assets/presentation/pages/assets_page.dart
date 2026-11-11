@@ -342,7 +342,21 @@ class _AssetsPageState extends State<AssetsPage> {
             onPressed: () => _showAddAssetDialog(context),
             child: const Icon(Icons.add),
           ),
-          body: BlocBuilder<AssetBloc, AssetState>(
+          body: BlocConsumer<AssetBloc, AssetState>(
+            listenWhen: (prev, curr) => curr is AssetFailure,
+            listener: (context, state) {
+              if (state is AssetFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.isPersian
+                          ? 'خطا: ${state.message}'
+                          : 'Error: ${state.message}',
+                    ),
+                  ),
+                );
+              }
+            },
             builder: (context, state) {
               if (state is AssetLoading) {
                 return const Padding(

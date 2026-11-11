@@ -74,6 +74,8 @@ final class BudgetFailure extends BudgetState {
 class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
   final BudgetRepository _repository;
   StreamSubscription<List<BudgetEntity>>? _subscription;
+  List<BudgetEntity> _lastBudgets = const [];
+  bool _hasLoaded = false;
 
   BudgetBloc(this._repository) : super(BudgetInitial()) {
     on<WatchBudgetsStarted>(_onWatchStarted);
@@ -94,8 +96,21 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
   }
 
   void _onBudgetsUpdated(_BudgetsUpdated event, Emitter<BudgetState> emit) {
-    final health = BudgetAdherenceCalculator.calculate(event.budgets);
-    emit(BudgetLoaded(budgets: event.budgets, health: health));
+    _lastBudgets = event.budgets;
+    _hasLoaded = true;
+    emit(_computeLoaded(event.budgets));
+  }
+
+  BudgetLoaded _computeLoaded(List<BudgetEntity> budgets) {
+    final health = BudgetAdherenceCalculator.calculate(budgets);
+    return BudgetLoaded(budgets: budgets, health: health);
+  }
+
+  void _emitFailurePreservingLoaded(Emitter<BudgetState> emit, String message) {
+    emit(BudgetFailure(message));
+    if (_hasLoaded) {
+      emit(_computeLoaded(_lastBudgets));
+    }
   }
 
   Future<void> _onCreateSubmitted(
@@ -105,7 +120,8 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     final result = await _repository.createBudget(event.budget);
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(BudgetFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -116,7 +132,8 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     final result = await _repository.deleteBudget(event.id);
     result.fold(
       onSuccess: (_) {},
-      onFailure: (failure) => emit(BudgetFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 

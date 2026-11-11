@@ -73,20 +73,38 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(accountingTransactionsTable);
         await m.createTable(fiscalYearsTable);
       }
-      if (from < 7) {
-        await m.createTable(installmentPaymentsTable);
-      }
-      if (from < 8) {
-        await m.addColumn(assetsTable, assetsTable.customTypeName);
-      }
-      if (from < 9) {
-        // Phase 1 COGS: weighted-average unit cost per product.
-        await m.addColumn(productsTable, productsTable.avgCostMinor);
-      }
-      if (from < 6) {
-        // Warehouse light (Phase 3): secondary unit + conversion factor.
-        await m.addColumn(productsTable, productsTable.secondaryUnit);
-        await m.addColumn(productsTable, productsTable.conversionFactor);
+      if (from == 3) {
+        // Sync-readiness for the accounting tables added in v3.
+        await _addColumnIfMissing(
+          m,
+          accountingTransactionsTable,
+          accountingTransactionsTable.deletedAt,
+        );
+        await _addColumnIfMissing(
+          m,
+          accountingTransactionsTable,
+          accountingTransactionsTable.syncStatus,
+        );
+        await _addColumnIfMissing(
+          m,
+          accountingTransactionsTable,
+          accountingTransactionsTable.version,
+        );
+        await _addColumnIfMissing(
+          m,
+          fiscalYearsTable,
+          fiscalYearsTable.deletedAt,
+        );
+        await _addColumnIfMissing(
+          m,
+          fiscalYearsTable,
+          fiscalYearsTable.syncStatus,
+        );
+        await _addColumnIfMissing(
+          m,
+          fiscalYearsTable,
+          fiscalYearsTable.version,
+        );
       }
       if (from < 5) {
         await m.createTable(accountingAuditLogsTable);
@@ -94,26 +112,45 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(accountingDetailValuesTable);
         await m.createTable(accountingDocumentDetailLinksTable);
       }
-      if (from < 4) {
-        // Sync-readiness for the accounting tables added in v3.
-        await m.addColumn(
-          accountingTransactionsTable,
-          accountingTransactionsTable.deletedAt,
+      if (from < 6) {
+        // Warehouse light (Phase 3): secondary unit + conversion factor.
+        await _addColumnIfMissing(
+          m,
+          productsTable,
+          productsTable.secondaryUnit,
         );
-        await m.addColumn(
-          accountingTransactionsTable,
-          accountingTransactionsTable.syncStatus,
+        await _addColumnIfMissing(
+          m,
+          productsTable,
+          productsTable.conversionFactor,
         );
-        await m.addColumn(
-          accountingTransactionsTable,
-          accountingTransactionsTable.version,
-        );
-        await m.addColumn(fiscalYearsTable, fiscalYearsTable.deletedAt);
-        await m.addColumn(fiscalYearsTable, fiscalYearsTable.syncStatus);
-        await m.addColumn(fiscalYearsTable, fiscalYearsTable.version);
+      }
+      if (from < 7) {
+        await m.createTable(installmentPaymentsTable);
+      }
+      if (from < 8) {
+        await _addColumnIfMissing(m, assetsTable, assetsTable.customTypeName);
+      }
+      if (from < 9) {
+        // Phase 1 COGS: weighted-average unit cost per product.
+        await _addColumnIfMissing(m, productsTable, productsTable.avgCostMinor);
       }
     },
   );
+
+  Future<void> _addColumnIfMissing(
+    Migrator m,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    final cols = await customSelect(
+      'PRAGMA table_info(${table.actualTableName})',
+    ).get();
+    final existing = cols.map((r) => r.read<String>('name')).toSet();
+    if (!existing.contains(column.name)) {
+      await m.addColumn(table, column);
+    }
+  }
 
   static LazyDatabase _openConnection(String? companyDbName) {
     return LazyDatabase(() async {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../../notifications/domain/entities/app_notification_entity.dart';
 import '../../../notifications/domain/services/notification_service.dart';
@@ -148,15 +149,24 @@ final class InstallmentHistoryLoaded extends InstallmentLoaded {
   ];
 }
 
-/// Transient success state — the page maps [op] to a localized SnackBar
-/// message (same pattern as GoalBloc's GoalOperationSuccess).
-final class InstallmentOperationSuccess extends InstallmentState {
+/// Transient success state — extends [InstallmentLoaded] so the list keeps
+/// rendering without flashing [AppEmptyState], while the page listener maps
+/// [op] to a localized SnackBar message.
+final class InstallmentOperationSuccess extends InstallmentLoaded {
   /// pay | payRemaining | update | delete | deletePayment
   final String op;
   final String message;
-  const InstallmentOperationSuccess(this.message, {required this.op});
+
+  const InstallmentOperationSuccess(
+    this.message, {
+    required this.op,
+    required super.installments,
+    required super.totalDebtRemaining,
+    required super.monthlyInstallmentDues,
+  });
+
   @override
-  List<Object?> get props => [message, op];
+  List<Object?> get props => [...super.props, message, op];
 }
 
 final class InstallmentFailure extends InstallmentState {
@@ -172,9 +182,10 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
   final NotificationService _notifications;
   StreamSubscription<List<InstallmentEntity>>? _subscription;
 
-  /// Latest snapshot from the watch stream — used to restore the loaded state
-  /// when the history sheet closes.
+  /// Latest snapshot from the watch stream — used to preserve the list state
+  /// across transient success/failure emissions and when the history sheet closes.
   List<InstallmentEntity> _lastInstallments = const [];
+  bool _hasLoaded = false;
 
   InstallmentBloc(this._repository, this._notifications)
     : super(InstallmentInitial()) {
@@ -207,6 +218,7 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     _lastInstallments = event.installments;
+    _hasLoaded = true;
     final loaded = _computeLoaded(event.installments);
 
     // While the history sheet is open, keep its data in sync with the fresh
@@ -238,21 +250,70 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
   }
 
   InstallmentLoaded _computeLoaded(List<InstallmentEntity> installments) {
+    final baseCurrency = AppCurrency.base;
     int totalRemainingMinor = 0;
     int monthlyDuesMinor = 0;
-    const currency = Currency.irr;
 
     for (final inst in installments) {
       if (inst.isCompleted || inst.isDeleted) continue;
-      totalRemainingMinor += inst.remainingAmount.minorUnits;
-      monthlyDuesMinor += inst.installmentAmount.minorUnits;
+      final remaining = inst.remainingAmount;
+      if (remaining.isCompatibleWith(baseCurrency)) {
+        totalRemainingMinor += remaining.currency == baseCurrency
+            ? remaining.minorUnits
+            : remaining.normalizeTo(baseCurrency).minorUnits;
+      }
+      final instAmount = inst.installmentAmount;
+      if (instAmount.isCompatibleWith(baseCurrency)) {
+        monthlyDuesMinor += instAmount.currency == baseCurrency
+            ? instAmount.minorUnits
+            : instAmount.normalizeTo(baseCurrency).minorUnits;
+      }
     }
 
     return InstallmentLoaded(
       installments: installments,
-      totalDebtRemaining: Money.fromMinor(totalRemainingMinor, currency),
-      monthlyInstallmentDues: Money.fromMinor(monthlyDuesMinor, currency),
+      totalDebtRemaining: Money.fromMinor(totalRemainingMinor, baseCurrency),
+      monthlyInstallmentDues: Money.fromMinor(monthlyDuesMinor, baseCurrency),
     );
+  }
+
+  void _emitSuccess(
+    Emitter<InstallmentState> emit,
+    String message, {
+    required String op,
+  }) {
+    final loaded = _computeLoaded(_lastInstallments);
+    emit(
+      InstallmentOperationSuccess(
+        message,
+        op: op,
+        installments: loaded.installments,
+        totalDebtRemaining: loaded.totalDebtRemaining,
+        monthlyInstallmentDues: loaded.monthlyInstallmentDues,
+      ),
+    );
+  }
+
+  void _emitFailurePreservingLoaded(
+    Emitter<InstallmentState> emit,
+    String message,
+  ) {
+    final prevState = state;
+    emit(InstallmentFailure(message));
+    if (prevState is InstallmentHistoryLoaded) {
+      final loaded = _computeLoaded(_lastInstallments);
+      emit(
+        InstallmentHistoryLoaded(
+          installments: loaded.installments,
+          totalDebtRemaining: loaded.totalDebtRemaining,
+          monthlyInstallmentDues: loaded.monthlyInstallmentDues,
+          installmentId: prevState.installmentId,
+          history: prevState.history,
+        ),
+      );
+    } else if (_hasLoaded) {
+      emit(_computeLoaded(_lastInstallments));
+    }
   }
 
   Future<void> _onCreateSubmitted(
@@ -261,8 +322,9 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
   ) async {
     final result = await _repository.createInstallment(event.installment);
     result.fold(
-      onSuccess: (_) => _scheduleDueReminder(event.installment),
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onSuccess: (created) => _scheduleDueReminder(created),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -286,9 +348,9 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
   ) async {
     final result = await _repository.payNextInstallment(event.id);
     result.fold(
-      onSuccess: (_) =>
-          emit(const InstallmentOperationSuccess('قسط پرداخت شد', op: 'pay')),
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onSuccess: (_) => _emitSuccess(emit, 'قسط پرداخت شد', op: 'pay'),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -300,9 +362,10 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     result.fold(
       onSuccess: (_) {
         _notifications.cancelScheduled(event.id);
-        emit(const InstallmentOperationSuccess('قسط حذف شد', op: 'delete'));
+        _emitSuccess(emit, 'قسط حذف شد', op: 'delete');
       },
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -314,11 +377,10 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     result.fold(
       onSuccess: (_) {
         _scheduleDueReminder(event.installment);
-        emit(
-          const InstallmentOperationSuccess('تغییرات ذخیره شد', op: 'update'),
-        );
+        _emitSuccess(emit, 'تغییرات ذخیره شد', op: 'update');
       },
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -328,13 +390,13 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
   ) async {
     final result = await _repository.payRemaining(event.id);
     result.fold(
-      onSuccess: (_) => emit(
-        const InstallmentOperationSuccess(
-          'تسویه کامل انجام شد',
-          op: 'payRemaining',
-        ),
+      onSuccess: (_) => _emitSuccess(
+        emit,
+        'تسویه کامل انجام شد',
+        op: 'payRemaining',
       ),
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -345,11 +407,10 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     final result = await _repository.deletePayment(event.paymentId);
     result.fold(
       onSuccess: (_) {
-        emit(
-          const InstallmentOperationSuccess(
-            'پرداخت حذف شد و مبلغ به حساب برگشت',
-            op: 'deletePayment',
-          ),
+        _emitSuccess(
+          emit,
+          'پرداخت حذف شد و مبلغ به حساب برگشت',
+          op: 'deletePayment',
         );
         // Keep the open history sheet in sync with the reverted counters.
         final installmentId = event.installmentId;
@@ -357,7 +418,8 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
           add(InstallmentHistoryRequested(installmentId));
         }
       },
-      onFailure: (failure) => emit(InstallmentFailure(failure.message)),
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -380,7 +442,7 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
         );
       }
     } catch (e) {
-      if (!emit.isDone) emit(InstallmentFailure(e.toString()));
+      if (!emit.isDone) _emitFailurePreservingLoaded(emit, e.toString());
     }
   }
 

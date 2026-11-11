@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../domain/entities/goal_entity.dart';
 import '../../domain/repositories/goal_repository.dart';
@@ -84,19 +85,31 @@ final class GoalFailure extends GoalState {
   List<Object?> get props => [message];
 }
 
-final class GoalOperationSuccess extends GoalState {
+/// Transient success state — extends [GoalLoaded] so the UI list keeps
+/// rendering without flashing [AppEmptyState].
+final class GoalOperationSuccess extends GoalLoaded {
   final String message;
   final String op; // create, contribute, achieve, delete
 
-  const GoalOperationSuccess(this.message, {required this.op});
+  const GoalOperationSuccess(
+    this.message, {
+    required this.op,
+    required super.goals,
+    required super.totalSaved,
+    required super.totalTarget,
+    required super.overallPercent,
+  });
+
   @override
-  List<Object?> get props => [message, op];
+  List<Object?> get props => [...super.props, message, op];
 }
 
 // Bloc
 class GoalBloc extends Bloc<GoalEvent, GoalState> {
   final GoalRepository _repository;
   StreamSubscription<List<GoalEntity>>? _subscription;
+  List<GoalEntity> _lastGoals = const [];
+  bool _hasLoaded = false;
 
   GoalBloc(this._repository) : super(GoalInitial()) {
     on<WatchGoalsStarted>(_onWatchStarted);
@@ -116,24 +129,31 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
   }
 
   void _onGoalsUpdated(_GoalsUpdated event, Emitter<GoalState> emit) {
+    _lastGoals = event.goals;
+    _hasLoaded = true;
     emit(_computeLoaded(event.goals));
   }
 
   GoalLoaded _computeLoaded(List<GoalEntity> goals) {
-    // Totals assume all goals share the same currency (the wallet default).
-    final currency = goals.isNotEmpty
-        ? goals.first.targetAmount.currency
-        : Currency.fromCode('TOMAN');
+    final baseCurrency = AppCurrency.base;
 
     int savedMinor = 0;
     int targetMinor = 0;
     for (final g in goals) {
-      savedMinor += g.currentAmount.minorUnits;
-      targetMinor += g.targetAmount.minorUnits;
+      if (g.currentAmount.isCompatibleWith(baseCurrency)) {
+        savedMinor += g.currentAmount.currency == baseCurrency
+            ? g.currentAmount.minorUnits
+            : g.currentAmount.normalizeTo(baseCurrency).minorUnits;
+      }
+      if (g.targetAmount.isCompatibleWith(baseCurrency)) {
+        targetMinor += g.targetAmount.currency == baseCurrency
+            ? g.targetAmount.minorUnits
+            : g.targetAmount.normalizeTo(baseCurrency).minorUnits;
+      }
     }
 
-    final totalSaved = Money.fromMinor(savedMinor, currency);
-    final totalTarget = Money.fromMinor(targetMinor, currency);
+    final totalSaved = Money.fromMinor(savedMinor, baseCurrency);
+    final totalTarget = Money.fromMinor(targetMinor, baseCurrency);
 
     final overallPercent = targetMinor <= 0
         ? 0.0
@@ -147,15 +167,46 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     );
   }
 
+  void _emitSuccess(
+    Emitter<GoalState> emit,
+    String message, {
+    required String op,
+  }) {
+    final loaded = _computeLoaded(_lastGoals);
+    emit(
+      GoalOperationSuccess(
+        message,
+        op: op,
+        goals: loaded.goals,
+        totalSaved: loaded.totalSaved,
+        totalTarget: loaded.totalTarget,
+        overallPercent: loaded.overallPercent,
+      ),
+    );
+  }
+
+  void _emitFailurePreservingLoaded(Emitter<GoalState> emit, String message) {
+    emit(GoalFailure(message));
+    if (_hasLoaded) {
+      emit(_computeLoaded(_lastGoals));
+    }
+  }
+
   Future<void> _onCreateSubmitted(
     GoalCreateSubmitted event,
     Emitter<GoalState> emit,
   ) async {
     final result = await _repository.createGoal(event.goal);
     result.fold(
-      onSuccess: (_) =>
-          emit(const GoalOperationSuccess('Goal created', op: 'create')),
-      onFailure: (failure) => emit(GoalFailure(failure.message)),
+      onSuccess: (created) {
+        if (!_lastGoals.any((g) => g.id == created.id)) {
+          _lastGoals = [created, ..._lastGoals];
+          _hasLoaded = true;
+        }
+        _emitSuccess(emit, 'Goal created', op: 'create');
+      },
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -165,15 +216,18 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
   ) async {
     final result = await _repository.contributeToGoal(event.id, event.amount);
     result.fold(
-      onSuccess: (goal) => emit(
-        goal.isAchieved
-            ? const GoalOperationSuccess('Goal achieved', op: 'achieve')
-            : const GoalOperationSuccess(
-                'Contribution saved',
-                op: 'contribute',
-              ),
-      ),
-      onFailure: (failure) => emit(GoalFailure(failure.message)),
+      onSuccess: (goal) {
+        _lastGoals = [
+          for (final g in _lastGoals) g.id == goal.id ? goal : g,
+        ];
+        if (goal.isAchieved) {
+          _emitSuccess(emit, 'Goal achieved', op: 'achieve');
+        } else {
+          _emitSuccess(emit, 'Contribution saved', op: 'contribute');
+        }
+      },
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
@@ -183,9 +237,12 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
   ) async {
     final result = await _repository.deleteGoal(event.id);
     result.fold(
-      onSuccess: (_) =>
-          emit(const GoalOperationSuccess('Goal deleted', op: 'delete')),
-      onFailure: (failure) => emit(GoalFailure(failure.message)),
+      onSuccess: (_) {
+        _lastGoals = _lastGoals.where((g) => g.id != event.id).toList();
+        _emitSuccess(emit, 'Goal deleted', op: 'delete');
+      },
+      onFailure: (failure) =>
+          _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
