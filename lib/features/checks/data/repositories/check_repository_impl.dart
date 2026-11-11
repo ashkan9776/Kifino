@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -108,8 +110,11 @@ class CheckRepositoryImpl implements CheckRepository {
                 syncEntityName: 'checks',
                 entityId: cId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$cId","checkNumber":"${check.checkNumber}","amount":${check.amount.minorUnits}}',
+                payloadJson: jsonEncode({
+                  'id': cId,
+                  'checkNumber': check.checkNumber,
+                  'amount': check.amount.minorUnits,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -149,8 +154,11 @@ class CheckRepositoryImpl implements CheckRepository {
               syncEntityName: 'checks',
               entityId: check.id,
               operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"${check.id}","amount":${check.amount.minorUnits},"number":"${check.checkNumber}"}',
+              payloadJson: jsonEncode({
+                'id': check.id,
+                'amount': check.amount.minorUnits,
+                'number': check.checkNumber,
+              }),
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),
@@ -233,8 +241,13 @@ class CheckRepositoryImpl implements CheckRepository {
                       syncEntityName: 'transactions',
                       entityId: txId,
                       operation: 'INSERT',
-                      payloadJson:
-                          '{"id":"$txId","account_id":"${check.accountId}","amount_minor":${check.amountMinor},"currency":"${check.currency}","type":"${isIssued ? "expense" : "income"}"}',
+                      payloadJson: jsonEncode({
+                        'id': txId,
+                        'account_id': check.accountId,
+                        'amount_minor': check.amountMinor,
+                        'currency': check.currency,
+                        'type': isIssued ? 'expense' : 'income',
+                      }),
                       idempotencyKey: _uuid.v4(),
                       queuedAt: now,
                     ),
@@ -256,7 +269,7 @@ class CheckRepositoryImpl implements CheckRepository {
                       syncEntityName: 'transactions',
                       entityId: txId,
                       operation: 'DELETE',
-                      payloadJson: '{"id":"$txId"}',
+                      payloadJson: jsonEncode({'id': txId}),
                       idempotencyKey: _uuid.v4(),
                       queuedAt: now,
                     ),
@@ -281,7 +294,7 @@ class CheckRepositoryImpl implements CheckRepository {
                 syncEntityName: 'checks',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson: '{"id":"$id","status":"${status.code}"}',
+                payloadJson: jsonEncode({'id': id, 'status': status.code}),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),

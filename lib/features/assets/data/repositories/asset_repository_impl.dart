@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -102,8 +104,11 @@ class AssetRepositoryImpl implements AssetRepository {
                 syncEntityName: 'assets',
                 entityId: aId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$aId","name":"${asset.name}","value":${asset.currentValue.minorUnits}}',
+                payloadJson: jsonEncode({
+                  'id': aId,
+                  'name': asset.name,
+                  'value': asset.currentValue.minorUnits,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -144,8 +149,11 @@ class AssetRepositoryImpl implements AssetRepository {
               syncEntityName: 'assets',
               entityId: asset.id,
               operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"${asset.id}","value":${asset.currentValue.minorUnits},"name":"${asset.name}"}',
+              payloadJson: jsonEncode({
+                'id': asset.id,
+                'value': asset.currentValue.minorUnits,
+                'name': asset.name,
+              }),
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),
@@ -178,8 +186,10 @@ class AssetRepositoryImpl implements AssetRepository {
               syncEntityName: 'assets',
               entityId: id,
               operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"$id","currentValue":${currentValue.minorUnits}}',
+              payloadJson: jsonEncode({
+                'id': id,
+                'currentValue': currentValue.minorUnits,
+              }),
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),

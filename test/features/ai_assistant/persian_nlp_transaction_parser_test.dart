@@ -122,6 +122,131 @@ void main() {
       expect(draft, isNotNull);
       expect(draft!.type, equals(TransactionType.expense));
     });
+
+    test('واریز به حساب detects transfer instead of income', () {
+      final draft = PersianNlpTransactionParser.parse(
+        'واریز به حساب ۵۰۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(draft, isNotNull);
+      expect(draft!.type, equals(TransactionType.transfer));
+      expect(draft.amount.minorUnits, equals(500000));
+    });
+
+    test('word boundaries avoid false positives (آناناس, سودابه, جوراب, روغن مایع, سریال)', () {
+      final pineapple = PersianNlpTransactionParser.parse(
+        'خرید آناناس ۱۰۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(pineapple!.suggestedCategory, equals('سایر هزینه‌ها'));
+
+      final lebanon = PersianNlpTransactionParser.parse(
+        'بلیت سفر لبنان ۵ میلیون تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(lebanon!.suggestedCategory, equals('سایر هزینه‌ها'));
+
+      final soudabeh = PersianNlpTransactionParser.parse(
+        'پرداخت به سودابه ۵۰۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(soudabeh!.type, equals(TransactionType.expense));
+
+      final worn = PersianNlpTransactionParser.parse(
+        'تعویض قطعات فرسوده ۳۰۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(worn!.type, equals(TransactionType.expense));
+
+      final socks = PersianNlpTransactionParser.parse(
+        'خرید جوراب ۱۵۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(socks!.suggestedCategory, equals('سایر هزینه‌ها'));
+
+      final liquidOil = PersianNlpTransactionParser.parse(
+        'خرید روغن مایع ۲۲۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(liquidOil!.suggestedCategory, equals('خوراک و غذا'));
+
+      final oliveOil = PersianNlpTransactionParser.parse(
+        'روغن زیتون ۳۵۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(oliveOil!.suggestedCategory, equals('خوراک و غذا'));
+
+      final engineOil = PersianNlpTransactionParser.parse(
+        'تعویض روغن ماشین ۴۰۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(engineOil!.suggestedCategory, equals('حمل و نقل'));
+
+      final serial = PersianNlpTransactionParser.parse(
+        'خرید اشتراک سریال ۱۵۰ هزار تومان',
+        targetCurrency: Currency.toman,
+      );
+      expect(serial!.description, contains('سریال'));
+    });
+
+    test('parses compound numeric and Persian word-number expressions', () {
+      final d1 = PersianNlpTransactionParser.parse(
+        '۱ میلیون و ۵۰۰ هزار تومان خرید گوشی',
+        targetCurrency: Currency.toman,
+      );
+      expect(d1!.amount.minorUnits, equals(1500000));
+      expect(d1.description, equals('خرید گوشی'));
+
+      final d2 = PersianNlpTransactionParser.parse(
+        'یک میلیون و دویست هزار تومن خرید کفش',
+        targetCurrency: Currency.toman,
+      );
+      expect(d2!.amount.minorUnits, equals(1200000));
+      expect(d2.description, equals('خرید کفش'));
+
+      final d3 = PersianNlpTransactionParser.parse(
+        '۲ و نیم میلیون تومان قسط مسکن',
+        targetCurrency: Currency.toman,
+      );
+      expect(d3!.amount.minorUnits, equals(2500000));
+
+      final d4 = PersianNlpTransactionParser.parse(
+        'دو میلیون و نیم خرید طلا',
+        targetCurrency: Currency.toman,
+      );
+      expect(d4!.amount.minorUnits, equals(2500000));
+
+      final d5 = PersianNlpTransactionParser.parse(
+        'بیست و پنج هزار تومان نان سنگک',
+        targetCurrency: Currency.toman,
+      );
+      expect(d5!.amount.minorUnits, equals(25000));
+      expect(d5.suggestedCategory, equals('خوراک و غذا'));
+
+      final d6 = PersianNlpTransactionParser.parse(
+        'دو میلیارد و پانصد میلیون تومان خرید آپارتمان',
+        targetCurrency: Currency.toman,
+      );
+      expect(d6!.amount.minorUnits, equals(2500000000));
+    });
+
+    test('supports relative Persian dates دیروز and پریروز', () {
+      final today = DateTime.now();
+      final yesterday = PersianNlpTransactionParser.parse(
+        'دیروز ۲۰۰ هزار تومان ناهار',
+        targetCurrency: Currency.toman,
+      );
+      expect(yesterday!.amount.minorUnits, equals(200000));
+      expect(yesterday.date.day, equals(today.subtract(const Duration(days: 1)).day));
+      expect(yesterday.description, equals('ناهار'));
+
+      final dayBefore = PersianNlpTransactionParser.parse(
+        'پریروز ۸۰ هزار تومان اسنپ',
+        targetCurrency: Currency.toman,
+      );
+      expect(dayBefore!.amount.minorUnits, equals(80000));
+      expect(dayBefore.date.day, equals(today.subtract(const Duration(days: 2)).day));
+    });
   });
 
   group('RuleBasedFinancialAdvisor Tests', () {

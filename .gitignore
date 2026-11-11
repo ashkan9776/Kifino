@@ -55,3 +55,6 @@ AGENTS.md
 key.properties
 *.jks
 *.keystore
+
+# Golden test diff outputs
+test/**/failures/

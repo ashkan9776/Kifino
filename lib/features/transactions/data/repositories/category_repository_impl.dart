@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -166,7 +168,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
                 syncEntityName: 'categories',
                 entityId: id,
                 operation: 'DELETE',
-                payloadJson: '{"id":"$id"}',
+                payloadJson: jsonEncode({'id': id}),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),

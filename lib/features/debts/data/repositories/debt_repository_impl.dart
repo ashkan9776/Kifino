@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -103,8 +105,11 @@ class DebtRepositoryImpl implements DebtRepository {
                 syncEntityName: 'debts_receivables',
                 entityId: dId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$dId","contact":"${debt.contactName}","amount":${debt.totalAmount.minorUnits}}',
+                payloadJson: jsonEncode({
+                  'id': dId,
+                  'contact': debt.contactName,
+                  'amount': debt.totalAmount.minorUnits,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -157,8 +162,11 @@ class DebtRepositoryImpl implements DebtRepository {
                 syncEntityName: 'debts_receivables',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson:
-                    '{"id":"$id","payment":${paymentAmount.minorUnits},"newPaid":$newPaidMinor}',
+                payloadJson: jsonEncode({
+                  'id': id,
+                  'payment': paymentAmount.minorUnits,
+                  'newPaid': newPaidMinor,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -178,32 +186,37 @@ class DebtRepositoryImpl implements DebtRepository {
   Future<Result<void>> updateDebt(DebtEntity debt) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(
-        _db.debtsReceivablesTable,
-      )..where((tbl) => tbl.id.equals(debt.id))).write(
-        DebtsReceivablesTableCompanion(
-          contactName: Value(debt.contactName),
-          contactPhone: Value(debt.contactPhone),
-          totalAmountMinor: Value(debt.totalAmount.minorUnits),
-          dueDate: Value(debt.dueDate?.millisecondsSinceEpoch),
-          notes: Value(debt.notes),
-          updatedAt: Value(now),
-        ),
-      );
+      await _db.transaction(() async {
+        await (_db.update(
+          _db.debtsReceivablesTable,
+        )..where((tbl) => tbl.id.equals(debt.id))).write(
+          DebtsReceivablesTableCompanion(
+            contactName: Value(debt.contactName),
+            contactPhone: Value(debt.contactPhone),
+            totalAmountMinor: Value(debt.totalAmount.minorUnits),
+            dueDate: Value(debt.dueDate?.millisecondsSinceEpoch),
+            notes: Value(debt.notes),
+            updatedAt: Value(now),
+          ),
+        );
 
-      await _db
-          .into(_db.syncQueueTable)
-          .insert(
-            SyncQueueTableCompanion.insert(
-              syncEntityName: 'debts_receivables',
-              entityId: debt.id,
-              operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"${debt.id}","total":${debt.totalAmount.minorUnits}}',
-              idempotencyKey: _uuid.v4(),
-              queuedAt: now,
-            ),
-          );
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'debts_receivables',
+                entityId: debt.id,
+                operation: 'UPDATE',
+                payloadJson: jsonEncode({
+                  'id': debt.id,
+                  'total': debt.totalAmount.minorUnits,
+                  'contact': debt.contactName,
+                }),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
 
       return const Success(null);
     } catch (e) {
@@ -215,14 +228,28 @@ class DebtRepositoryImpl implements DebtRepository {
   Future<Result<void>> updateDebtStatus(String id, DebtStatus status) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(
-        _db.debtsReceivablesTable,
-      )..where((t) => t.id.equals(id))).write(
-        DebtsReceivablesTableCompanion(
-          status: Value(status.code),
-          updatedAt: Value(now),
-        ),
-      );
+      await _db.transaction(() async {
+        await (_db.update(
+          _db.debtsReceivablesTable,
+        )..where((t) => t.id.equals(id))).write(
+          DebtsReceivablesTableCompanion(
+            status: Value(status.code),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'debts_receivables',
+                entityId: id,
+                operation: 'UPDATE',
+                payloadJson: jsonEncode({'id': id, 'status': status.code}),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('تغییر وضعیت انجام نشد.').asFailure();
@@ -233,14 +260,28 @@ class DebtRepositoryImpl implements DebtRepository {
   Future<Result<void>> deleteDebt(String id) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(
-        _db.debtsReceivablesTable,
-      )..where((t) => t.id.equals(id))).write(
-        DebtsReceivablesTableCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
-      );
+      await _db.transaction(() async {
+        await (_db.update(
+          _db.debtsReceivablesTable,
+        )..where((t) => t.id.equals(id))).write(
+          DebtsReceivablesTableCompanion(
+            deletedAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'debts_receivables',
+                entityId: id,
+                operation: 'DELETE',
+                payloadJson: jsonEncode({'id': id}),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
       return const Success(null);
     } catch (e) {
       return DatabaseFailure('حذف بدهی انجام نشد.').asFailure();

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -99,8 +101,11 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncEntityName: 'installments',
                 entityId: instId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$instId","title":"${installment.title}","total":${installment.totalAmount.minorUnits}}',
+                payloadJson: jsonEncode({
+                  'id': instId,
+                  'title': installment.title,
+                  'total': installment.totalAmount.minorUnits,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -188,8 +193,13 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncEntityName: 'transactions',
                 entityId: txId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$txId","account_id":"${inst.accountId}","amount_minor":${inst.installmentAmountMinor},"currency":"${inst.currency}","type":"expense"}',
+                payloadJson: jsonEncode({
+                  'id': txId,
+                  'account_id': inst.accountId,
+                  'amount_minor': inst.installmentAmountMinor,
+                  'currency': inst.currency,
+                  'type': 'expense',
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -218,8 +228,11 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncEntityName: 'installments',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson:
-                    '{"id":"$id","paidCount":$nextPaidCount,"isCompleted":$isCompleted}',
+                payloadJson: jsonEncode({
+                  'id': id,
+                  'paidCount': nextPaidCount,
+                  'isCompleted': isCompleted,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -336,8 +349,12 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                   syncEntityName: 'transactions',
                   entityId: txId,
                   operation: 'INSERT',
-                  payloadJson:
-                      '{"id":"$txId","account_id":"${inst.accountId}","amount_minor":${inst.installmentAmountMinor},"type":"expense"}',
+                  payloadJson: jsonEncode({
+                    'id': txId,
+                    'account_id': inst.accountId,
+                    'amount_minor': inst.installmentAmountMinor,
+                    'type': 'expense',
+                  }),
                   idempotencyKey: _uuid.v4(),
                   queuedAt: now,
                 ),
@@ -366,8 +383,11 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncEntityName: 'installments',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson:
-                    '{"id":"$id","paidRemaining":$remainingMinor,"count":$remainingCount}',
+                payloadJson: jsonEncode({
+                  'id': id,
+                  'paidRemaining': remainingMinor,
+                  'count': remainingCount,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -410,8 +430,11 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
               syncEntityName: 'installments',
               entityId: installment.id,
               operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"${installment.id}","title":"${installment.title}","total":${installment.totalAmount.minorUnits}}',
+              payloadJson: jsonEncode({
+                'id': installment.id,
+                'title': installment.title,
+                'total': installment.totalAmount.minorUnits,
+              }),
               idempotencyKey: _uuid.v4(),
               queuedAt: now,
             ),
@@ -533,8 +556,11 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 syncEntityName: 'installments',
                 entityId: inst.id,
                 operation: 'UPDATE',
-                payloadJson:
-                    '{"id":"${inst.id}","deletedPayment":$paymentId,"paidCount":$newPaidCount}',
+                payloadJson: jsonEncode({
+                  'id': inst.id,
+                  'deletedPayment': paymentId,
+                  'paidCount': newPaidCount,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),

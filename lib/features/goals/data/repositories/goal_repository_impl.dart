@@ -165,31 +165,36 @@ class GoalRepositoryImpl implements GoalRepository {
   Future<Result<void>> updateGoal(GoalEntity goal) async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      await (_db.update(
-        _db.financialGoalsTable,
-      )..where((tbl) => tbl.id.equals(goal.id))).write(
-        FinancialGoalsTableCompanion(
-          name: Value(goal.name),
-          targetAmountMinor: Value(goal.targetAmount.minorUnits),
-          targetDate: Value(goal.targetDate?.millisecondsSinceEpoch),
-          notes: Value(goal.notes),
-          updatedAt: Value(now),
-        ),
-      );
+      await _db.transaction(() async {
+        await (_db.update(
+          _db.financialGoalsTable,
+        )..where((tbl) => tbl.id.equals(goal.id))).write(
+          FinancialGoalsTableCompanion(
+            name: Value(goal.name),
+            targetAmountMinor: Value(goal.targetAmount.minorUnits),
+            targetDate: Value(goal.targetDate?.millisecondsSinceEpoch),
+            notes: Value(goal.notes),
+            updatedAt: Value(now),
+          ),
+        );
 
-      await _db
-          .into(_db.syncQueueTable)
-          .insert(
-            SyncQueueTableCompanion.insert(
-              syncEntityName: 'goals',
-              entityId: goal.id,
-              operation: 'UPDATE',
-              payloadJson:
-                  '{"id":"${goal.id}","target":${goal.targetAmount.minorUnits}}',
-              idempotencyKey: _uuid.v4(),
-              queuedAt: now,
-            ),
-          );
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'financial_goals',
+                entityId: goal.id,
+                operation: 'UPDATE',
+                payloadJson: jsonEncode({
+                  'id': goal.id,
+                  'name': goal.name,
+                  'target': goal.targetAmount.minorUnits,
+                }),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
 
       return const Success(null);
     } catch (e) {
