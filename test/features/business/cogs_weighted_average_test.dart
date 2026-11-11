@@ -40,12 +40,13 @@ void main() {
   Future<ProductEntity> seedProduct({
     String id = 'p-1',
     double stock = 0,
+    int purchasePriceMinor = 1000000,
   }) async {
     final now = DateTime.now();
     final product = ProductEntity(
       id: id,
       name: 'کالای تست',
-      purchasePrice: Money.fromMinor(1000000, Currency.irr),
+      purchasePrice: Money.fromMinor(purchasePriceMinor, Currency.irr),
       sellingPrice: Money.fromMinor(1500000, Currency.irr),
       currentStock: stock,
       createdAt: now,
@@ -219,10 +220,10 @@ void main() {
     expect(voucher.isBalanced, isTrue);
   });
 
-  test('sale of a never-purchased product omits COGS legs (still balanced)',
+  test('sale of a zero-cost product omits COGS legs (still balanced)',
       () async {
     final now = DateTime.now();
-    await seedProduct(stock: 3); // avgCostMinor = 0
+    await seedProduct(stock: 3, purchasePriceMinor: 0); // avgCostMinor = 0
     await repo.createContact(
       ContactEntity(
         id: 'cust-2',

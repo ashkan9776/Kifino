@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
@@ -348,44 +350,67 @@ class BusinessRepositoryImpl implements BusinessRepository {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       final pId = product.id.isEmpty ? _uuid.v4() : product.id;
+      final initialAvgCost = product.avgCostMinor > 0
+          ? product.avgCostMinor
+          : product.purchasePrice.minorUnits;
 
-      await _db
-          .into(_db.productsTable)
-          .insert(
-            ProductsTableCompanion.insert(
-              id: pId,
-              name: product.name,
-              sku: Value(product.sku),
-              barcode: Value(product.barcode),
-              description: Value(product.description),
-              unit: Value(product.unit),
-              secondaryUnit: Value(product.secondaryUnit),
-              conversionFactor: Value(product.conversionFactor),
-              purchasePriceMinor: Value(product.purchasePrice.minorUnits),
-              sellingPriceMinor: product.sellingPrice.minorUnits,
-              currency: product.sellingPrice.currency.code,
-              currentStock: Value(product.currentStock),
-              lowStockThreshold: Value(product.lowStockThreshold),
-              supplierId: Value(product.supplierId),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
+      await _db.transaction(() async {
+        await _db
+            .into(_db.productsTable)
+            .insert(
+              ProductsTableCompanion.insert(
+                id: pId,
+                name: product.name,
+                sku: Value(product.sku),
+                barcode: Value(product.barcode),
+                description: Value(product.description),
+                unit: Value(product.unit),
+                secondaryUnit: Value(product.secondaryUnit),
+                conversionFactor: Value(product.conversionFactor),
+                purchasePriceMinor: Value(product.purchasePrice.minorUnits),
+                sellingPriceMinor: product.sellingPrice.minorUnits,
+                currency: product.sellingPrice.currency.code,
+                currentStock: Value(product.currentStock),
+                lowStockThreshold: Value(product.lowStockThreshold),
+                avgCostMinor: Value(initialAvgCost),
+                supplierId: Value(product.supplierId),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      await _db
-          .into(_db.syncQueueTable)
-          .insert(
-            SyncQueueTableCompanion.insert(
-              syncEntityName: 'products',
-              entityId: pId,
-              operation: 'INSERT',
-              payloadJson: '{"id":"$pId","name":"${product.name}"}',
-              idempotencyKey: _uuid.v4(),
-              queuedAt: now,
-            ),
-          );
+        if (product.currentStock > 0) {
+          await _db
+              .into(_db.inventoryLogsTable)
+              .insert(
+                InventoryLogsTableCompanion.insert(
+                  id: _uuid.v4(),
+                  productId: pId,
+                  changeQuantity: product.currentStock,
+                  movementType: InventoryMovementType.adjustment.code,
+                  costPerUnitMinor: Value(product.purchasePrice.minorUnits),
+                  notes: const Value('موجودی اولیه زمان تعریف کالا'),
+                  createdAt: now,
+                  updatedAt: now,
+                ),
+              );
+        }
 
-      return Success(product.copyWith(id: pId));
+        await _db
+            .into(_db.syncQueueTable)
+            .insert(
+              SyncQueueTableCompanion.insert(
+                syncEntityName: 'products',
+                entityId: pId,
+                operation: 'INSERT',
+                payloadJson: jsonEncode({'id': pId, 'name': product.name}),
+                idempotencyKey: _uuid.v4(),
+                queuedAt: now,
+              ),
+            );
+      });
+
+      return Success(product.copyWith(id: pId, avgCostMinor: initialAvgCost));
     } catch (e) {
       return DatabaseFailure('ثبت محصول انجام نشد.').asFailure();
     }
@@ -788,44 +813,28 @@ class BusinessRepositoryImpl implements BusinessRepository {
           }
         }
 
-        // 4. Contact balance: sale charges, sales-return credits. A return
-        // ALWAYS credits the full total — regardless of how much of the
-        // original invoice was paid (a credit note nets against the debt,
-        // possibly pushing the balance negative = refund owed).
+        // 4. Contact balance: sale charges (+), sales-return credits (-),
+        // purchase records supplier payable (-).
         if (invoice.type == InvoiceType.sale &&
             invoice.remainingBalance.minorUnits > 0) {
-          final contact = await (_db.select(
-            _db.businessContactsTable,
-          )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
-          if (contact != null) {
-            final delta = invoice.remainingBalance.minorUnits;
-            final newBalance = contact.outstandingBalanceMinor + delta;
-            await (_db.update(
-              _db.businessContactsTable,
-            )..where((t) => t.id.equals(contact.id))).write(
-              BusinessContactsTableCompanion(
-                outstandingBalanceMinor: Value(newBalance),
-                updatedAt: Value(now),
-              ),
-            );
-          }
-        }
-        if (invoice.type == InvoiceType.salesReturn) {
-          final contact = await (_db.select(
-            _db.businessContactsTable,
-          )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
-          if (contact != null) {
-            await (_db.update(
-              _db.businessContactsTable,
-            )..where((t) => t.id.equals(contact.id))).write(
-              BusinessContactsTableCompanion(
-                outstandingBalanceMinor: Value(
-                  contact.outstandingBalanceMinor - invoice.total.minorUnits,
-                ),
-                updatedAt: Value(now),
-              ),
-            );
-          }
+          await _adjustContactBalance(
+            invoice.contactId,
+            invoice.remainingBalance.minorUnits,
+            now,
+          );
+        } else if (invoice.type == InvoiceType.salesReturn) {
+          await _adjustContactBalance(
+            invoice.contactId,
+            -invoice.total.minorUnits,
+            now,
+          );
+        } else if (invoice.type == InvoiceType.purchase &&
+            invoice.remainingBalance.minorUnits > 0) {
+          await _adjustContactBalance(
+            invoice.contactId,
+            -invoice.remainingBalance.minorUnits,
+            now,
+          );
         }
 
         // 5. Outbox Sync Record
@@ -836,8 +845,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 syncEntityName: 'invoices',
                 entityId: invId,
                 operation: 'INSERT',
-                payloadJson:
-                    '{"id":"$invId","number":"${invoice.invoiceNumber}","total":${invoice.total.minorUnits}}',
+                payloadJson: jsonEncode({
+                  'id': invId,
+                  'number': invoice.invoiceNumber,
+                  'total': invoice.total.minorUnits,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -848,6 +860,28 @@ class BusinessRepositoryImpl implements BusinessRepository {
     } catch (e) {
       return DatabaseFailure('ثبت فاکتور انجام نشد.').asFailure();
     }
+  }
+
+  Future<void> _adjustContactBalance(
+    String contactId,
+    int deltaMinor,
+    int now,
+  ) async {
+    if (deltaMinor == 0) return;
+    final contact = await (_db.select(
+      _db.businessContactsTable,
+    )..where((t) => t.id.equals(contactId))).getSingleOrNull();
+    if (contact == null) return;
+    await (_db.update(
+      _db.businessContactsTable,
+    )..where((t) => t.id.equals(contact.id))).write(
+      BusinessContactsTableCompanion(
+        outstandingBalanceMinor: Value(
+          contact.outstandingBalanceMinor + deltaMinor,
+        ),
+        updatedAt: Value(now),
+      ),
+    );
   }
 
   // ── Invoice side-effects unification (P0-3) ──
@@ -940,23 +974,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
       final unpaid = (totalMinor - paidMinor).clamp(0, 1 << 62);
       if (unpaid > 0) {
-        final contact = await (_db.select(
-          _db.businessContactsTable,
-        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
-        if (contact != null) {
-          final reverted = (contact.outstandingBalanceMinor - unpaid).clamp(
-            0,
-            double.maxFinite.toInt(),
-          );
-          await (_db.update(
-            _db.businessContactsTable,
-          )..where((tbl) => tbl.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor: Value(reverted),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        await _adjustContactBalance(contactId, -unpaid, now);
       }
     } else if (invoiceType == InvoiceType.salesReturn.code) {
       // Reversing a RETURN (edit/cancel): stock goes back out, the customer
@@ -998,22 +1016,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
       }
 
       // A return credited the FULL total — reversing re-charges it all.
-      final creditAmount = totalMinor;
-      if (creditAmount > 0) {
-        final contact = await (_db.select(
-          _db.businessContactsTable,
-        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
-        if (contact != null) {
-          await (_db.update(
-            _db.businessContactsTable,
-          )..where((tbl) => tbl.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor:
-                  Value(contact.outstandingBalanceMinor + creditAmount),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+      if (totalMinor > 0) {
+        await _adjustContactBalance(contactId, totalMinor, now);
       }
     } else if (invoiceType == InvoiceType.purchase.code) {
       for (final item in items) {
@@ -1050,6 +1054,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 updatedAt: now,
               ),
             );
+      }
+
+      final unpaid = (totalMinor - paidMinor).clamp(0, 1 << 62);
+      if (unpaid > 0) {
+        await _adjustContactBalance(contactId, unpaid, now);
       }
     }
 
@@ -1104,21 +1113,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
       }
 
       if (remainingMinor > 0) {
-        final contact = await (_db.select(
-          _db.businessContactsTable,
-        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
-        if (contact != null) {
-          await (_db.update(
-            _db.businessContactsTable,
-          )..where((tbl) => tbl.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor: Value(
-                contact.outstandingBalanceMinor + remainingMinor,
-              ),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        await _adjustContactBalance(contactId, remainingMinor, now);
       }
     } else if (type == InvoiceType.salesReturn) {
       // Edit-path application of a RETURN: stock comes back in (avg cost
@@ -1161,21 +1156,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
       }
 
       if (totalMinor > 0) {
-        final contact = await (_db.select(
-          _db.businessContactsTable,
-        )..where((tbl) => tbl.id.equals(contactId))).getSingleOrNull();
-        if (contact != null) {
-          await (_db.update(
-            _db.businessContactsTable,
-          )..where((tbl) => tbl.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor: Value(
-                contact.outstandingBalanceMinor - totalMinor,
-              ),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        await _adjustContactBalance(contactId, -totalMinor, now);
       }
     } else if (type == InvoiceType.purchase) {
       for (final item in items) {
@@ -1226,6 +1207,10 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 updatedAt: now,
               ),
             );
+      }
+
+      if (remainingMinor > 0) {
+        await _adjustContactBalance(contactId, -remainingMinor, now);
       }
     }
   }
@@ -1551,9 +1536,38 @@ class BusinessRepositoryImpl implements BusinessRepository {
         final invoice = await (_db.select(
           _db.invoicesTable,
         )..where((t) => t.id.equals(id))).getSingleOrNull();
-        if (invoice == null) throw Exception('Invoice not found');
+        if (invoice == null || invoice.deletedAt != null) {
+          throw StateError('فاکتور پیدا نشد.');
+        }
+        if (invoice.status == InvoiceStatus.cancelled.code) {
+          throw StateError('ثبت پرداخت برای فاکتور لغو‌شده مجاز نیست.');
+        }
+        if (invoice.type == InvoiceType.quote.code) {
+          throw StateError('ثبت پرداخت برای پیش‌فاکتور مجاز نیست.');
+        }
 
-        final newPaid = invoice.paidMinor + paymentAmount.minorUnits;
+        final invCurrency = Currency.fromCode(invoice.currency);
+        Money effectivePayment = paymentAmount;
+        if (effectivePayment.currency != invCurrency) {
+          if (effectivePayment.isCompatibleWith(invCurrency)) {
+            effectivePayment = effectivePayment.normalizeTo(invCurrency);
+          } else {
+            throw ArgumentError('ارز پرداخت با ارز فاکتور همخوانی ندارد.');
+          }
+        }
+
+        if (effectivePayment.minorUnits <= 0) {
+          throw ArgumentError('مبلغ پرداخت باید بیشتر از صفر باشد.');
+        }
+        final remaining = invoice.totalMinor - invoice.paidMinor;
+        if (remaining <= 0) {
+          throw StateError('این فاکتور قبلاً به طور کامل تسویه شده است.');
+        }
+        if (effectivePayment.minorUnits > remaining) {
+          throw ArgumentError('مبلغ پرداخت نمی‌تواند از مانده فاکتور بیشتر باشد.');
+        }
+
+        final newPaid = invoice.paidMinor + effectivePayment.minorUnits;
         final isCompleted = newPaid >= invoice.totalMinor;
         final newStatus = isCompleted
             ? InvoiceStatus.paid.code
@@ -1569,21 +1583,19 @@ class BusinessRepositoryImpl implements BusinessRepository {
           ),
         );
 
-        // Reduce contact outstanding balance
-        final contact = await (_db.select(
-          _db.businessContactsTable,
-        )..where((t) => t.id.equals(invoice.contactId))).getSingleOrNull();
-        if (contact != null) {
-          final newContactBalance =
-              (contact.outstandingBalanceMinor - paymentAmount.minorUnits)
-                  .clamp(0, double.maxFinite.toInt());
-          await (_db.update(
-            _db.businessContactsTable,
-          )..where((t) => t.id.equals(contact.id))).write(
-            BusinessContactsTableCompanion(
-              outstandingBalanceMinor: Value(newContactBalance),
-              updatedAt: Value(now),
-            ),
+        // Update contact balance proportionally to invoice direction:
+        // sale reduces receivable (-), purchase settles payable (+).
+        if (invoice.type == InvoiceType.purchase.code) {
+          await _adjustContactBalance(
+            invoice.contactId,
+            effectivePayment.minorUnits,
+            now,
+          );
+        } else if (invoice.type == InvoiceType.sale.code) {
+          await _adjustContactBalance(
+            invoice.contactId,
+            -effectivePayment.minorUnits,
+            now,
           );
         }
 
@@ -1594,8 +1606,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
                 syncEntityName: 'invoices',
                 entityId: id,
                 operation: 'UPDATE',
-                payloadJson:
-                    '{"id":"$id","payment":${paymentAmount.minorUnits},"newPaid":$newPaid}',
+                payloadJson: jsonEncode({
+                  'id': id,
+                  'payment': effectivePayment.minorUnits,
+                  'newPaid': newPaid,
+                }),
                 idempotencyKey: _uuid.v4(),
                 queuedAt: now,
               ),
@@ -1604,6 +1619,10 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
       return const Success(null);
     } catch (e) {
+      if (e is ArgumentError) {
+        return DatabaseFailure(e.message.toString()).asFailure();
+      }
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
       return DatabaseFailure('ثبت پرداخت انجام نشد. دوباره تلاش کنید.')
           .asFailure();
     }
@@ -1723,10 +1742,16 @@ class BusinessRepositoryImpl implements BusinessRepository {
       (List<InvoiceEntity> salesInvoices, List<ProductEntity> products) {
         int totalSalesMinor = 0;
         int unpaidMinor = 0;
+        int activeInvoicesCount = 0;
 
         for (final inv in salesInvoices) {
+          if (inv.status == InvoiceStatus.cancelled ||
+              inv.status == InvoiceStatus.draft) {
+            continue;
+          }
           totalSalesMinor += inv.total.minorUnits;
           unpaidMinor += inv.remainingBalance.minorUnits;
+          activeInvoicesCount++;
         }
 
         final lowStock = products.where((p) => p.isLowStock).toList();
@@ -1736,7 +1761,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
           unpaidReceivables: Money.fromMinor(unpaidMinor, currency),
           activeProductsCount: products.length,
           lowStockCount: lowStock.length,
-          totalInvoicesCount: salesInvoices.length,
+          totalInvoicesCount: activeInvoicesCount,
           lowStockProducts: lowStock,
         );
       },

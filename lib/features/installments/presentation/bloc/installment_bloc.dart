@@ -321,19 +321,19 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     final result = await _repository.createInstallment(event.installment);
-    result.fold(
+    await result.fold(
       onSuccess: (created) => _scheduleDueReminder(created),
-      onFailure: (failure) =>
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
 
   /// Schedules the next due-date reminder. Fires at 09:00 local time
   /// on the due date.
-  void _scheduleDueReminder(InstallmentEntity installment) {
+  Future<void> _scheduleDueReminder(InstallmentEntity installment) async {
     final due = installment.nextDueDate;
     final reminderDate = DateTime(due.year, due.month, due.day, 9, 0);
-    _notifications.scheduleNotification(
+    await _notifications.scheduleNotification(
       title: 'قسط «${installment.title}» سررسید شد',
       body: 'قسط بعدی وام ${installment.title} سررسید شد.',
       type: NotificationType.installmentDue,
@@ -347,11 +347,26 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     final result = await _repository.payNextInstallment(event.id);
-    result.fold(
-      onSuccess: (_) => _emitSuccess(emit, 'قسط پرداخت شد', op: 'pay'),
-      onFailure: (failure) =>
-          _emitFailurePreservingLoaded(emit, failure.message),
-    );
+    if (result.isFailure) {
+      _emitFailurePreservingLoaded(emit, result.failureOrNull!.message);
+      return;
+    }
+
+    final listRes = await _repository.getInstallments();
+    final updatedList = listRes.dataOrNull;
+    if (updatedList != null) {
+      _lastInstallments = updatedList;
+      _hasLoaded = true;
+      final updated = updatedList.where((i) => i.id == event.id).firstOrNull;
+      if (updated != null) {
+        if (updated.isCompleted) {
+          await _notifications.cancelScheduled(event.id);
+        } else {
+          await _scheduleDueReminder(updated);
+        }
+      }
+    }
+    _emitSuccess(emit, 'قسط پرداخت شد', op: 'pay');
   }
 
   Future<void> _onDeleteSubmitted(
@@ -359,12 +374,14 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     final result = await _repository.deleteInstallment(event.id);
-    result.fold(
-      onSuccess: (_) {
-        _notifications.cancelScheduled(event.id);
+    await result.fold(
+      onSuccess: (_) async {
+        await _notifications.cancelScheduled(event.id);
+        _lastInstallments =
+            _lastInstallments.where((i) => i.id != event.id).toList();
         _emitSuccess(emit, 'قسط حذف شد', op: 'delete');
       },
-      onFailure: (failure) =>
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
@@ -374,12 +391,12 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     final result = await _repository.updateInstallment(event.installment);
-    result.fold(
-      onSuccess: (_) {
-        _scheduleDueReminder(event.installment);
+    await result.fold(
+      onSuccess: (_) async {
+        await _scheduleDueReminder(event.installment);
         _emitSuccess(emit, 'تغییرات ذخیره شد', op: 'update');
       },
-      onFailure: (failure) =>
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
@@ -389,13 +406,21 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     Emitter<InstallmentState> emit,
   ) async {
     final result = await _repository.payRemaining(event.id);
-    result.fold(
-      onSuccess: (_) => _emitSuccess(
-        emit,
-        'تسویه کامل انجام شد',
-        op: 'payRemaining',
-      ),
-      onFailure: (failure) =>
+    await result.fold(
+      onSuccess: (_) async {
+        await _notifications.cancelScheduled(event.id);
+        final listRes = await _repository.getInstallments();
+        if (listRes.dataOrNull != null) {
+          _lastInstallments = listRes.dataOrNull!;
+          _hasLoaded = true;
+        }
+        _emitSuccess(
+          emit,
+          'تسویه کامل انجام شد',
+          op: 'payRemaining',
+        );
+      },
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }

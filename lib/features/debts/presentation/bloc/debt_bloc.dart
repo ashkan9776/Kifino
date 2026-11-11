@@ -198,9 +198,17 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     Emitter<DebtState> emit,
   ) async {
     final result = await _repository.addPayment(event.id, event.amount);
-    result.fold(
-      onSuccess: (_) {},
-      onFailure: (failure) =>
+    await result.fold(
+      onSuccess: (_) async {
+        final listRes = await _repository.getDebts();
+        final updated = listRes.dataOrNull
+            ?.where((d) => d.id == event.id)
+            .firstOrNull;
+        if (updated != null && updated.isSettled) {
+          await _notifications.cancelScheduled(event.id);
+        }
+      },
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }
@@ -210,9 +218,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     Emitter<DebtState> emit,
   ) async {
     final result = await _repository.deleteDebt(event.id);
-    result.fold(
+    await result.fold(
       onSuccess: (_) => _notifications.cancelScheduled(event.id),
-      onFailure: (failure) =>
+      onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),
     );
   }

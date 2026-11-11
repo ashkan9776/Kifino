@@ -894,11 +894,18 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                       ],
                     ),
                     const SizedBox(height: 4),
-                    if (contact.outstandingBalance.minorUnits > 0)
+                    if (contact.outstandingBalance.minorUnits != 0)
                       AppMoneyText(
-                        money: contact.outstandingBalance,
+                        money: contact.outstandingBalance.minorUnits < 0
+                            ? Money.fromMinor(
+                                -contact.outstandingBalance.minorUnits,
+                                contact.outstandingBalance.currency,
+                              )
+                            : contact.outstandingBalance,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.warning,
+                          color: contact.outstandingBalance.minorUnits < 0
+                              ? AppColors.expense
+                              : AppColors.warning,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

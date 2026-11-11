@@ -119,6 +119,17 @@ class NotificationService {
     final id = const Uuid().v4();
     final now = DateTime.now();
 
+    if (referenceId != null && scheduledFor.isAfter(now)) {
+      await (db.delete(db.notificationsTable)
+            ..where(
+              (t) =>
+                  t.referenceId.equals(referenceId) &
+                  t.isRead.equals(false) &
+                  t.scheduledFor.isBiggerThanValue(now.millisecondsSinceEpoch),
+            ))
+          .go();
+    }
+
     // 1. Persist in database (audit + in-app notification center)
     await db
         .into(db.notificationsTable)
@@ -151,9 +162,11 @@ class NotificationService {
       iOS: darwinDetails,
     );
 
+    final osNotificationId = numericIdFor(referenceId ?? id);
+
     try {
       await _localNotifications.zonedSchedule(
-        id: numericIdFor(id),
+        id: osNotificationId,
         title: title,
         body: body,
         scheduledDate: tz.TZDateTime.from(scheduledFor, tz.local),
@@ -166,9 +179,15 @@ class NotificationService {
     }
   }
 
-  /// Cancels a previously scheduled OS reminder (e.g. after deletion).
+  /// Cancels a previously scheduled OS reminder (e.g. after deletion) and clears
+  /// pending unread audit rows linked to [entityId].
   Future<void> cancelScheduled(String entityId) async {
     try {
+      await (db.delete(db.notificationsTable)
+            ..where(
+              (t) => t.referenceId.equals(entityId) & t.isRead.equals(false),
+            ))
+          .go();
       _initTimeZonesSafely();
       await _localNotifications.cancel(id: numericIdFor(entityId));
     } catch (_) {}
@@ -209,11 +228,16 @@ class NotificationService {
 
   /// Removes one notification row and cancels its OS reminder if pending.
   Future<void> deleteNotification(String id) async {
+    final row = await (db.select(
+      db.notificationsTable,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     await (db.delete(
       db.notificationsTable,
     )..where((t) => t.id.equals(id))).go();
     try {
-      await _localNotifications.cancel(id: numericIdFor(id));
+      await _localNotifications.cancel(
+        id: numericIdFor(row?.referenceId ?? id),
+      );
     } catch (_) {}
   }
 

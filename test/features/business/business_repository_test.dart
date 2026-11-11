@@ -261,11 +261,13 @@ void main() {
         );
 
         final card = await repo.getProductCard('p-card');
-        expect(card.length, equals(2));
-        expect(card[0].inQuantity, equals(5.0));
-        expect(card[0].balance, equals(5.0));
-        expect(card[1].outQuantity, equals(2.0));
-        expect(card[1].balance, equals(3.0));
+        expect(card.length, equals(3));
+        expect(card[0].inQuantity, equals(10.0));
+        expect(card[0].balance, equals(10.0));
+        expect(card[1].inQuantity, equals(5.0));
+        expect(card[1].balance, equals(15.0));
+        expect(card[2].outQuantity, equals(2.0));
+        expect(card[2].balance, equals(13.0));
       },
     );
 
