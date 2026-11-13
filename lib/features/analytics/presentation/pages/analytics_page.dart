@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_budget_progress.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../accounts/presentation/bloc/accounts_bloc.dart';
@@ -85,7 +86,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         top: false,
         child: Scaffold(
           appBar: AppBar(title: Text(l10n.navAnalytics), elevation: 0),
-          body: BlocBuilder<TransactionBloc, TransactionState>(
+          body: AppResponsiveContainer(
+            maxWidth: 1150,
+            child: BlocBuilder<TransactionBloc, TransactionState>(
             builder: (context, txState) {
               if (txState is TransactionLoading) {
                 return const Padding(
@@ -286,8 +289,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _showCreateBudgetSheet(BuildContext context) async {
     final l10n = context.l10n;

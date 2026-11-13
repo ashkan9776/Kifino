@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../../core/widgets/app_transaction_tile.dart';
 import '../../../accounts/presentation/bloc/accounts_bloc.dart';
@@ -84,9 +85,11 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        children: [
+      body: AppResponsiveContainer(
+        maxWidth: 1150,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          children: [
           // Net Worth & Monthly Balance Card
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -728,8 +731,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildQuickOperations(
     BuildContext context,

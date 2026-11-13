@@ -17,6 +17,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../debts/domain/entities/debt_entity.dart';
 import '../../../debts/presentation/bloc/debt_bloc.dart';
@@ -113,7 +114,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
             icon: const Icon(Icons.add),
             label: Text(_getFabLabel(l10n)),
           ),
-          body: BlocListener<BusinessBloc, BusinessState>(
+          body: AppResponsiveContainer(
+            maxWidth: 1200,
+            child: BlocListener<BusinessBloc, BusinessState>(
             listenWhen: (prev, curr) =>
                 curr is BusinessInvoiceVoucherPending &&
                 prev is! BusinessInvoiceVoucherPending,
@@ -349,6 +352,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                 ),
               );
             },
+          ),
           ),
           ),
         ),

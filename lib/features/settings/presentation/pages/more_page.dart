@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/di/company_controller.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../widgets/company_switcher_sheet.dart';
 import '../../../../core/database/company_registry.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
@@ -77,9 +78,10 @@ class MorePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navMore)),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
+      body: AppResponsiveContainer.settings(
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
           _CompanyCard(isPersian: isPersian),
           const SizedBox(height: AppSpacing.lg),
           _SettingsSection(isPersian: isPersian),
@@ -208,8 +210,9 @@ class MorePage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 /// Company switcher entry (Phase 5): shows the active دفتر and opens the

@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../domain/entities/account_entity.dart';
 import '../bloc/accounts_bloc.dart';
@@ -300,7 +301,9 @@ class _AccountsPageState extends State<AccountsPage> {
             icon: const Icon(Icons.add_rounded),
             label: Text(isFa ? 'حساب جدید' : 'New account'),
           ),
-          body: BlocConsumer<AccountsBloc, AccountsState>(
+          body: AppResponsiveContainer(
+            maxWidth: 960,
+            child: BlocConsumer<AccountsBloc, AccountsState>(
             listener: (context, state) {
               if (state is AccountsFailure) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -533,6 +536,7 @@ class _AccountsPageState extends State<AccountsPage> {
               return const SizedBox.shrink();
             },
           ),
+        ),
         ),
       ),
     );

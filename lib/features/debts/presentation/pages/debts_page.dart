@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';
@@ -356,7 +357,9 @@ class _DebtsPageState extends State<DebtsPage> {
             onPressed: () => _showAddDebtDialog(context),
             child: const Icon(Icons.add),
           ),
-          body: BlocConsumer<DebtBloc, DebtState>(
+          body: AppResponsiveContainer(
+            maxWidth: 960,
+            child: BlocConsumer<DebtBloc, DebtState>(
             listenWhen: (prev, curr) => curr is DebtFailure,
             listener: (context, state) {
               if (state is DebtFailure) {
@@ -689,6 +692,7 @@ class _DebtsPageState extends State<DebtsPage> {
               );
             },
           ),
+        ),
         ),
       ),
     );

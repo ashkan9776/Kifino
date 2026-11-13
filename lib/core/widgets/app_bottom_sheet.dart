@@ -24,6 +24,7 @@ class AppBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
+    final isDesktop = mq.size.width >= 600;
     // Keyboard height beyond what SafeArea already covers, so we never
     // double-count the gesture nav bar inset.
     final extraKeyboard = (mq.viewInsets.bottom - mq.padding.bottom).clamp(
@@ -31,10 +32,21 @@ class AppBottomSheet extends StatelessWidget {
       double.infinity,
     );
 
-    return Padding(
+    final content = Padding(
       padding: EdgeInsets.only(bottom: extraKeyboard),
       child: SafeArea(top: false, child: child),
     );
+
+    if (isDesktop) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 580),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 }
 

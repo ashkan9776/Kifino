@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';
@@ -712,7 +713,9 @@ class InstallmentsPage extends StatelessWidget {
               onPressed: () => _showAddInstallmentDialog(context),
               child: const Icon(Icons.add),
             ),
-            body: BlocBuilder<InstallmentBloc, InstallmentState>(
+            body: AppResponsiveContainer(
+              maxWidth: 960,
+              child: BlocBuilder<InstallmentBloc, InstallmentState>(
               builder: (context, state) {
                 if (state is InstallmentLoading) {
                   return const Padding(
@@ -842,6 +845,7 @@ class InstallmentsPage extends StatelessWidget {
                 );
               },
             ),
+          ),
           ),
         ),
       ),

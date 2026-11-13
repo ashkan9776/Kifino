@@ -7,6 +7,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../../core/widgets/app_transaction_tile.dart';
 import '../bloc/transaction_bloc.dart';
@@ -48,7 +49,8 @@ class _ActivityPageState extends State<ActivityPage> {
         top: false,
         child: Scaffold(
           appBar: AppBar(title: Text(l10n.navActivity)),
-          body: BlocConsumer<TransactionBloc, TransactionState>(
+          body: AppResponsiveContainer.feed(
+            child: BlocConsumer<TransactionBloc, TransactionState>(
             listener: (context, state) {
               if (state is TransactionOperationSuccess &&
                   state.deletedTransactionId != null) {
@@ -184,6 +186,7 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

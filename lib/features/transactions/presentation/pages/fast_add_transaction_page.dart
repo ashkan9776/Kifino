@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_date_picker.dart';
 import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
@@ -477,10 +478,12 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                   onAction: () => context.push('/accounts'),
                 )
               : SafeArea(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
+                  child: AppResponsiveContainer.form(
+                    maxWidth: 680,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           children: [
                             if (!isEditing) ...[
@@ -788,6 +791,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                     ],
                   ),
                 ),
+              ),
         ),
       ),
     );

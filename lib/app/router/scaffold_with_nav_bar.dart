@@ -62,8 +62,14 @@ class ScaffoldWithNavBar extends StatelessWidget {
       ),
     ];
 
+    final isDesktopOrTablet =
+        MediaQuery.sizeOf(context).width >= AppSpacing.mobileBreakpoint;
+
     showModalBottomSheet<void>(
       context: context,
+      constraints: BoxConstraints(
+        maxWidth: isDesktopOrTablet ? 540 : double.infinity,
+      ),
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -119,6 +125,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
     final l10n = context.l10n;
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopOrTablet = width >= AppSpacing.mobileBreakpoint;
+    final isDesktop = width >= 1000.0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (isDesktopOrTablet) {
@@ -134,21 +141,93 @@ class ScaffoldWithNavBar extends StatelessWidget {
                 NavigationRail(
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: _onTap,
-                  labelType: NavigationRailLabelType.all,
+                  extended: isDesktop,
+                  minExtendedWidth: 230,
+                  labelType: isDesktop
+                      ? NavigationRailLabelType.none
+                      : NavigationRailLabelType.all,
                   leading: Padding(
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
+                      horizontal: AppSpacing.sm,
                     ),
-                    child: FloatingActionButton(
-                      onPressed: () => _openQuickAddSheet(context),
-                      elevation: 0,
-                      backgroundColor: isDark
-                          ? AppColors.primaryBlueDark
-                          : AppColors.primaryBlueLight,
-                      foregroundColor: isDark
-                          ? AppColors.darkBackground
-                          : Colors.white,
-                      child: const Icon(Icons.add_rounded, size: 28),
+                    child: isDesktop
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: KifinoPalette.actionLight,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_wallet_rounded,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    l10n.isPersian ? 'کیفینو' : 'Kifino',
+                                    style: AppTypography.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              SizedBox(
+                                width: 195,
+                                child: FilledButton.icon(
+                                  onPressed: () => _openQuickAddSheet(context),
+                                  icon: const Icon(Icons.add_rounded, size: 20),
+                                  label: Text(
+                                    l10n.isPersian
+                                        ? 'ثبت تراکنش'
+                                        : 'Add Transaction',
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : FloatingActionButton(
+                            onPressed: () => _openQuickAddSheet(context),
+                            elevation: 0,
+                            backgroundColor: isDark
+                                ? AppColors.primaryBlueDark
+                                : AppColors.primaryBlueLight,
+                            foregroundColor: isDark
+                                ? AppColors.darkBackground
+                                : Colors.white,
+                            child: const Icon(Icons.add_rounded, size: 28),
+                          ),
+                  ),
+                  trailing: Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: IconButton(
+                          tooltip: l10n.isPersian
+                              ? 'تنظیمات و بیشتر'
+                              : 'Settings & More',
+                          icon: const Icon(Icons.settings_outlined),
+                          onPressed: () => context.push('/more'),
+                        ),
+                      ),
                     ),
                   ),
                   destinations: [

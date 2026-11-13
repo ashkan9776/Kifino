@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "kifino" "\0"
+            VALUE "CompanyName", "ir.kifino" "\0"
+            VALUE "FileDescription", "کیفینو — حسابداری و مدیریت مالی هوشمند" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "kifino" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Kifino. All rights reserved." "\0"
             VALUE "OriginalFilename", "kifino.exe" "\0"
-            VALUE "ProductName", "kifino" "\0"
+            VALUE "ProductName", "کیفینو (Kifino)" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

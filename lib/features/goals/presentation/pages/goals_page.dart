@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_responsive_container.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 
 import '../../../../core/widgets/app_date_picker.dart';
@@ -374,7 +375,9 @@ class GoalsPage extends StatelessWidget {
                 onPressed: () => _showAddGoalSheet(context),
                 child: const Icon(Icons.add),
               ),
-              body: BlocBuilder<GoalBloc, GoalState>(
+              body: AppResponsiveContainer(
+                maxWidth: 960,
+                child: BlocBuilder<GoalBloc, GoalState>(
                 builder: (context, state) {
                   if (state is GoalLoading) {
                     return const Padding(
@@ -721,6 +724,7 @@ class GoalsPage extends StatelessWidget {
                   );
                 },
               ),
+            ),
             ),
           ),
         ),
