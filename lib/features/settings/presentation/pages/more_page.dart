@@ -82,137 +82,137 @@ class MorePage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-          _CompanyCard(isPersian: isPersian),
-          const SizedBox(height: AppSpacing.lg),
-          _SettingsSection(isPersian: isPersian),
-          const SizedBox(height: AppSpacing.lg),
+            _CompanyCard(isPersian: isPersian),
+            const SizedBox(height: AppSpacing.lg),
+            _SettingsSection(isPersian: isPersian),
+            const SizedBox(height: AppSpacing.lg),
 
-          // Enterprise Accounting OS Hero Card
-          Builder(
-            builder: (context) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              final accent = Theme.of(context).colorScheme.primary;
-              return AppCard(
-                onTap: () => context.push('/accounting'),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    borderRadius: AppSpacing.borderRadiusMd,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.indigo.withValues(alpha: 0.12),
-                        Colors.indigo.withValues(alpha: 0.04),
+            // Enterprise Accounting OS Hero Card
+            Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final accent = Theme.of(context).colorScheme.primary;
+                return AppCard(
+                  onTap: () => context.push('/accounting'),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      borderRadius: AppSpacing.borderRadiusMd,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.indigo.withValues(alpha: 0.12),
+                          Colors.indigo.withValues(alpha: 0.04),
+                        ],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.account_balance,
+                            color: accent,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      isPersian
+                                          ? 'سیستم حسابداری مالی (دوبل)'
+                                          : 'Financial Accounting OS',
+                                      style: AppTypography.titleMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: accent,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'PRO',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.darkBackground
+                                            : Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                isPersian
+                                    ? 'اسناد دوبل، کدینگ، دفاتر قانونی، تراز آزمایشی و ترازنامه'
+                                    : 'General ledger, journal vouchers, trial balance & statements',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.75),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_left_rounded, color: accent),
                       ],
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.account_balance,
-                          color: accent,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    isPersian
-                                        ? 'سیستم حسابداری مالی (دوبل)'
-                                        : 'Financial Accounting OS',
-                                    style: AppTypography.titleMedium.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: accent,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    'PRO',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? AppColors.darkBackground
-                                          : Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              isPersian
-                                  ? 'اسناد دوبل، کدینگ، دفاتر قانونی، تراز آزمایشی و ترازنامه'
-                                  : 'General ledger, journal vouchers, trial balance & statements',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withValues(alpha: 0.75),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.chevron_left_rounded, color: accent),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          _SectionHeader(
-            label: isPersian ? 'مدیریت مالی' : 'Financial management',
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ...managementItems.map((item) => _MoreRow(item: item)),
-          const SizedBox(height: AppSpacing.lg),
-          _SectionHeader(label: isPersian ? 'سیستم' : 'System'),
-          const SizedBox(height: AppSpacing.sm),
-          ...systemItems.map((item) => _MoreRow(item: item)),
-          const SizedBox(height: AppSpacing.lg),
-          _MoreRow(
-            item: (
-              Icons.palette_outlined,
-              isPersian
-                  ? 'نمایش سیستم طراحی (توسعه‌دهنده)'
-                  : 'Design system showcase (dev)',
-              '/design-system',
+                );
+              },
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.lg),
+
+            _SectionHeader(
+              label: isPersian ? 'مدیریت مالی' : 'Financial management',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...managementItems.map((item) => _MoreRow(item: item)),
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(label: isPersian ? 'سیستم' : 'System'),
+            const SizedBox(height: AppSpacing.sm),
+            ...systemItems.map((item) => _MoreRow(item: item)),
+            const SizedBox(height: AppSpacing.lg),
+            _MoreRow(
+              item: (
+                Icons.palette_outlined,
+                isPersian
+                    ? 'نمایش سیستم طراحی (توسعه‌دهنده)'
+                    : 'Design system showcase (dev)',
+                '/design-system',
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 /// Company switcher entry (Phase 5): shows the active دفتر and opens the

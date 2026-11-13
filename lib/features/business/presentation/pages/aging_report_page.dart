@@ -34,8 +34,9 @@ class _AgingReportPageState extends State<AgingReportPage> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final result =
-        await sl<BusinessRepository>().getAgingReport(receivables: _receivables);
+    final result = await sl<BusinessRepository>().getAgingReport(
+      receivables: _receivables,
+    );
     if (!mounted) return;
     setState(() {
       _entries = result.dataOrNull ?? const [];
@@ -50,10 +51,7 @@ class _AgingReportPageState extends State<AgingReportPage> {
     final subtext = isDark ? AppColors.darkSubtext : AppColors.lightSubtext;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('گزارش سنی مطالبات'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('گزارش سنی مطالبات'), centerTitle: true),
       body: SafeArea(
         top: false,
         child: Column(
@@ -94,7 +92,9 @@ class _AgingReportPageState extends State<AgingReportPage> {
               Expanded(
                 child: AppEmptyState(
                   icon: Icons.hourglass_empty_rounded,
-                  title: _receivables ? 'مطالبی در جریان نیست' : 'بدهی در جریان نیست',
+                  title: _receivables
+                      ? 'مطالبی در جریان نیست'
+                      : 'بدهی در جریان نیست',
                   description: 'همه فاکتورهای این دسته تسویه شده‌اند.',
                 ),
               )
@@ -133,12 +133,12 @@ class _BucketHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget bucket(String label) => Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: subtext,
-            fontWeight: FontWeight.bold,
-          ),
-        );
+      label,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: subtext,
+        fontWeight: FontWeight.bold,
+      ),
+    );
     return Row(
       children: [
         Expanded(
@@ -178,8 +178,7 @@ class _AgingCard extends StatelessWidget {
     String label,
     int minor,
     Color color,
-  ) =>
-      (label: label, minor: minor, color: color);
+  ) => (label: label, minor: minor, color: color);
 
   @override
   Widget build(BuildContext context) {

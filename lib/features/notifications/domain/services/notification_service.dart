@@ -120,13 +120,12 @@ class NotificationService {
     final now = DateTime.now();
 
     if (referenceId != null && scheduledFor.isAfter(now)) {
-      await (db.delete(db.notificationsTable)
-            ..where(
-              (t) =>
-                  t.referenceId.equals(referenceId) &
-                  t.isRead.equals(false) &
-                  t.scheduledFor.isBiggerThanValue(now.millisecondsSinceEpoch),
-            ))
+      await (db.delete(db.notificationsTable)..where(
+            (t) =>
+                t.referenceId.equals(referenceId) &
+                t.isRead.equals(false) &
+                t.scheduledFor.isBiggerThanValue(now.millisecondsSinceEpoch),
+          ))
           .go();
     }
 
@@ -183,10 +182,9 @@ class NotificationService {
   /// pending unread audit rows linked to [entityId].
   Future<void> cancelScheduled(String entityId) async {
     try {
-      await (db.delete(db.notificationsTable)
-            ..where(
-              (t) => t.referenceId.equals(entityId) & t.isRead.equals(false),
-            ))
+      await (db.delete(db.notificationsTable)..where(
+            (t) => t.referenceId.equals(entityId) & t.isRead.equals(false),
+          ))
           .go();
       _initTimeZonesSafely();
       await _localNotifications.cancel(id: numericIdFor(entityId));

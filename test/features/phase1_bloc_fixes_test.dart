@@ -44,7 +44,9 @@ void main() {
       addTearDown(bloc.close);
 
       final now = DateTime.now();
-      await db.into(db.accountsTable).insert(
+      await db
+          .into(db.accountsTable)
+          .insert(
             AccountsTableCompanion.insert(
               id: 'acc-1',
               name: 'بانک',
@@ -64,10 +66,15 @@ void main() {
           id: 'inst-irr',
           title: 'وام ریالی',
           accountId: 'acc-1',
-          totalAmount: const Money(minorUnits: 10000000, currency: Currency.irr),
+          totalAmount: const Money(
+            minorUnits: 10000000,
+            currency: Currency.irr,
+          ),
           numberOfInstallments: 10,
-          installmentAmount:
-              const Money(minorUnits: 1000000, currency: Currency.irr),
+          installmentAmount: const Money(
+            minorUnits: 1000000,
+            currency: Currency.irr,
+          ),
           startDate: now,
           nextDueDate: now.add(const Duration(days: 30)),
           createdAt: now,
@@ -117,10 +124,14 @@ void main() {
           GoalEntity(
             id: 'g-1',
             name: 'هدف سفر',
-            targetAmount:
-                const Money(minorUnits: 20000000, currency: Currency.irr), // 2M Toman
-            currentAmount:
-                const Money(minorUnits: 5000000, currency: Currency.irr), // 500k Toman
+            targetAmount: const Money(
+              minorUnits: 20000000,
+              currency: Currency.irr,
+            ), // 2M Toman
+            currentAmount: const Money(
+              minorUnits: 5000000,
+              currency: Currency.irr,
+            ), // 500k Toman
             createdAt: now,
             updatedAt: now,
           ),
@@ -166,8 +177,10 @@ void main() {
           id: 'd-irr',
           contactName: 'بستانکار',
           type: DebtType.debt,
-          totalAmount:
-              const Money(minorUnits: 5000000, currency: Currency.irr), // 500k Toman
+          totalAmount: const Money(
+            minorUnits: 5000000,
+            currency: Currency.irr,
+          ), // 500k Toman
           createdAt: now,
           updatedAt: now,
         ),
@@ -216,10 +229,14 @@ void main() {
           category: AssetCategory.gold,
           quantity: 1,
           unit: 'گرم',
-          costBasis:
-              const Money(minorUnits: 40000000, currency: Currency.irr), // 4M Toman
-          currentValue:
-              const Money(minorUnits: 45000000, currency: Currency.irr), // 4.5M Toman
+          costBasis: const Money(
+            minorUnits: 40000000,
+            currency: Currency.irr,
+          ), // 4M Toman
+          currentValue: const Money(
+            minorUnits: 45000000,
+            currency: Currency.irr,
+          ), // 4.5M Toman
           purchaseDate: now,
           createdAt: now,
           updatedAt: now,
@@ -271,96 +288,108 @@ void main() {
   });
 
   group('Phase 1.4 — AccountingDocumentBloc filter preservation', () {
-    test('preserves active status and date filters after create, approve, delete', () async {
-      final repo = AccountingRepositoryImpl(db);
-      await repo.seedChartOfAccountsIfNotExists();
-      final cashId = (await repo.getSubjectByCode('011'))!.id;
-      final salesId = (await repo.getSubjectByCode('060'))!.id;
-      final bloc = AccountingDocumentBloc(repo);
-      addTearDown(bloc.close);
+    test(
+      'preserves active status and date filters after create, approve, delete',
+      () async {
+        final repo = AccountingRepositoryImpl(db);
+        await repo.seedChartOfAccountsIfNotExists();
+        final cashId = (await repo.getSubjectByCode('011'))!.id;
+        final salesId = (await repo.getSubjectByCode('060'))!.id;
+        final bloc = AccountingDocumentBloc(repo);
+        addTearDown(bloc.close);
 
-      final startFilter = DateTime(2026, 1, 1);
-      final endFilter = DateTime(2027, 12, 31);
-      final docDate = DateTime.now();
+        final startFilter = DateTime(2026, 1, 1);
+        final endFilter = DateTime(2027, 12, 31);
+        final docDate = DateTime.now();
 
-      bloc.add(
-        LoadAccountingDocuments(
-          startDate: startFilter,
-          endDate: endFilter,
-          status: DocumentStatus.draft,
-        ),
-      );
-      final initialLoaded = await bloc.stream.firstWhere(
-        (s) => s is AccountingDocumentLoaded,
-      ) as AccountingDocumentLoaded;
-      expect(initialLoaded.status, equals(DocumentStatus.draft));
-      expect(initialLoaded.startDate, equals(startFilter));
-      expect(initialLoaded.endDate, equals(endFilter));
-
-      // Create draft doc -> reload MUST keep draft status & date range
-      bloc.add(
-        CreateAccountingDocumentSubmitted(
-          AccountingDocumentEntity(
-            id: 'doc-draft-1',
-            number: 0,
-            date: docDate,
-            title: 'سند پیش‌نویس',
+        bloc.add(
+          LoadAccountingDocuments(
+            startDate: startFilter,
+            endDate: endFilter,
             status: DocumentStatus.draft,
-            createdAt: docDate,
-            updatedAt: docDate,
-            transactions: [
-              AccountingTransactionEntity(
-                id: '',
-                documentId: '',
-                subjectId: cashId,
-                debit: const Money(minorUnits: 50000, currency: Currency.toman),
-                credit: const Money.zero(),
-                description: 'د',
-                rowOrder: 1,
-                createdAt: docDate,
-                updatedAt: docDate,
-              ),
-              AccountingTransactionEntity(
-                id: '',
-                documentId: '',
-                subjectId: salesId,
-                debit: const Money.zero(),
-                credit:
-                    const Money(minorUnits: 50000, currency: Currency.toman),
-                description: 'ب',
-                rowOrder: 2,
-                createdAt: docDate,
-                updatedAt: docDate,
-              ),
-            ],
           ),
-        ),
-      );
+        );
+        final initialLoaded = await bloc.stream.firstWhere(
+          (s) => s is AccountingDocumentLoaded,
+        ) as AccountingDocumentLoaded;
+        expect(initialLoaded.status, equals(DocumentStatus.draft));
+        expect(initialLoaded.startDate, equals(startFilter));
+        expect(initialLoaded.endDate, equals(endFilter));
 
-      final afterCreate = await bloc.stream.firstWhere(
-        (s) => s is AccountingDocumentLoaded,
-      ) as AccountingDocumentLoaded;
-      expect(afterCreate.status, equals(DocumentStatus.draft));
-      expect(afterCreate.startDate, equals(startFilter));
-      expect(afterCreate.endDate, equals(endFilter));
-      expect(afterCreate.documents.length, equals(1));
+        // Create draft doc -> reload MUST keep draft status & date range
+        bloc.add(
+          CreateAccountingDocumentSubmitted(
+            AccountingDocumentEntity(
+              id: 'doc-draft-1',
+              number: 0,
+              date: docDate,
+              title: 'سند پیش‌نویس',
+              status: DocumentStatus.draft,
+              createdAt: docDate,
+              updatedAt: docDate,
+              transactions: [
+                AccountingTransactionEntity(
+                  id: '',
+                  documentId: '',
+                  subjectId: cashId,
+                  debit: const Money(
+                    minorUnits: 50000,
+                    currency: Currency.toman,
+                  ),
+                  credit: const Money.zero(),
+                  description: 'د',
+                  rowOrder: 1,
+                  createdAt: docDate,
+                  updatedAt: docDate,
+                ),
+                AccountingTransactionEntity(
+                  id: '',
+                  documentId: '',
+                  subjectId: salesId,
+                  debit: const Money.zero(),
+                  credit: const Money(
+                    minorUnits: 50000,
+                    currency: Currency.toman,
+                  ),
+                  description: 'ب',
+                  rowOrder: 2,
+                  createdAt: docDate,
+                  updatedAt: docDate,
+                ),
+              ],
+            ),
+          ),
+        );
 
-      // Approve doc -> reload MUST keep draft filter (now empty list since it's approved!)
-      bloc.add(ApproveAccountingDocumentSubmitted(afterCreate.documents.first.id));
-      final afterApprove = await bloc.stream.firstWhere(
-        (s) => s is AccountingDocumentLoaded,
-      ) as AccountingDocumentLoaded;
-      expect(afterApprove.status, equals(DocumentStatus.draft));
-      expect(afterApprove.startDate, equals(startFilter));
-      expect(afterApprove.documents, isEmpty);
+        final afterCreate = await bloc.stream.firstWhere(
+          (s) => s is AccountingDocumentLoaded,
+        ) as AccountingDocumentLoaded;
+        expect(afterCreate.status, equals(DocumentStatus.draft));
+        expect(afterCreate.startDate, equals(startFilter));
+        expect(afterCreate.endDate, equals(endFilter));
+        expect(afterCreate.documents.length, equals(1));
 
-      // Delete doc -> reload MUST keep filters
-      bloc.add(DeleteAccountingDocumentSubmitted(afterCreate.documents.first.id));
-      final afterDelete = await bloc.stream.firstWhere(
-        (s) => s is AccountingDocumentLoaded,
-      ) as AccountingDocumentLoaded;
-      expect(afterDelete.status, equals(DocumentStatus.draft));
-      expect(afterDelete.endDate, equals(endFilter));
-    });
+        // Approve doc -> reload MUST keep draft filter (now empty list since it's approved!)
+        bloc.add(
+          ApproveAccountingDocumentSubmitted(afterCreate.documents.first.id),
+        );
+        final afterApprove = await bloc.stream.firstWhere(
+          (s) => s is AccountingDocumentLoaded,
+        ) as AccountingDocumentLoaded;
+        expect(afterApprove.status, equals(DocumentStatus.draft));
+        expect(afterApprove.startDate, equals(startFilter));
+        expect(afterApprove.documents, isEmpty);
+
+        // Delete doc -> reload MUST keep filters
+        bloc.add(
+          DeleteAccountingDocumentSubmitted(afterCreate.documents.first.id),
+        );
+        final afterDelete = await bloc.stream.firstWhere(
+          (s) => s is AccountingDocumentLoaded,
+        ) as AccountingDocumentLoaded;
+        expect(afterDelete.status, equals(DocumentStatus.draft));
+        expect(afterDelete.endDate, equals(endFilter));
+      },
+    );
   });
 }

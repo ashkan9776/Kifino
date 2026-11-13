@@ -675,9 +675,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
       startDate: startDate,
       endDate: endDate,
       fiscalYearId: fiscalYearId,
-    ))
-        .where(_isFinalDoc)
-        .toList();
+    )).where(_isFinalDoc).toList();
 
     final List<AccountingTransactionEntity> allTxs = [];
     for (final doc in docs.reversed) {
@@ -707,9 +705,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
       final priorDocs = (await getDocuments(
         endDate: startDate.subtract(const Duration(milliseconds: 1)),
         fiscalYearId: fiscalYearId,
-      ))
-          .where(_isFinalDoc)
-          .toList();
+      )).where(_isFinalDoc).toList();
       for (final doc in priorDocs) {
         for (final tx in doc.transactions) {
           if (targetIds.contains(tx.subjectId)) {
@@ -724,9 +720,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
       startDate: startDate,
       endDate: endDate,
       fiscalYearId: fiscalYearId,
-    ))
-        .where(_isFinalDoc)
-        .toList();
+    )).where(_isFinalDoc).toList();
     // Sort ascending for ledger
     final sortedDocs = periodDocs.reversed.toList();
 
@@ -1503,9 +1497,10 @@ class AccountingRepositoryImpl implements AccountingRepository {
                   ) &
                   // Final documents only — posted must count too, and drafts
                   // must not (same rule as every other report).
-                  _db.accountingDocumentsTable.status.isIn(
-                    const ['approved', 'posted'],
-                  ) &
+                  _db.accountingDocumentsTable.status.isIn(const [
+                    'approved',
+                    'posted',
+                  ]) &
                   _db.accountingDocumentsTable.deletedAt.isNull(),
             ))
             .get();
@@ -1574,15 +1569,13 @@ class AccountingRepositoryImpl implements AccountingRepository {
       startDate: startDate,
       endDate: endDate,
       fiscalYearId: fiscalYearId,
-    ))
-        .where(_isFinalDoc)
-        .toList();
+    )).where(_isFinalDoc).toList();
     final nets = <String, int>{};
     for (final doc in docs) {
       for (final tx in doc.transactions) {
         nets[tx.subjectId] =
             (nets[tx.subjectId] ?? 0) +
-                (tx.debit.minorUnits - tx.credit.minorUnits);
+            (tx.debit.minorUnits - tx.credit.minorUnits);
       }
     }
     return nets;

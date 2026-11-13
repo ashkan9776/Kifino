@@ -181,9 +181,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(
-            l10n.isPersian
-                ? 'چسباندن پیامک بانکی'
-                : 'Paste Bank SMS',
+            l10n.isPersian ? 'چسباندن پیامک بانکی' : 'Paste Bank SMS',
           ),
           content: TextField(
             controller: smsController,
@@ -201,8 +199,7 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
               child: Text(l10n.cancel),
             ),
             FilledButton(
-              onPressed: () =>
-                  Navigator.of(ctx).pop(smsController.text.trim()),
+              onPressed: () => Navigator.of(ctx).pop(smsController.text.trim()),
               child: Text(
                 l10n.isPersian ? 'تحلیل و پر کردن فرم' : 'Parse & Fill',
               ),
@@ -484,314 +481,324 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                       children: [
                         Expanded(
                           child: ListView(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          children: [
-                            if (!isEditing) ...[
-                              OutlinedButton.icon(
-                                onPressed: _pasteBankSms,
-                                icon: const Icon(
-                                  Icons.content_paste_go_rounded,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  l10n.isPersian
-                                      ? 'چسباندن پیامک بانکی از کلیپبورد'
-                                      : 'Paste bank SMS from clipboard',
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                            ],
-
-                            // Segmented Control
-                            SegmentedButton<int>(
-                              segments: [
-                                ButtonSegment(
-                                  value: 0,
-                                  label: Text(l10n.expense),
-                                  icon: const Icon(Icons.arrow_upward_rounded),
-                                ),
-                                ButtonSegment(
-                                  value: 1,
-                                  label: Text(l10n.income),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            children: [
+                              if (!isEditing) ...[
+                                OutlinedButton.icon(
+                                  onPressed: _pasteBankSms,
                                   icon: const Icon(
-                                    Icons.arrow_downward_rounded,
+                                    Icons.content_paste_go_rounded,
+                                    size: 18,
                                   ),
-                                ),
-                                ButtonSegment(
-                                  value: 2,
-                                  label: Text(l10n.transfer),
-                                  icon: const Icon(Icons.swap_horiz_rounded),
-                                ),
-                              ],
-                              selected: {_selectedTypeIndex},
-                              onSelectionChanged: (set) {
-                                setState(() {
-                                  _selectedTypeIndex = set.first;
-                                  final newFiltered = _categories.where((cat) {
-                                    if (_selectedTypeIndex == 0) {
-                                      return cat.type == CategoryType.expense;
-                                    }
-                                    if (_selectedTypeIndex == 1) {
-                                      return cat.type == CategoryType.income;
-                                    }
-                                    return false;
-                                  }).toList();
-                                  if (newFiltered.isNotEmpty) {
-                                    _selectedCategoryId = newFiltered.first.id;
-                                  }
-                                });
-                                HapticFeedback.selectionClick();
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-
-                            // Amount Field
-                            AppAmountField(
-                              currency: currentCurrency,
-                              amountNotifier: _amountNotifier,
-                              signColor: typeColor,
-                              prefixSign: _selectedTypeIndex == 0
-                                  ? '-'
-                                  : (_selectedTypeIndex == 1 ? '+' : ''),
-                              onAmountMinorChanged: (value) {
-                                setState(() => _amountMinor = value);
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-
-                            // Quick Chips
-                            Wrap(
-                              spacing: AppSpacing.sm,
-                              children: _quickChipsToman.map((chipAmount) {
-                                final money = Money.fromMinor(
-                                  chipAmount,
-                                  currentCurrency,
-                                );
-                                return ActionChip(
                                   label: Text(
-                                    money.format(
-                                      includeSymbol: false,
-                                      usePersianDigits: l10n.isPersian,
+                                    l10n.isPersian
+                                        ? 'چسباندن پیامک بانکی از کلیپبورد'
+                                        : 'Paste bank SMS from clipboard',
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+
+                              // Segmented Control
+                              SegmentedButton<int>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: 0,
+                                    label: Text(l10n.expense),
+                                    icon: const Icon(
+                                      Icons.arrow_upward_rounded,
                                     ),
                                   ),
-                                  onPressed: () {
-                                    HapticFeedback.lightImpact();
-                                    setState(() {
-                                      _amountMinor += chipAmount;
-                                      _amountNotifier.value = _amountMinor;
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-
-                            // Category Selector (if not transfer). The section
-                            // stays visible even with zero categories so the
-                            // «+ مدیریت» chip can open the categories manager.
-                            if (_selectedTypeIndex != 2) ...[
-                              Text(
-                                l10n.selectCategory,
-                                style: AppTypography.labelLarge,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Wrap(
-                                spacing: AppSpacing.sm,
-                                runSpacing: AppSpacing.xs,
-                                children: [
-                                  ...filteredCategories.map((cat) {
-                                    final isSelected =
-                                        _selectedCategoryId == cat.id;
-                                    return ChoiceChip(
-                                      avatar: Icon(
-                                        CategoryIconAssets.resolve(
-                                          cat.iconCodePoint,
-                                        ),
-                                        size: 18,
-                                      ),
-                                      label: Text(cat.name),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(
-                                            () => _selectedCategoryId = cat.id,
-                                          );
-                                        }
-                                      },
-                                    );
-                                  }),
-                                  ActionChip(
-                                    avatar: const Icon(
-                                      Icons.add_rounded,
-                                      size: 16,
+                                  ButtonSegment(
+                                    value: 1,
+                                    label: Text(l10n.income),
+                                    icon: const Icon(
+                                      Icons.arrow_downward_rounded,
                                     ),
-                                    label: Text(
-                                      l10n.isPersian ? '+ مدیریت' : 'Manage',
-                                    ),
-                                    onPressed: () async {
-                                      await context.push('/categories');
-                                      if (mounted) await _reloadCategories();
-                                    },
+                                  ),
+                                  ButtonSegment(
+                                    value: 2,
+                                    label: Text(l10n.transfer),
+                                    icon: const Icon(Icons.swap_horiz_rounded),
                                   ),
                                 ],
+                                selected: {_selectedTypeIndex},
+                                onSelectionChanged: (set) {
+                                  setState(() {
+                                    _selectedTypeIndex = set.first;
+                                    final newFiltered = _categories.where((
+                                      cat,
+                                    ) {
+                                      if (_selectedTypeIndex == 0) {
+                                        return cat.type == CategoryType.expense;
+                                      }
+                                      if (_selectedTypeIndex == 1) {
+                                        return cat.type == CategoryType.income;
+                                      }
+                                      return false;
+                                    }).toList();
+                                    if (newFiltered.isNotEmpty) {
+                                      _selectedCategoryId =
+                                          newFiltered.first.id;
+                                    }
+                                  });
+                                  HapticFeedback.selectionClick();
+                                },
                               ),
                               const SizedBox(height: AppSpacing.lg),
-                            ],
 
-                            // Account Selector
-                            Text(
-                              _selectedTypeIndex == 2
-                                  ? 'از حساب مبدأ'
-                                  : l10n.selectAccount,
-                              style: AppTypography.labelLarge,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Wrap(
-                              spacing: AppSpacing.sm,
-                              children: _accounts.map((acc) {
-                                final isSelected = _selectedAccountId == acc.id;
-                                return ChoiceChip(
-                                  label: Text(
-                                    '${acc.name} (${acc.currentBalance.format()})',
-                                  ),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      setState(
-                                        () => _selectedAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-
-                            // Destination Account Selector (Transfer only)
-                            if (_selectedTypeIndex == 2) ...[
-                              Text(
-                                l10n.destinationAccount,
-                                style: AppTypography.labelLarge,
+                              // Amount Field
+                              AppAmountField(
+                                currency: currentCurrency,
+                                amountNotifier: _amountNotifier,
+                                signColor: typeColor,
+                                prefixSign: _selectedTypeIndex == 0
+                                    ? '-'
+                                    : (_selectedTypeIndex == 1 ? '+' : ''),
+                                onAmountMinorChanged: (value) {
+                                  setState(() => _amountMinor = value);
+                                },
                               ),
                               const SizedBox(height: AppSpacing.sm),
+
+                              // Quick Chips
                               Wrap(
                                 spacing: AppSpacing.sm,
-                                children: _accounts
-                                    .where((a) => a.id != _selectedAccountId)
-                                    .map((acc) {
+                                children: _quickChipsToman.map((chipAmount) {
+                                  final money = Money.fromMinor(
+                                    chipAmount,
+                                    currentCurrency,
+                                  );
+                                  return ActionChip(
+                                    label: Text(
+                                      money.format(
+                                        includeSymbol: false,
+                                        usePersianDigits: l10n.isPersian,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      HapticFeedback.lightImpact();
+                                      setState(() {
+                                        _amountMinor += chipAmount;
+                                        _amountNotifier.value = _amountMinor;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+
+                              // Category Selector (if not transfer). The section
+                              // stays visible even with zero categories so the
+                              // «+ مدیریت» chip can open the categories manager.
+                              if (_selectedTypeIndex != 2) ...[
+                                Text(
+                                  l10n.selectCategory,
+                                  style: AppTypography.labelLarge,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Wrap(
+                                  spacing: AppSpacing.sm,
+                                  runSpacing: AppSpacing.xs,
+                                  children: [
+                                    ...filteredCategories.map((cat) {
                                       final isSelected =
-                                          _selectedDestAccountId == acc.id;
+                                          _selectedCategoryId == cat.id;
                                       return ChoiceChip(
-                                        label: Text(acc.name),
+                                        avatar: Icon(
+                                          CategoryIconAssets.resolve(
+                                            cat.iconCodePoint,
+                                          ),
+                                          size: 18,
+                                        ),
+                                        label: Text(cat.name),
                                         selected: isSelected,
                                         onSelected: (selected) {
                                           if (selected) {
                                             setState(
-                                              () => _selectedDestAccountId =
-                                                  acc.id,
+                                              () =>
+                                                  _selectedCategoryId = cat.id,
                                             );
                                           }
                                         },
                                       );
-                                    })
-                                    .toList(),
-                              ),
-                              const SizedBox(height: AppSpacing.lg),
-                            ],
-
-                            // Date Selection Tile
-                            InkWell(
-                              onTap: () async {
-                                final picked = await showAppDatePicker(
-                                  context: context,
-                                  initialDate: _selectedDate,
-                                );
-                                if (picked != null) {
-                                  setState(() => _selectedDate = picked);
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color:
-                                        Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? AppColors.darkBorder
-                                        : AppColors.lightBorder,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.calendar_month_rounded,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          l10n.isPersian
-                                              ? 'تاریخ تراکنش'
-                                              : 'Transaction Date',
-                                          style: AppTypography.bodyMedium,
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      AppDateFormatter.format(
-                                        _selectedDate,
-                                        locale: l10n.localeName,
+                                    }),
+                                    ActionChip(
+                                      avatar: const Icon(
+                                        Icons.add_rounded,
+                                        size: 16,
                                       ),
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
+                                      label: Text(
+                                        l10n.isPersian ? '+ مدیریت' : 'Manage',
                                       ),
+                                      onPressed: () async {
+                                        await context.push('/categories');
+                                        if (mounted) await _reloadCategories();
+                                      },
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
 
-                            // Note Field
-                            TextField(
-                              controller: _noteController,
-                              decoration: InputDecoration(
-                                labelText: l10n.note,
-                                hintText: l10n.notePlaceholder,
-                                prefixIcon: const Icon(Icons.edit_note_rounded),
+                              // Account Selector
+                              Text(
+                                _selectedTypeIndex == 2
+                                    ? 'از حساب مبدأ'
+                                    : l10n.selectAccount,
+                                style: AppTypography.labelLarge,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: AppSpacing.sm),
+                              Wrap(
+                                spacing: AppSpacing.sm,
+                                children: _accounts.map((acc) {
+                                  final isSelected =
+                                      _selectedAccountId == acc.id;
+                                  return ChoiceChip(
+                                    label: Text(
+                                      '${acc.name} (${acc.currentBalance.format()})',
+                                    ),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        setState(
+                                          () => _selectedAccountId = acc.id,
+                                        );
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+
+                              // Destination Account Selector (Transfer only)
+                              if (_selectedTypeIndex == 2) ...[
+                                Text(
+                                  l10n.destinationAccount,
+                                  style: AppTypography.labelLarge,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Wrap(
+                                  spacing: AppSpacing.sm,
+                                  children: _accounts
+                                      .where((a) => a.id != _selectedAccountId)
+                                      .map((acc) {
+                                        final isSelected =
+                                            _selectedDestAccountId == acc.id;
+                                        return ChoiceChip(
+                                          label: Text(acc.name),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            if (selected) {
+                                              setState(
+                                                () => _selectedDestAccountId =
+                                                    acc.id,
+                                              );
+                                            }
+                                          },
+                                        );
+                                      })
+                                      .toList(),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
+
+                              // Date Selection Tile
+                              InkWell(
+                                onTap: () async {
+                                  final picked = await showAppDatePicker(
+                                    context: context,
+                                    initialDate: _selectedDate,
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _selectedDate = picked);
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppColors.darkBorder
+                                          : AppColors.lightBorder,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.calendar_month_rounded,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            l10n.isPersian
+                                                ? 'تاریخ تراکنش'
+                                                : 'Transaction Date',
+                                            style: AppTypography.bodyMedium,
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        AppDateFormatter.format(
+                                          _selectedDate,
+                                          locale: l10n.localeName,
+                                        ),
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+
+                              // Note Field
+                              TextField(
+                                controller: _noteController,
+                                decoration: InputDecoration(
+                                  labelText: l10n.note,
+                                  hintText: l10n.notePlaceholder,
+                                  prefixIcon: const Icon(
+                                    Icons.edit_note_rounded,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: AppButton(
-                          label: isEditing
-                              ? (l10n.isPersian
-                                    ? 'ذخیره تغییرات'
-                                    : 'Save changes')
-                              : l10n.save,
-                          onPressed: _onSave,
-                          width: double.infinity,
-                          variant: AppButtonVariant.primary,
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: AppButton(
+                            label: isEditing
+                                ? (l10n.isPersian
+                                      ? 'ذخیره تغییرات'
+                                      : 'Save changes')
+                                : l10n.save,
+                            onPressed: _onSave,
+                            width: double.infinity,
+                            variant: AppButtonVariant.primary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
         ),
       ),
     );

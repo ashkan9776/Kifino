@@ -199,7 +199,6 @@ class AccountingExportService {
     return _save('income-statement', [XlsxSheetData('صورت سود و زیان', rows)]);
   }
 
-
   /// ─── دفاتر قانونی (فرمت سازمان امور مالیاتی) ───
   ///
   /// The tax org's electronic-books format requires, per transaction line:
@@ -212,9 +211,11 @@ class AccountingExportService {
   /// شمول and موضوع columns share it.
   Future<String> exportLegalJournal({String? fiscalYearId}) async {
     final docs = (await _repository.getDocuments(fiscalYearId: fiscalYearId))
-        .where((d) =>
-            d.status == DocumentStatus.approved ||
-            d.status == DocumentStatus.posted)
+        .where(
+          (d) =>
+              d.status == DocumentStatus.approved ||
+              d.status == DocumentStatus.posted,
+        )
         .toList();
     final subjects = await _repository.getAllSubjects();
     String codeOf(String id) =>
@@ -249,7 +250,9 @@ class AccountingExportService {
         String kolName = '';
         if (kolCode.length >= 3) {
           final matches = subjects.where(
-            (s) => s.code == kolCode.substring(0, 3) && s.level == AccountingSubjectLevel.kol,
+            (s) =>
+                s.code == kolCode.substring(0, 3) &&
+                s.level == AccountingSubjectLevel.kol,
           );
           kolName = matches.isEmpty ? '' : matches.first.name;
         }
@@ -271,9 +274,7 @@ class AccountingExportService {
         ]);
       }
     }
-    return _save('legal-journal', [
-      XlsxSheetData('دفتر روزنامه قانونی', rows),
-    ]);
+    return _save('legal-journal', [XlsxSheetData('دفتر روزنامه قانونی', rows)]);
   }
 
   /// Legal GENERAL LEDGER: one row per moein account — kol/moein codes and

@@ -227,8 +227,7 @@ void main() {
         (s) =>
             s is DebtLoaded &&
             s.debts.any(
-              (d) =>
-                  d.id == 'debt-no-acc' && d.paidAmount.minorUnits == 100000,
+              (d) => d.id == 'debt-no-acc' && d.paidAmount.minorUnits == 100000,
             ),
       );
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -328,77 +327,80 @@ void main() {
       expect(txs, isEmpty);
     });
 
-    testWidgets('OptionalAccountSelector shows no-change option + compatible active accounts only', (tester) async {
-      final now = DateTime.now();
-      final accounts = [
-        AccountEntity(
-          id: 'a-toman',
-          name: 'بانک ملت',
-          type: AccountType.bankCard,
-          currency: Currency.toman,
-          initialBalance: const Money.fromMinor(100000, Currency.toman),
-          currentBalance: const Money.fromMinor(100000, Currency.toman),
-          createdAt: now,
-          updatedAt: now,
-        ),
-        AccountEntity(
-          id: 'a-usd',
-          name: 'حساب دلاری',
-          type: AccountType.savings,
-          currency: Currency.usd,
-          initialBalance: const Money.fromMinor(10000, Currency.usd),
-          currentBalance: const Money.fromMinor(10000, Currency.usd),
-          createdAt: now,
-          updatedAt: now,
-        ),
-        AccountEntity(
-          id: 'a-arch',
-          name: 'حساب بایگانی',
-          type: AccountType.bankCard,
-          currency: Currency.toman,
-          initialBalance: const Money.fromMinor(50000, Currency.toman),
-          currentBalance: const Money.fromMinor(50000, Currency.toman),
-          isArchived: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ];
+    testWidgets(
+      'OptionalAccountSelector shows no-change option + compatible active accounts only',
+      (tester) async {
+        final now = DateTime.now();
+        final accounts = [
+          AccountEntity(
+            id: 'a-toman',
+            name: 'بانک ملت',
+            type: AccountType.bankCard,
+            currency: Currency.toman,
+            initialBalance: const Money.fromMinor(100000, Currency.toman),
+            currentBalance: const Money.fromMinor(100000, Currency.toman),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          AccountEntity(
+            id: 'a-usd',
+            name: 'حساب دلاری',
+            type: AccountType.savings,
+            currency: Currency.usd,
+            initialBalance: const Money.fromMinor(10000, Currency.usd),
+            currentBalance: const Money.fromMinor(10000, Currency.usd),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          AccountEntity(
+            id: 'a-arch',
+            name: 'حساب بایگانی',
+            type: AccountType.bankCard,
+            currency: Currency.toman,
+            initialBalance: const Money.fromMinor(50000, Currency.toman),
+            currentBalance: const Money.fromMinor(50000, Currency.toman),
+            isArchived: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ];
 
-      String? selected;
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('fa'),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: OptionalAccountSelector(
-              accountsFuture: Future.value(Success(accounts)),
-              compatibleCurrency: Currency.toman,
-              selectedAccountId: selected,
-              label: 'برداشت از حساب (اختیاری)',
-              onChanged: (val) => selected = val,
+        String? selected;
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('fa'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: OptionalAccountSelector(
+                accountsFuture: Future.value(Success(accounts)),
+                compatibleCurrency: Currency.toman,
+                selectedAccountId: selected,
+                label: 'برداشت از حساب (اختیاری)',
+                onChanged: (val) => selected = val,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('بدون تغییر موجودی حساب'), findsOneWidget);
-      await tester.tap(find.byType(DropdownButtonFormField<String?>));
-      await tester.pumpAndSettle();
+        expect(find.text('بدون تغییر موجودی حساب'), findsOneWidget);
+        await tester.tap(find.byType(DropdownButtonFormField<String?>));
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('بانک ملت').last, findsOneWidget);
-      expect(find.textContaining('حساب دلاری'), findsNothing);
-      expect(find.textContaining('حساب بایگانی'), findsNothing);
+        expect(find.textContaining('بانک ملت').last, findsOneWidget);
+        expect(find.textContaining('حساب دلاری'), findsNothing);
+        expect(find.textContaining('حساب بایگانی'), findsNothing);
 
-      await tester.tap(find.textContaining('بانک ملت').last);
-      await tester.pumpAndSettle();
-      expect(selected, equals('a-toman'));
-    });
+        await tester.tap(find.textContaining('بانک ملت').last);
+        await tester.pumpAndSettle();
+        expect(selected, equals('a-toman'));
+      },
+    );
   });
 }

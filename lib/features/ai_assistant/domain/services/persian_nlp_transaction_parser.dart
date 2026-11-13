@@ -131,8 +131,10 @@ class PersianNlpTransactionParser {
     return text.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
-  static String _stripPunct(String token) =>
-      token.replaceAll(RegExp(r'^[.,،؛:!?()\[\]{}"\x27«»\-/+]+|[.,،؛:!?()\[\]{}"\x27«»\-/+]+$'), '');
+  static String _stripPunct(String token) => token.replaceAll(
+    RegExp(r'^[.,،؛:!?()\[\]{}"\x27«»\-/+]+|[.,،؛:!?()\[\]{}"\x27«»\-/+]+$'),
+    '',
+  );
 
   static bool _isAmountToken(String tok) {
     if (tok.isEmpty) return false;
@@ -477,7 +479,10 @@ class PersianNlpTransactionParser {
       }
       keptTokens.add(tokens[t]);
     }
-    var description = keptTokens.join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+    var description = keptTokens
+        .join(' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     if (description.isEmpty) {
       description = category;
     } else {

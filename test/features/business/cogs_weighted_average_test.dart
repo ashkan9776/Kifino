@@ -220,54 +220,56 @@ void main() {
     expect(voucher.isBalanced, isTrue);
   });
 
-  test('sale of a zero-cost product omits COGS legs (still balanced)',
-      () async {
-    final now = DateTime.now();
-    await seedProduct(stock: 3, purchasePriceMinor: 0); // avgCostMinor = 0
-    await repo.createContact(
-      ContactEntity(
-        id: 'cust-2',
-        name: 'مشتری دو',
-        type: ContactType.customer,
-        outstandingBalance: Money.zero(Currency.irr),
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+  test(
+    'sale of a zero-cost product omits COGS legs (still balanced)',
+    () async {
+      final now = DateTime.now();
+      await seedProduct(stock: 3, purchasePriceMinor: 0); // avgCostMinor = 0
+      await repo.createContact(
+        ContactEntity(
+          id: 'cust-2',
+          name: 'مشتری دو',
+          type: ContactType.customer,
+          outstandingBalance: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 
-    final unit = Money.fromMinor(900000, Currency.irr);
-    await repo.createInvoice(
-      InvoiceEntity(
-        id: 'inv-sale-2',
-        invoiceNumber: 'SALE-2',
-        contactId: 'cust-2',
-        type: InvoiceType.sale,
-        status: InvoiceStatus.sent,
-        issueDate: now,
-        dueDate: now,
-        subtotal: unit,
-        discount: Money.zero(Currency.irr),
-        tax: Money.zero(Currency.irr),
-        total: unit,
-        paidAmount: Money.zero(Currency.irr),
-        createdAt: now,
-        updatedAt: now,
-        items: [item('inv-sale-2', 'p-1', 1, 900000)],
-      ),
-    );
+      final unit = Money.fromMinor(900000, Currency.irr);
+      await repo.createInvoice(
+        InvoiceEntity(
+          id: 'inv-sale-2',
+          invoiceNumber: 'SALE-2',
+          contactId: 'cust-2',
+          type: InvoiceType.sale,
+          status: InvoiceStatus.sent,
+          issueDate: now,
+          dueDate: now,
+          subtotal: unit,
+          discount: Money.zero(Currency.irr),
+          tax: Money.zero(Currency.irr),
+          total: unit,
+          paidAmount: Money.zero(Currency.irr),
+          createdAt: now,
+          updatedAt: now,
+          items: [item('inv-sale-2', 'p-1', 1, 900000)],
+        ),
+      );
 
-    await voucherService.generateInvoiceVoucher(
-      (await repo.getInvoiceById('inv-sale-2')).dataOrNull!,
-    );
+      await voucherService.generateInvoiceVoucher(
+        (await repo.getInvoiceById('inv-sale-2')).dataOrNull!,
+      );
 
-    final docs = await accountingRepo.getDocuments();
-    final voucher = docs.firstWhere((d) => d.referenceId == 'inv-sale-2');
-    expect(
-      voucher.transactions.where((t) => t.subject?.code == '070001'),
-      isEmpty,
-    );
-    expect(voucher.isBalanced, isTrue);
-  });
+      final docs = await accountingRepo.getDocuments();
+      final voucher = docs.firstWhere((d) => d.referenceId == 'inv-sale-2');
+      expect(
+        voucher.transactions.where((t) => t.subject?.code == '070001'),
+        isEmpty,
+      );
+      expect(voucher.isBalanced, isTrue);
+    },
+  );
 
   test('کاردکس sale movement records the avg cost as costPerUnit', () async {
     final now = DateTime.now();
@@ -328,9 +330,9 @@ void main() {
     final saleEntry = card.lastWhere((e) => e.outQuantity > 0);
     expect(saleEntry.outQuantity, equals(1.0));
     // The movement's cost reference is the weighted avg, not list price.
-    final rows = await (db.select(db.inventoryLogsTable)
-          ..where((t) => t.referenceId.equals('inv-sale-9')))
-        .get();
+    final rows = await (db.select(
+      db.inventoryLogsTable,
+    )..where((t) => t.referenceId.equals('inv-sale-9'))).get();
     expect(rows.single.costPerUnitMinor, equals(1000000));
   });
 }

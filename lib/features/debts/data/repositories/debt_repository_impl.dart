@@ -175,8 +175,12 @@ class DebtRepositoryImpl implements DebtRepository {
 
       return const Success(null);
     } catch (e) {
-      if (e is ArgumentError) return DatabaseFailure(e.message.toString()).asFailure();
-      if (e is StateError) return DatabaseFailure(e.message).asFailure();
+      if (e is ArgumentError) {
+        return DatabaseFailure(e.message.toString()).asFailure();
+      }
+      if (e is StateError) {
+        return DatabaseFailure(e.message).asFailure();
+      }
       return DatabaseFailure('ثبت پرداخت انجام نشد. دوباره تلاش کنید.')
           .asFailure();
     }

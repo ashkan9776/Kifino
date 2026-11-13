@@ -237,7 +237,10 @@ void main() {
         targetCurrency: Currency.toman,
       );
       expect(yesterday!.amount.minorUnits, equals(200000));
-      expect(yesterday.date.day, equals(today.subtract(const Duration(days: 1)).day));
+      expect(
+        yesterday.date.day,
+        equals(today.subtract(const Duration(days: 1)).day),
+      );
       expect(yesterday.description, equals('ناهار'));
 
       final dayBefore = PersianNlpTransactionParser.parse(
@@ -245,7 +248,10 @@ void main() {
         targetCurrency: Currency.toman,
       );
       expect(dayBefore!.amount.minorUnits, equals(80000));
-      expect(dayBefore.date.day, equals(today.subtract(const Duration(days: 2)).day));
+      expect(
+        dayBefore.date.day,
+        equals(today.subtract(const Duration(days: 2)).day),
+      );
     });
   });
 

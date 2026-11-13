@@ -361,77 +361,74 @@ class _JournalPageState extends State<JournalPage>
   }
 }
 
-
-  /// دفاتر قانونی — official tax-org XLSX exports for the CURRENT date
-  /// range (دفتر روزنامه) and the active fiscal year (دفتر کل).
-  void _showLegalBooksSheet(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => AppBottomSheet(
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const AppSheetHeader(title: 'دفاتر قانونی'),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'خروجی اکسل مطابق ستون‌های سامانه دفاتر الکترونیکی سازمان امور مالیاتی',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.darkSubtext
-                        : AppColors.lightSubtext,
-                  ),
+/// دفاتر قانونی — official tax-org XLSX exports for the CURRENT date
+/// range (دفتر روزنامه) and the active fiscal year (دفتر کل).
+void _showLegalBooksSheet(BuildContext context) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => AppBottomSheet(
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AppSheetHeader(title: 'دفاتر قانونی'),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'خروجی اکسل مطابق ستون‌های سامانه دفاتر الکترونیکی سازمان امور مالیاتی',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isDark
+                      ? AppColors.darkSubtext
+                      : AppColors.lightSubtext,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                ListTile(
-                  leading: const Icon(Icons.menu_book_outlined),
-                  title: const Text('دفتر روزنامه قانونی'),
-                  subtitle: const Text('برای بازه تاریخ انتخاب‌شده'),
-                  trailing: const Icon(Icons.chevron_left_rounded),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppSpacing.borderRadiusMd,
-                  ),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    final path = await getIt<AccountingExportService>()
-                        .exportLegalJournal();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('ذخیره شد: $path')),
-                    );
-                  },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ListTile(
+                leading: const Icon(Icons.menu_book_outlined),
+                title: const Text('دفتر روزنامه قانونی'),
+                subtitle: const Text('برای بازه تاریخ انتخاب‌شده'),
+                trailing: const Icon(Icons.chevron_left_rounded),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppSpacing.borderRadiusMd,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.chrome_reader_mode_outlined),
-                  title: const Text('دفتر کل قانونی'),
-                  subtitle: const Text('گردش و مانده معین‌ها'),
-                  trailing: const Icon(Icons.chevron_left_rounded),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppSpacing.borderRadiusMd,
-                  ),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    final path = await getIt<AccountingExportService>()
-                        .exportLegalLedger();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('ذخیره شد: $path')),
-                    );
-                  },
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final path = await getIt<AccountingExportService>()
+                      .exportLegalJournal();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('ذخیره شد: $path')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.chrome_reader_mode_outlined),
+                title: const Text('دفتر کل قانونی'),
+                subtitle: const Text('گردش و مانده معین‌ها'),
+                trailing: const Icon(Icons.chevron_left_rounded),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppSpacing.borderRadiusMd,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-            ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final path = await getIt<AccountingExportService>()
+                      .exportLegalLedger();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('ذخیره شد: $path')));
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}

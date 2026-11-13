@@ -112,41 +112,44 @@ void main() {
       expect(draft.bankName, equals('بانک ملی'));
     });
 
-    test('parses BluBank Toman withdrawal and deposit without double dividing', () {
-      const withdrawSms = '''
+    test(
+      'parses BluBank Toman withdrawal and deposit without double dividing',
+      () {
+        const withdrawSms = '''
 بلوبانک
 ۲۵۰,۰۰۰ تومان از حسابت برداشت شد.
 مانده: ۳,۴۲۰,۰۰۰ تومان
 1403/08/21 11:05
 ''';
-      final withdraw = IranianBankSmsParser.parse(
-        withdrawSms,
-        targetCurrency: Currency.toman,
-        accounts: sampleAccounts,
-      );
-      expect(withdraw, isNotNull);
-      expect(withdraw!.type, equals(TransactionType.expense));
-      expect(withdraw.amount.minorUnits, equals(250000));
-      expect(withdraw.remainingBalance?.minorUnits, equals(3420000));
-      expect(withdraw.matchedAccountId, equals('acc-blu'));
+        final withdraw = IranianBankSmsParser.parse(
+          withdrawSms,
+          targetCurrency: Currency.toman,
+          accounts: sampleAccounts,
+        );
+        expect(withdraw, isNotNull);
+        expect(withdraw!.type, equals(TransactionType.expense));
+        expect(withdraw.amount.minorUnits, equals(250000));
+        expect(withdraw.remainingBalance?.minorUnits, equals(3420000));
+        expect(withdraw.matchedAccountId, equals('acc-blu'));
 
-      const depositSms = '''
+        const depositSms = '''
 سلام، 1,500,000 تومان به حسابت واریز شد.
 موجودی فعلی: 5,200,000 تومان
 بلو
 ''';
-      final deposit = IranianBankSmsParser.parse(
-        depositSms,
-        targetCurrency: Currency.toman,
-        accounts: sampleAccounts,
-      );
-      expect(deposit, isNotNull);
-      expect(deposit!.type, equals(TransactionType.income));
-      expect(deposit.amount.minorUnits, equals(1500000));
-      expect(deposit.remainingBalance?.minorUnits, equals(5200000));
-      expect(deposit.bankName, equals('بلوبانک'));
-      expect(deposit.matchedAccountId, equals('acc-blu'));
-    });
+        final deposit = IranianBankSmsParser.parse(
+          depositSms,
+          targetCurrency: Currency.toman,
+          accounts: sampleAccounts,
+        );
+        expect(deposit, isNotNull);
+        expect(deposit!.type, equals(TransactionType.income));
+        expect(deposit.amount.minorUnits, equals(1500000));
+        expect(deposit.remainingBalance?.minorUnits, equals(5200000));
+        expect(deposit.bankName, equals('بلوبانک'));
+        expect(deposit.matchedAccountId, equals('acc-blu'));
+      },
+    );
 
     test('parses Bank Saman and Bank Saderat 2-digit Jalali year & skips archived accounts', () {
       const samanSms = '''
@@ -187,53 +190,56 @@ void main() {
       expect(saderat.matchedAccountId, isNull); // acc-archived is archived
     });
 
-    test('parses Pasargad dense SMS and Keshavarzi افزایش/کاهش موجودی accurately', () {
-      const pasargadSms = '''
+    test(
+      'parses Pasargad dense SMS and Keshavarzi افزایش/کاهش موجودی accurately',
+      () {
+        const pasargadSms = '''
 بانک پاسارگاد
 برداشت:3,200,000ریال
 حساب:205.8100.123456.1
 تاریخ:1403/08/10-12:30
 مانده:45,000,000ریال
 ''';
-      final pasargad = IranianBankSmsParser.parse(
-        pasargadSms,
-        targetCurrency: Currency.toman,
-      );
-      expect(pasargad, isNotNull);
-      expect(pasargad!.type, equals(TransactionType.expense));
-      expect(pasargad.amount.minorUnits, equals(320000));
-      expect(pasargad.remainingBalance?.minorUnits, equals(4500000));
-      expect(pasargad.bankName, equals('بانک پاسارگاد'));
+        final pasargad = IranianBankSmsParser.parse(
+          pasargadSms,
+          targetCurrency: Currency.toman,
+        );
+        expect(pasargad, isNotNull);
+        expect(pasargad!.type, equals(TransactionType.expense));
+        expect(pasargad.amount.minorUnits, equals(320000));
+        expect(pasargad.remainingBalance?.minorUnits, equals(4500000));
+        expect(pasargad.bankName, equals('بانک پاسارگاد'));
 
-      const keshavarziIncome = '''
+        const keshavarziIncome = '''
 بانک کشاورزی
 افزایش موجودی: 20,000,000 ریال
 حساب: *5566
 1403/08/05 08:00
 مانده: 41,000,000 ریال
 ''';
-      final keshInc = IranianBankSmsParser.parse(
-        keshavarziIncome,
-        targetCurrency: Currency.toman,
-      );
-      expect(keshInc, isNotNull);
-      expect(keshInc!.type, equals(TransactionType.income));
-      expect(keshInc.amount.minorUnits, equals(2000000));
-      expect(keshInc.remainingBalance?.minorUnits, equals(4100000));
+        final keshInc = IranianBankSmsParser.parse(
+          keshavarziIncome,
+          targetCurrency: Currency.toman,
+        );
+        expect(keshInc, isNotNull);
+        expect(keshInc!.type, equals(TransactionType.income));
+        expect(keshInc.amount.minorUnits, equals(2000000));
+        expect(keshInc.remainingBalance?.minorUnits, equals(4100000));
 
-      const keshavarziExpense = '''
+        const keshavarziExpense = '''
 بانک کشاورزی
 کاهش موجودی: 1,200,000 ریال
 حساب: *5566
 ''';
-      final keshExp = IranianBankSmsParser.parse(
-        keshavarziExpense,
-        targetCurrency: Currency.toman,
-      );
-      expect(keshExp, isNotNull);
-      expect(keshExp!.type, equals(TransactionType.expense));
-      expect(keshExp.amount.minorUnits, equals(120000));
-    });
+        final keshExp = IranianBankSmsParser.parse(
+          keshavarziExpense,
+          targetCurrency: Currency.toman,
+        );
+        expect(keshExp, isNotNull);
+        expect(keshExp!.type, equals(TransactionType.expense));
+        expect(keshExp.amount.minorUnits, equals(120000));
+      },
+    );
 
     test('parses Tejarat, Resalat, and Behpardakht refund without false PSP expense hit', () {
       const tejaratSms = '''

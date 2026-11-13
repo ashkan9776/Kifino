@@ -377,8 +377,9 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
     await result.fold(
       onSuccess: (_) async {
         await _notifications.cancelScheduled(event.id);
-        _lastInstallments =
-            _lastInstallments.where((i) => i.id != event.id).toList();
+        _lastInstallments = _lastInstallments
+            .where((i) => i.id != event.id)
+            .toList();
         _emitSuccess(emit, 'قسط حذف شد', op: 'delete');
       },
       onFailure: (failure) async =>
@@ -414,11 +415,7 @@ class InstallmentBloc extends Bloc<InstallmentEvent, InstallmentState> {
           _lastInstallments = listRes.dataOrNull!;
           _hasLoaded = true;
         }
-        _emitSuccess(
-          emit,
-          'تسویه کامل انجام شد',
-          op: 'payRemaining',
-        );
+        _emitSuccess(emit, 'تسویه کامل انجام شد', op: 'payRemaining');
       },
       onFailure: (failure) async =>
           _emitFailurePreservingLoaded(emit, failure.message),

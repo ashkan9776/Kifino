@@ -37,37 +37,36 @@ void main() {
   tearDown(() async => db.close());
 
   InvoiceEntity purchaseInvoice(String id, DateTime now) => InvoiceEntity(
-        id: id,
-        invoiceNumber: 'PUR-$id',
-        contactId: 'sup-1',
-        type: InvoiceType.purchase,
-        status: InvoiceStatus.paid,
-        issueDate: now,
-        dueDate: now,
-        subtotal: Money.fromMinor(5000000, Currency.irr),
+    id: id,
+    invoiceNumber: 'PUR-$id',
+    contactId: 'sup-1',
+    type: InvoiceType.purchase,
+    status: InvoiceStatus.paid,
+    issueDate: now,
+    dueDate: now,
+    subtotal: Money.fromMinor(5000000, Currency.irr),
+    discount: Money.zero(Currency.irr),
+    tax: Money.zero(Currency.irr),
+    total: Money.fromMinor(5000000, Currency.irr),
+    paidAmount: Money.fromMinor(5000000, Currency.irr),
+    createdAt: now,
+    updatedAt: now,
+    items: [
+      InvoiceItemEntity(
+        id: '',
+        invoiceId: id,
+        productId: 'p-1',
+        description: 'کالا',
+        quantity: 5,
+        unitPrice: Money.fromMinor(1000000, Currency.irr),
         discount: Money.zero(Currency.irr),
         tax: Money.zero(Currency.irr),
         total: Money.fromMinor(5000000, Currency.irr),
-        paidAmount: Money.fromMinor(5000000, Currency.irr),
-        createdAt: now,
-        updatedAt: now,
-        items: [
-          InvoiceItemEntity(
-            id: '',
-            invoiceId: id,
-            productId: 'p-1',
-            description: 'کالا',
-            quantity: 5,
-            unitPrice: Money.fromMinor(1000000, Currency.irr),
-            discount: Money.zero(Currency.irr),
-            tax: Money.zero(Currency.irr),
-            total: Money.fromMinor(5000000, Currency.irr),
-          ),
-        ],
-      );
+      ),
+    ],
+  );
 
-  test('full return flow: stock in, balance credit, mirror voucher',
-      () async {
+  test('full return flow: stock in, balance credit, mirror voucher', () async {
     final now = DateTime.now();
     await repo.createProduct(
       ProductEntity(
@@ -192,9 +191,9 @@ void main() {
     expect(cust.outstandingBalance.minorUnits, equals(0));
 
     // Movements: a 'returned' entry exists for the return invoice.
-    final logs = await (db.select(db.inventoryLogsTable)
-          ..where((t) => t.referenceId.equals('ret-1')))
-        .get();
+    final logs = await (db.select(
+      db.inventoryLogsTable,
+    )..where((t) => t.referenceId.equals('ret-1'))).get();
     expect(logs.single.movementType, equals('return'));
     expect(logs.single.changeQuantity, equals(3.0));
 

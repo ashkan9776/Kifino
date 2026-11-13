@@ -71,8 +71,10 @@ void main() {
         accountId: 'acc-1',
         totalAmount: const Money(minorUnits: 200000, currency: Currency.toman),
         numberOfInstallments: 2,
-        installmentAmount:
-            const Money(minorUnits: 100000, currency: Currency.toman),
+        installmentAmount: const Money(
+          minorUnits: 100000,
+          currency: Currency.toman,
+        ),
         startDate: now,
         nextDueDate: now.add(const Duration(days: 30)),
         createdAt: now,

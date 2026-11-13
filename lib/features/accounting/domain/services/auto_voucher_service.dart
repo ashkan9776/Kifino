@@ -14,6 +14,7 @@ import 'voucher_settings_service.dart';
 class AutoVoucherService {
   final AccountingRepository _accountingRepository;
   final VoucherSettingsService settingsService;
+
   /// Optional so existing constructions (tests) keep compiling — the app
   /// registers it so sale vouchers can carry the COGS leg.
   final BusinessRepository? businessRepository;

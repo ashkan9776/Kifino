@@ -134,7 +134,10 @@ class AccountingDocumentBloc
     fiscalYearId: _lastFiscalYearId,
   );
 
-  void _emitErrorPreservingLoaded(Emitter<AccountingDocumentState> emit, Object e) {
+  void _emitErrorPreservingLoaded(
+    Emitter<AccountingDocumentState> emit,
+    Object e,
+  ) {
     emit(AccountingDocumentError(_cleanError(e)));
     if (_lastLoadedState != null) {
       emit(_lastLoadedState!);

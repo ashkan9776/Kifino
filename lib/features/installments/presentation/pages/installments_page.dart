@@ -716,136 +716,138 @@ class InstallmentsPage extends StatelessWidget {
             body: AppResponsiveContainer(
               maxWidth: 960,
               child: BlocBuilder<InstallmentBloc, InstallmentState>(
-              builder: (context, state) {
-                if (state is InstallmentLoading) {
-                  return const Padding(
-                    padding: EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      children: [
-                        AppSkeleton(
-                          height: 120,
-                          borderRadius: AppSpacing.borderRadiusLg,
-                        ),
-                        SizedBox(height: AppSpacing.md),
-                        AppSkeleton(
-                          height: 90,
-                          borderRadius: AppSpacing.borderRadiusMd,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // InstallmentHistoryLoaded extends InstallmentLoaded, so the
-                // list keeps rendering behind the open history sheet.
-                if (state is! InstallmentLoaded) {
-                  return AppEmptyState(
-                    icon: Icons.calendar_month_outlined,
-                    title: l10n.installments,
-                    description: l10n.isPersian
-                        ? 'اقساط و وام‌های دریافتی را برای یادآوری و کسر خودکار سررسیدها ثبت کنید.'
-                        : 'Track your loan installments and upcoming dues.',
-                  );
-                }
-
-                final installments = state.installments;
-
-                return ListView(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  children: [
-                    // Summary card
-                    AppCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
+                builder: (context, state) {
+                  if (state is InstallmentLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.isPersian
-                                      ? 'باقیمانده کل وام‌ها'
-                                      : 'Remaining Loans',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppColors.darkSubtext
-                                        : AppColors.lightSubtext,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                AppMoneyText(
-                                  money: state.totalDebtRemaining,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.expense,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          AppSkeleton(
+                            height: 120,
+                            borderRadius: AppSpacing.borderRadiusLg,
                           ),
-                          Container(
-                            height: 36,
-                            width: 1,
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder,
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.isPersian
-                                      ? 'تعهد ماهانه اقساط'
-                                      : 'Monthly Dues',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppColors.darkSubtext
-                                        : AppColors.lightSubtext,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                AppMoneyText(
-                                  money: state.monthlyInstallmentDues,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          SizedBox(height: AppSpacing.md),
+                          AppSkeleton(
+                            height: 90,
+                            borderRadius: AppSpacing.borderRadiusMd,
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+                    );
+                  }
 
-                    if (installments.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xl,
+                  // InstallmentHistoryLoaded extends InstallmentLoaded, so the
+                  // list keeps rendering behind the open history sheet.
+                  if (state is! InstallmentLoaded) {
+                    return AppEmptyState(
+                      icon: Icons.calendar_month_outlined,
+                      title: l10n.installments,
+                      description: l10n.isPersian
+                          ? 'اقساط و وام‌های دریافتی را برای یادآوری و کسر خودکار سررسیدها ثبت کنید.'
+                          : 'Track your loan installments and upcoming dues.',
+                    );
+                  }
+
+                  final installments = state.installments;
+
+                  return ListView(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    children: [
+                      // Summary card
+                      AppCard(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.isPersian
+                                        ? 'باقیمانده کل وام‌ها'
+                                        : 'Remaining Loans',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkSubtext
+                                          : AppColors.lightSubtext,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  AppMoneyText(
+                                    money: state.totalDebtRemaining,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.expense,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              height: 36,
+                              width: 1,
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.isPersian
+                                        ? 'تعهد ماهانه اقساط'
+                                        : 'Monthly Dues',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkSubtext
+                                          : AppColors.lightSubtext,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  AppMoneyText(
+                                    money: state.monthlyInstallmentDues,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        child: AppEmptyState(
-                          icon: Icons.calendar_month_outlined,
-                          title: l10n.isPersian
-                              ? 'هیچ وامی ثبت نشده است'
-                              : 'No active loans',
-                          description: l10n.isPersian
-                              ? 'اقساط و وام‌های بانکی خود را با زدن دکمه + اضافه کنید.'
-                              : 'Tap + to add your loans and installments.',
-                        ),
-                      )
-                    else
-                      ...installments.map(
-                        (inst) => _buildInstallmentCard(context, inst),
                       ),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
-                );
-              },
+                      const SizedBox(height: AppSpacing.md),
+
+                      if (installments.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xl,
+                          ),
+                          child: AppEmptyState(
+                            icon: Icons.calendar_month_outlined,
+                            title: l10n.isPersian
+                                ? 'هیچ وامی ثبت نشده است'
+                                : 'No active loans',
+                            description: l10n.isPersian
+                                ? 'اقساط و وام‌های بانکی خود را با زدن دکمه + اضافه کنید.'
+                                : 'Tap + to add your loans and installments.',
+                          ),
+                        )
+                      else
+                        ...installments.map(
+                          (inst) => _buildInstallmentCard(context, inst),
+                        ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
           ),
         ),
       ),

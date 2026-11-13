@@ -101,10 +101,7 @@ void main() {
     var docs = await accountingRepo.getDocuments();
     expect(docs.where((d) => d.referenceId == 'q-1'), isEmpty);
     // generateInvoiceVoucher returns null for quotes.
-    expect(
-      await voucherService.generateInvoiceVoucher(quote),
-      isNull,
-    );
+    expect(await voucherService.generateInvoiceVoucher(quote), isNull);
 
     // ── Convert ──
     final convRes = await repo.convertQuoteToInvoice('q-1');

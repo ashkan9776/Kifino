@@ -262,7 +262,9 @@ DateTime startOfJalaliYear(DateTime dateTime) {
 /// End of the Jalali year containing [dateTime] — last second of اسفند.
 DateTime endOfJalaliYear(DateTime dateTime) {
   final jy = JalaliDate.fromDateTime(dateTime).year;
-  return JalaliDate(jy + 1, 1, 1)
-      .toDateTime()
-      .subtract(const Duration(seconds: 1));
+  return JalaliDate(
+    jy + 1,
+    1,
+    1,
+  ).toDateTime().subtract(const Duration(seconds: 1));
 }

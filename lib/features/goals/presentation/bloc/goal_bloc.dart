@@ -116,10 +116,8 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
   List<GoalEntity> _lastGoals = const [];
   bool _hasLoaded = false;
 
-  GoalBloc(
-    this._repository, {
-    this.transactionRepository,
-  }) : super(GoalInitial()) {
+  GoalBloc(this._repository, {this.transactionRepository})
+    : super(GoalInitial()) {
     on<WatchGoalsStarted>(_onWatchStarted);
     on<_GoalsUpdated>(_onGoalsUpdated);
     on<GoalCreateSubmitted>(_onCreateSubmitted);
@@ -225,9 +223,7 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     final result = await _repository.contributeToGoal(event.id, event.amount);
     await result.fold(
       onSuccess: (goal) async {
-        _lastGoals = [
-          for (final g in _lastGoals) g.id == goal.id ? goal : g,
-        ];
+        _lastGoals = [for (final g in _lastGoals) g.id == goal.id ? goal : g];
         if (event.accountId != null &&
             event.accountId!.isNotEmpty &&
             transactionRepository != null) {

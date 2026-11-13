@@ -101,10 +101,7 @@ void main() {
       dueDate: now.subtract(const Duration(days: 200)),
     );
     await repo.createInvoice(
-      paid.copyWith(
-        paidAmount: paid.total,
-        status: InvoiceStatus.paid,
-      ),
+      paid.copyWith(paidAmount: paid.total, status: InvoiceStatus.paid),
     );
 
     final res = await repo.getAgingReport(receivables: true);

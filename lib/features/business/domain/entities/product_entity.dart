@@ -13,6 +13,7 @@ class ProductEntity extends Equatable {
   final int conversionFactor;
   final Money purchasePrice;
   final Money sellingPrice;
+
   /// Weighted-average unit cost (minor units) — updated on purchases, used
   /// by the sale voucher's COGS leg. Kept as raw minor units so a 0 default
   /// reads as «never purchased».

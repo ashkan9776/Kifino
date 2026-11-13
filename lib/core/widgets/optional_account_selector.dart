@@ -29,7 +29,8 @@ class OptionalAccountSelector extends StatelessWidget {
     return FutureBuilder<Result<List<AccountEntity>>>(
       future: accountsFuture,
       builder: (context, snapshot) {
-        final rawAccounts = snapshot.data?.dataOrNull ?? const <AccountEntity>[];
+        final rawAccounts =
+            snapshot.data?.dataOrNull ?? const <AccountEntity>[];
         final compatible = rawAccounts
             .where(
               (a) =>

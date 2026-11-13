@@ -378,353 +378,362 @@ class GoalsPage extends StatelessWidget {
               body: AppResponsiveContainer(
                 maxWidth: 960,
                 child: BlocBuilder<GoalBloc, GoalState>(
-                builder: (context, state) {
-                  if (state is GoalLoading) {
-                    return const Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        children: [
-                          AppSkeleton(
-                            height: 120,
-                            borderRadius: AppSpacing.borderRadiusLg,
-                          ),
-                          SizedBox(height: AppSpacing.md),
-                          AppSkeleton(
-                            height: 100,
-                            borderRadius: AppSpacing.borderRadiusLg,
-                          ),
-                          SizedBox(height: AppSpacing.md),
-                          AppSkeleton(
-                            height: 100,
-                            borderRadius: AppSpacing.borderRadiusLg,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (state is GoalLoaded) {
-                    final goals = state.goals;
-
-                    if (goals.isEmpty) {
-                      return AppEmptyState(
-                        icon: Icons.flag_rounded,
-                        title: l10n.isPersian
-                            ? 'هدف مالی نداری'
-                            : 'No financial goals yet',
-                        description: l10n.isPersian
-                            ? 'اولین هدف پس‌اندازت را بساز و قدم به قدم به آن برس.'
-                            : 'Create your first savings goal and track your progress toward it.',
-                        actionLabel: l10n.isPersian
-                            ? 'ایجاد هدف'
-                            : 'Create goal',
-                        onAction: () => _showAddGoalSheet(context),
+                  builder: (context, state) {
+                    if (state is GoalLoading) {
+                      return const Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          children: [
+                            AppSkeleton(
+                              height: 120,
+                              borderRadius: AppSpacing.borderRadiusLg,
+                            ),
+                            SizedBox(height: AppSpacing.md),
+                            AppSkeleton(
+                              height: 100,
+                              borderRadius: AppSpacing.borderRadiusLg,
+                            ),
+                            SizedBox(height: AppSpacing.md),
+                            AppSkeleton(
+                              height: 100,
+                              borderRadius: AppSpacing.borderRadiusLg,
+                            ),
+                          ],
+                        ),
                       );
                     }
 
-                    final theme = Theme.of(context);
-                    final isDark = theme.brightness == Brightness.dark;
+                    if (state is GoalLoaded) {
+                      final goals = state.goals;
 
-                    return ListView(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      children: [
-                        // Summary Card
-                        AppCard(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    l10n.isPersian
-                                        ? 'کل پس‌انداز'
-                                        : 'Total saved',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      TextNormalizer.auto(
-                                        '${state.overallPercent.toStringAsFixed(0)}%',
-                                      ),
-                                      style: theme.textTheme.labelSmall
+                      if (goals.isEmpty) {
+                        return AppEmptyState(
+                          icon: Icons.flag_rounded,
+                          title: l10n.isPersian
+                              ? 'هدف مالی نداری'
+                              : 'No financial goals yet',
+                          description: l10n.isPersian
+                              ? 'اولین هدف پس‌اندازت را بساز و قدم به قدم به آن برس.'
+                              : 'Create your first savings goal and track your progress toward it.',
+                          actionLabel: l10n.isPersian
+                              ? 'ایجاد هدف'
+                              : 'Create goal',
+                          onAction: () => _showAddGoalSheet(context),
+                        );
+                      }
+
+                      final theme = Theme.of(context);
+                      final isDark = theme.brightness == Brightness.dark;
+
+                      return ListView(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        children: [
+                          // Summary Card
+                          AppCard(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      l10n.isPersian
+                                          ? 'کل پس‌انداز'
+                                          : 'Total saved',
+                                      style: theme.textTheme.bodySmall
                                           ?.copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.bold,
+                                            color: isDark
+                                                ? AppColors.darkSubtext
+                                                : AppColors.lightSubtext,
                                           ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              AppMoneyText(
-                                money: state.totalSaved,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusSm,
-                                ),
-                                child: LinearProgressIndicator(
-                                  value: (state.overallPercent / 100.0).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
-                                  minHeight: 8,
-                                  backgroundColor: isDark
-                                      ? AppColors.darkBorder
-                                      : AppColors.lightBorder,
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                        AppColors.primary,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
                                       ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        TextNormalizer.auto(
+                                          '${state.overallPercent.toStringAsFixed(0)}%',
+                                        ),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    l10n.isPersian ? 'هدف کل' : 'Total target',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
+                                const SizedBox(height: 4),
+                                AppMoneyText(
+                                  money: state.totalSaved,
+                                  style: theme.textTheme.headlineMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
                                   ),
-                                  AppMoneyText(
-                                    money: state.totalTarget,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                  child: LinearProgressIndicator(
+                                    value: (state.overallPercent / 100.0).clamp(
+                                      0.0,
+                                      1.0,
                                     ),
+                                    minHeight: 8,
+                                    backgroundColor: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          AppColors.primary,
+                                        ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Goal Cards
-                        ...goals.map((goal) {
-                          final statusColor = _statusColor(goal.status);
-                          final statusLabel = switch (goal.status) {
-                            GoalStatus.achieved =>
-                              l10n.isPersian ? 'دستیافت' : 'Achieved',
-                            GoalStatus.active =>
-                              l10n.isPersian ? 'فعال' : 'Active',
-                            GoalStatus.cancelled =>
-                              l10n.isPersian ? 'لغو شده' : 'Cancelled',
-                          };
-
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.sm,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      l10n.isPersian
+                                          ? 'هدف کل'
+                                          : 'Total target',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? AppColors.darkSubtext
+                                                : AppColors.lightSubtext,
+                                          ),
+                                    ),
+                                    AppMoneyText(
+                                      money: state.totalTarget,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            child: AppCard(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          goal.name,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.sm,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: statusColor.withValues(
-                                            alpha: 0.12,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Goal Cards
+                          ...goals.map((goal) {
+                            final statusColor = _statusColor(goal.status);
+                            final statusLabel = switch (goal.status) {
+                              GoalStatus.achieved =>
+                                l10n.isPersian ? 'دستیافت' : 'Achieved',
+                              GoalStatus.active =>
+                                l10n.isPersian ? 'فعال' : 'Active',
+                              GoalStatus.cancelled =>
+                                l10n.isPersian ? 'لغو شده' : 'Cancelled',
+                            };
+
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.sm,
+                              ),
+                              child: AppCard(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            goal.name,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            AppSpacing.radiusSm,
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.sm,
+                                            vertical: 3,
                                           ),
-                                        ),
-                                        child: Text(
-                                          statusLabel,
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                                color: statusColor,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusSm,
-                                    ),
-                                    child: LinearProgressIndicator(
-                                      value: (goal.progressPercent / 100.0)
-                                          .clamp(0.0, 1.0),
-                                      minHeight: 8,
-                                      backgroundColor: isDark
-                                          ? AppColors.darkBorder
-                                          : AppColors.lightBorder,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        statusColor,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Flexible(
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              '${l10n.isPersian ? 'مانده' : 'Remaining'}: ',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppColors.darkSubtext
-                                                        : AppColors
-                                                              .lightSubtext,
-                                                  ),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withValues(
+                                              alpha: 0.12,
                                             ),
-                                            Flexible(
-                                              child: AppMoneyText(
-                                                money: goal.remainingAmount
-                                                    .abs(),
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusSm,
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (goal.targetDate != null) ...[
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_month_rounded,
-                                              size: 14,
-                                              color: isDark
-                                                  ? AppColors.darkSubtext
-                                                  : AppColors.lightSubtext,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              AppDateFormatter.formatShort(
-                                                goal.targetDate!,
-                                                locale: l10n.localeName,
-                                              ),
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppColors.darkSubtext
-                                                        : AppColors
-                                                              .lightSubtext,
-                                                  ),
-                                            ),
-                                          ],
+                                          ),
+                                          child: Text(
+                                            statusLabel,
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: statusColor,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: AppButton(
-                                          label: l10n.isPersian
-                                              ? 'ثبت پس‌انداز'
-                                              : 'Add savings',
-                                          onPressed:
-                                              goal.status == GoalStatus.active
-                                              ? () => _showContributeSheet(
-                                                  context,
-                                                  goal,
-                                                )
-                                              : null,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
+                                      child: LinearProgressIndicator(
+                                        value: (goal.progressPercent / 100.0)
+                                            .clamp(0.0, 1.0),
+                                        minHeight: 8,
+                                        backgroundColor: isDark
+                                            ? AppColors.darkBorder
+                                            : AppColors.lightBorder,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              statusColor,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${l10n.isPersian ? 'مانده' : 'Remaining'}: ',
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: isDark
+                                                          ? AppColors
+                                                                .darkSubtext
+                                                          : AppColors
+                                                                .lightSubtext,
+                                                    ),
+                                              ),
+                                              Flexible(
+                                                child: AppMoneyText(
+                                                  money: goal.remainingAmount
+                                                      .abs(),
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () =>
-                                            EditGoalSheet.show(context, goal),
-                                        icon: const Icon(Icons.edit_outlined),
-                                        tooltip: l10n.isPersian
-                                            ? 'ویرایش'
-                                            : 'Edit',
-                                      ),
-                                      IconButton(
-                                        onPressed: () =>
-                                            _confirmDelete(context, goal),
-                                        icon: const Icon(
-                                          Icons.delete_outline_rounded,
+                                        if (goal.targetDate != null) ...[
+                                          const SizedBox(width: AppSpacing.sm),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.calendar_month_rounded,
+                                                size: 14,
+                                                color: isDark
+                                                    ? AppColors.darkSubtext
+                                                    : AppColors.lightSubtext,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                AppDateFormatter.formatShort(
+                                                  goal.targetDate!,
+                                                  locale: l10n.localeName,
+                                                ),
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: isDark
+                                                          ? AppColors
+                                                                .darkSubtext
+                                                          : AppColors
+                                                                .lightSubtext,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: AppButton(
+                                            label: l10n.isPersian
+                                                ? 'ثبت پس‌انداز'
+                                                : 'Add savings',
+                                            onPressed:
+                                                goal.status == GoalStatus.active
+                                                ? () => _showContributeSheet(
+                                                    context,
+                                                    goal,
+                                                  )
+                                                : null,
+                                          ),
                                         ),
-                                        color: AppColors.danger,
-                                        tooltip: l10n.delete,
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                        IconButton(
+                                          onPressed: () =>
+                                              EditGoalSheet.show(context, goal),
+                                          icon: const Icon(Icons.edit_outlined),
+                                          tooltip: l10n.isPersian
+                                              ? 'ویرایش'
+                                              : 'Edit',
+                                        ),
+                                        IconButton(
+                                          onPressed: () =>
+                                              _confirmDelete(context, goal),
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                          ),
+                                          color: AppColors.danger,
+                                          tooltip: l10n.delete,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: AppSpacing.xxl),
-                      ],
-                    );
-                  }
+                            );
+                          }),
+                          const SizedBox(height: AppSpacing.xxl),
+                        ],
+                      );
+                    }
 
-                  // GoalInitial / GoalFailure
-                  return AppEmptyState(
-                    icon: Icons.flag_rounded,
-                    title: l10n.isPersian
-                        ? 'هدف مالی نداری'
-                        : 'No financial goals yet',
-                    description: l10n.isPersian
-                        ? 'اولین هدف پس‌اندازت را بساز و قدم به قدم به آن برس.'
-                        : 'Create your first savings goal and track your progress toward it.',
-                  );
-                },
+                    // GoalInitial / GoalFailure
+                    return AppEmptyState(
+                      icon: Icons.flag_rounded,
+                      title: l10n.isPersian
+                          ? 'هدف مالی نداری'
+                          : 'No financial goals yet',
+                      description: l10n.isPersian
+                          ? 'اولین هدف پس‌اندازت را بساز و قدم به قدم به آن برس.'
+                          : 'Create your first savings goal and track your progress toward it.',
+                    );
+                  },
+                ),
               ),
-            ),
             ),
           ),
         ),

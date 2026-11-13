@@ -72,9 +72,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
             actions: [
               IconButton(
                 icon: const Icon(Icons.hourglass_top_rounded),
-                tooltip: l10n.isPersian
-                    ? 'گزارش سنی مطالبات'
-                    : 'Aging report',
+                tooltip: l10n.isPersian ? 'گزارش سنی مطالبات' : 'Aging report',
                 onPressed: () => context.push('/business/aging'),
               ),
             ],
@@ -117,243 +115,254 @@ class _BusinessHubPageState extends State<BusinessHubPage>
           body: AppResponsiveContainer(
             maxWidth: 1200,
             child: BlocListener<BusinessBloc, BusinessState>(
-            listenWhen: (prev, curr) =>
-                curr is BusinessInvoiceVoucherPending &&
-                prev is! BusinessInvoiceVoucherPending,
-            listener: (context, state) {
-              if (state is BusinessInvoiceVoucherPending) {
-                // Accounting failed but the business data is intact — warn
-                // without blocking (the hub keeps rendering via Loaded).
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.warningMessage),
-                    backgroundColor: AppColors.warning,
-                    duration: const Duration(seconds: 5),
-                  ),
-                );
-              }
-            },
-            child: BlocBuilder<BusinessBloc, BusinessState>(
-            builder: (context, state) {
-              if (state is BusinessLoading) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    children: [
-                      AppSkeleton(
-                        height: 110,
-                        borderRadius: AppSpacing.borderRadiusLg,
+              listenWhen: (prev, curr) =>
+                  curr is BusinessInvoiceVoucherPending &&
+                  prev is! BusinessInvoiceVoucherPending,
+              listener: (context, state) {
+                if (state is BusinessInvoiceVoucherPending) {
+                  // Accounting failed but the business data is intact — warn
+                  // without blocking (the hub keeps rendering via Loaded).
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.warningMessage),
+                      backgroundColor: AppColors.warning,
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
+                }
+              },
+              child: BlocBuilder<BusinessBloc, BusinessState>(
+                builder: (context, state) {
+                  if (state is BusinessLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        children: [
+                          AppSkeleton(
+                            height: 110,
+                            borderRadius: AppSpacing.borderRadiusLg,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          AppSkeleton(
+                            height: 70,
+                            borderRadius: AppSpacing.borderRadiusMd,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          AppSkeleton(
+                            height: 70,
+                            borderRadius: AppSpacing.borderRadiusMd,
+                          ),
+                        ],
                       ),
-                      SizedBox(height: AppSpacing.md),
-                      AppSkeleton(
-                        height: 70,
-                        borderRadius: AppSpacing.borderRadiusMd,
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      AppSkeleton(
-                        height: 70,
-                        borderRadius: AppSpacing.borderRadiusMd,
-                      ),
-                    ],
-                  ),
-                );
-              }
+                    );
+                  }
 
-              if (state is! BusinessLoaded) {
-                return AppEmptyState(
-                  icon: Icons.storefront_outlined,
-                  title: l10n.isPersian
-                      ? 'کسب‌وکار شما آماده راه‌اندازی است'
-                      : 'Business OS Ready',
-                  description: l10n.isPersian
-                      ? 'فاکتورها، موجودی انبار و مشتریان خود را با نظم حرفه‌ای ثبت و مدیریت کنید.'
-                      : 'Track invoices, inventory stock, and customer relationships in one place.',
-                  actionLabel: l10n.isPersian
-                      ? 'ثبت اولین مشتری'
-                      : 'Add your first customer',
-                  onAction: () {
-                    _showAddContactSheet(context);
-                  },
-                );
-              }
+                  if (state is! BusinessLoaded) {
+                    return AppEmptyState(
+                      icon: Icons.storefront_outlined,
+                      title: l10n.isPersian
+                          ? 'کسب‌وکار شما آماده راه‌اندازی است'
+                          : 'Business OS Ready',
+                      description: l10n.isPersian
+                          ? 'فاکتورها، موجودی انبار و مشتریان خود را با نظم حرفه‌ای ثبت و مدیریت کنید.'
+                          : 'Track invoices, inventory stock, and customer relationships in one place.',
+                      actionLabel: l10n.isPersian
+                          ? 'ثبت اولین مشتری'
+                          : 'Add your first customer',
+                      onAction: () {
+                        _showAddContactSheet(context);
+                      },
+                    );
+                  }
 
-              final metrics = state.metrics;
+                  final metrics = state.metrics;
 
-              return NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          children: [
-                            // KPI Cards
-                            Row(
+                  return NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) {
+                      return [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
                               children: [
-                                Expanded(
-                                  child: AppCard(
-                                    padding: const EdgeInsets.all(
-                                      AppSpacing.md,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.trending_up,
-                                              color: AppColors.income,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(
-                                              width: AppSpacing.xs,
-                                            ),
-                                            Text(
-                                              l10n.isPersian
-                                                  ? 'مجموع فروش'
-                                                  : 'Total Sales',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppColors.darkSubtext
-                                                        : AppColors
-                                                              .lightSubtext,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: AppSpacing.xs),
-                                        AppMoneyText(
-                                          money: metrics.totalSales,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.income,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                Expanded(
-                                  child: AppCard(
-                                    padding: const EdgeInsets.all(
-                                      AppSpacing.md,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.pending_actions_outlined,
-                                              color: AppColors.warning,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(
-                                              width: AppSpacing.xs,
-                                            ),
-                                            Text(
-                                              l10n.isPersian
-                                                  ? 'مطالبات فاکتور'
-                                                  : 'Unpaid Invoices',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppColors.darkSubtext
-                                                        : AppColors
-                                                              .lightSubtext,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: AppSpacing.xs),
-                                        AppMoneyText(
-                                          money: metrics.unpaidReceivables,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.warning,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Low stock alert banner
-                            if (metrics.lowStockCount > 0) ...[
-                              const SizedBox(height: AppSpacing.sm),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.md,
-                                  vertical: AppSpacing.sm,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.danger.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  borderRadius: AppSpacing.borderRadiusMd,
-                                  border: Border.all(
-                                    color: AppColors.danger.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
+                                // KPI Cards
+                                Row(
                                   children: [
-                                    const Icon(
-                                      Icons.warning_amber_rounded,
-                                      color: AppColors.danger,
-                                      size: 20,
+                                    Expanded(
+                                      child: AppCard(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.md,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.trending_up,
+                                                  color: AppColors.income,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(
+                                                  width: AppSpacing.xs,
+                                                ),
+                                                Text(
+                                                  l10n.isPersian
+                                                      ? 'مجموع فروش'
+                                                      : 'Total Sales',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: isDark
+                                                            ? AppColors
+                                                                  .darkSubtext
+                                                            : AppColors
+                                                                  .lightSubtext,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(
+                                              height: AppSpacing.xs,
+                                            ),
+                                            AppMoneyText(
+                                              money: metrics.totalSales,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.income,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
-                                      child: Text(
-                                        l10n.isPersian
-                                            ? TextNormalizer.auto(
-                                                '${metrics.lowStockCount} کالا به حداقل موجودی انبار رسیده‌اند!',
-                                              )
-                                            : '${metrics.lowStockCount} items have reached low stock limit!',
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: AppColors.danger,
-                                              fontWeight: FontWeight.bold,
+                                      child: AppCard(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.md,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons
+                                                      .pending_actions_outlined,
+                                                  color: AppColors.warning,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(
+                                                  width: AppSpacing.xs,
+                                                ),
+                                                Text(
+                                                  l10n.isPersian
+                                                      ? 'مطالبات فاکتور'
+                                                      : 'Unpaid Invoices',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: isDark
+                                                            ? AppColors
+                                                                  .darkSubtext
+                                                            : AppColors
+                                                                  .lightSubtext,
+                                                      ),
+                                                ),
+                                              ],
                                             ),
+                                            const SizedBox(
+                                              height: AppSpacing.xs,
+                                            ),
+                                            AppMoneyText(
+                                              money: metrics.unpaidReceivables,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.warning,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ],
+
+                                // Low stock alert banner
+                                if (metrics.lowStockCount > 0) ...[
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.danger.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: AppSpacing.borderRadiusMd,
+                                      border: Border.all(
+                                        color: AppColors.danger.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: AppColors.danger,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: AppSpacing.sm),
+                                        Expanded(
+                                          child: Text(
+                                            l10n.isPersian
+                                                ? TextNormalizer.auto(
+                                                    '${metrics.lowStockCount} کالا به حداقل موجودی انبار رسیده‌اند!',
+                                                  )
+                                                : '${metrics.lowStockCount} items have reached low stock limit!',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: AppColors.danger,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ];
+                    },
+                    body: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildInvoicesTab(
+                          context,
+                          state.invoices,
+                          state.contacts,
+                          state.products,
+                        ),
+                        _buildProductsTab(context, state.products),
+                        _buildContactsTab(context, state.contacts),
+                      ],
                     ),
-                  ];
+                  );
                 },
-                body: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildInvoicesTab(
-                      context,
-                      state.invoices,
-                      state.contacts,
-                      state.products,
-                    ),
-                    _buildProductsTab(context, state.products),
-                    _buildContactsTab(context, state.contacts),
-                  ],
-                ),
-              );
-            },
-          ),
-          ),
+              ),
+            ),
           ),
         ),
       ),
@@ -533,8 +542,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                             );
                           },
                         ),
-                        if (!isPaid &&
-                            invoice.type != InvoiceType.quote)
+                        if (!isPaid && invoice.type != InvoiceType.quote)
                           TextButton.icon(
                             icon: const Icon(Icons.payment_outlined, size: 16),
                             label: Text(l10n.isPersian ? 'ثبت پرداخت' : 'Pay'),
@@ -562,9 +570,7 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                               size: 16,
                             ),
                             label: Text(
-                              l10n.isPersian
-                                  ? 'تبدیل به فاکتور'
-                                  : 'To invoice',
+                              l10n.isPersian ? 'تبدیل به فاکتور' : 'To invoice',
                             ),
                             onPressed: () {
                               final bloc = context.read<BusinessBloc>();

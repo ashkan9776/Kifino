@@ -110,11 +110,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
   List<DebtEntity> _lastDebts = const [];
   bool _hasLoaded = false;
 
-  DebtBloc(
-    this._repository,
-    this._notifications, {
-    this.transactionRepository,
-  }) : super(DebtInitial()) {
+  DebtBloc(this._repository, this._notifications, {this.transactionRepository})
+    : super(DebtInitial()) {
     on<WatchDebtsStarted>(_onWatchStarted);
     on<_DebtsUpdated>(_onDebtsUpdated);
     on<DebtCreateSubmitted>(_onCreateSubmitted);
@@ -225,8 +222,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
             event.accountId!.isNotEmpty &&
             transactionRepository != null) {
           final debtInfo =
-              updated ??
-              _lastDebts.where((d) => d.id == event.id).firstOrNull;
+              updated ?? _lastDebts.where((d) => d.id == event.id).firstOrNull;
           final isDebt = (debtInfo?.type ?? DebtType.debt) == DebtType.debt;
           final contact = debtInfo?.contactName ?? '';
           final description = contact.isNotEmpty

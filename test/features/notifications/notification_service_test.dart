@@ -180,7 +180,9 @@ void main() {
       addTearDown(bloc.close);
 
       final now = DateTime.now();
-      await db.into(db.accountsTable).insert(
+      await db
+          .into(db.accountsTable)
+          .insert(
             AccountsTableCompanion.insert(
               id: 'acc-n',
               name: 'بانک',
@@ -197,8 +199,10 @@ void main() {
         accountId: 'acc-n',
         totalAmount: const Money(minorUnits: 300000, currency: Currency.toman),
         numberOfInstallments: 3,
-        installmentAmount:
-            const Money(minorUnits: 100000, currency: Currency.toman),
+        installmentAmount: const Money(
+          minorUnits: 100000,
+          currency: Currency.toman,
+        ),
         startDate: now,
         nextDueDate: now.add(const Duration(days: 10)),
         createdAt: now,
@@ -223,16 +227,20 @@ void main() {
     });
 
     test('AndroidManifest declares RECEIVE_BOOT_COMPLETED and notification receivers', () {
-      final manifest =
-          File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+      final manifest = File('android/app/src/main/AndroidManifest.xml')
+          .readAsStringSync();
       expect(manifest, contains('android.permission.RECEIVE_BOOT_COMPLETED'));
       expect(
         manifest,
-        contains('com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver'),
+        contains(
+          'com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver',
+        ),
       );
       expect(
         manifest,
-        contains('com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver'),
+        contains(
+          'com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver',
+        ),
       );
     });
   });

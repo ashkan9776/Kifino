@@ -5,14 +5,19 @@ import 'package:equatable/equatable.dart';
 class ContactAgingEntry extends Equatable {
   final String contactId;
   final String contactName;
+
   /// Not yet due (dueDate today or in the future).
   final int currentMinor;
+
   /// 1–30 days past due.
   final int days1To30Minor;
+
   /// 31–60 days past due.
   final int days31To60Minor;
+
   /// 61–90 days past due.
   final int days61To90Minor;
+
   /// More than 90 days past due.
   final int days90PlusMinor;
 
@@ -69,12 +74,12 @@ class ContactAgingEntry extends Equatable {
 
   @override
   List<Object?> get props => [
-        contactId,
-        contactName,
-        currentMinor,
-        days1To30Minor,
-        days31To60Minor,
-        days61To90Minor,
-        days90PlusMinor,
-      ];
+    contactId,
+    contactName,
+    currentMinor,
+    days1To30Minor,
+    days31To60Minor,
+    days61To90Minor,
+    days90PlusMinor,
+  ];
 }

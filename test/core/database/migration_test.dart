@@ -111,12 +111,14 @@ void main() {
     expect(inserted.conversionFactor, equals(1));
   });
 
-  test('upgrades cleanly from v2 -> v9 without duplicate column crash', () async {
-    final db = AppDatabase(
-      NativeDatabase.memory(
-        setup: (rawDb) {
-          createV1Schema(rawDb);
-          rawDb.execute('''
+  test(
+    'upgrades cleanly from v2 -> v9 without duplicate column crash',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) {
+            createV1Schema(rawDb);
+            rawDb.execute('''
             CREATE TABLE financial_goals (
               id TEXT NOT NULL PRIMARY KEY,
               name TEXT NOT NULL,
@@ -133,15 +135,16 @@ void main() {
               version INTEGER NOT NULL DEFAULT 1
             );
           ''');
-          rawDb.execute('PRAGMA user_version = 2;');
-        },
-      ),
-    );
-    addTearDown(db.close);
+            rawDb.execute('PRAGMA user_version = 2;');
+          },
+        ),
+      );
+      addTearDown(db.close);
 
-    expect(await db.select(db.accountingTransactionsTable).get(), isEmpty);
-    expect(await db.select(db.assetsTable).get(), isEmpty);
-  });
+      expect(await db.select(db.accountingTransactionsTable).get(), isEmpty);
+      expect(await db.select(db.assetsTable).get(), isEmpty);
+    },
+  );
 
   test('upgrades cleanly from v3 -> v9 and adds sync columns to accounting_transactions & fiscal_years', () async {
     final db = AppDatabase(

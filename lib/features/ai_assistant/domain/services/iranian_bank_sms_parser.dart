@@ -45,12 +45,16 @@ class IranianBankSmsParser {
     _BankDef(['بانک پاسارگاد'], 'بانک پاسارگاد', 'پاسارگاد'),
     _BankDef(['بانک کشاورزی'], 'بانک کشاورزی', 'کشاورزی'),
     _BankDef(['بانک تجارت'], 'بانک تجارت', 'تجارت'),
-    _BankDef([
-      'بانک قرض الحسنه رسالت',
-      'بانک قرض‌الحسنه رسالت',
+    _BankDef(
+      ['بانک قرض الحسنه رسالت', 'بانک قرض‌الحسنه رسالت', 'بانک رسالت'],
       'بانک رسالت',
-    ], 'بانک رسالت', 'رسالت'),
-    _BankDef(['بانک قرض الحسنه مهر', 'بانک مهر ایران'], 'بانک مهر ایران', 'مهر'),
+      'رسالت',
+    ),
+    _BankDef(
+      ['بانک قرض الحسنه مهر', 'بانک مهر ایران'],
+      'بانک مهر ایران',
+      'مهر',
+    ),
     _BankDef(['بانک سپه'], 'بانک سپه', 'سپه'),
     _BankDef(['بانک آینده'], 'بانک آینده', 'آینده'),
     _BankDef(['بانک مسکن'], 'بانک مسکن', 'مسکن'),
@@ -59,7 +63,11 @@ class IranianBankSmsParser {
     _BankDef(['بانک دی'], 'بانک دی', 'دی'),
     _BankDef(['بانک سینا'], 'بانک سینا', 'سینا'),
     _BankDef(['بانک پارسیان'], 'بانک پارسیان', 'پارسیان'),
-    _BankDef(['بانک اقتصاد نوین', 'اقتصاد نوین'], 'بانک اقتصاد نوین', 'اقتصاد نوین'),
+    _BankDef(
+      ['بانک اقتصاد نوین', 'اقتصاد نوین'],
+      'بانک اقتصاد نوین',
+      'اقتصاد نوین',
+    ),
     _BankDef(['بانک کارآفرین'], 'بانک کارآفرین', 'کارآفرین'),
     _BankDef(['بانک سرمایه'], 'بانک سرمایه', 'سرمایه'),
     _BankDef(['بانک گردشگری'], 'بانک گردشگری', 'گردشگری'),
@@ -100,9 +108,7 @@ class IranianBankSmsParser {
       signals++;
     }
 
-    if (RegExp(
-          r'مبلغ\s*[:：\-]?\s*[0-9,،]+',
-        ).hasMatch(normalized) ||
+    if (RegExp(r'مبلغ\s*[:：\-]?\s*[0-9,،]+').hasMatch(normalized) ||
         RegExp(
           r'(?:برداشت|واریز|خرید|انتقال|افزایش\s+موجودی|کاهش\s+موجودی)\s*[:：\-]\s*[0-9,،]+',
         ).hasMatch(normalized) ||
@@ -114,9 +120,8 @@ class IranianBankSmsParser {
     final hasMultilineAndAmount =
         normalized.contains('\n') &&
         RegExp(r'[0-9,،]+\s*(?:ریال|تومان|تومن)').hasMatch(normalized);
-    final hasJalaliTimestamp = RegExp(
-      r'\b1[34]\d{2}[/-]\d{1,2}[/-]\d{1,2}\b',
-    ).hasMatch(normalized);
+    final hasJalaliTimestamp = RegExp(r'\b1[34]\d{2}[/-]\d{1,2}[/-]\d{1,2}\b')
+        .hasMatch(normalized);
     if (hasMultilineAndAmount || hasJalaliTimestamp) {
       signals++;
     }
@@ -296,9 +301,8 @@ class IranianBankSmsParser {
 
   static String? _extractAccountDigits(String text) {
     // 1. Masked PAN or asterisk-prefixed 4 digits: 6037********4321, *4321
-    final maskedMatch = RegExp(
-      r'(?:\d{4}[\s\-*xX]+|\*{2,}|\*|\.{2,})(\d{4})\b',
-    ).firstMatch(text);
+    final maskedMatch = RegExp(r'(?:\d{4}[\s\-*xX]+|\*{2,}|\*|\.{2,})(\d{4})\b')
+        .firstMatch(text);
     if (maskedMatch != null) return maskedMatch.group(1);
 
     // 2. Explicit account/card label with numeric identifier
@@ -516,7 +520,9 @@ class IranianBankSmsParser {
     required _BankDef? bankDef,
   }) {
     if (accounts == null || accounts.isEmpty) return null;
-    final active = accounts.where((a) => !a.isDeleted && !a.isArchived).toList();
+    final active = accounts
+        .where((a) => !a.isDeleted && !a.isArchived)
+        .toList();
     if (active.isEmpty) return null;
 
     if (hintDigits != null && hintDigits.length == 4) {

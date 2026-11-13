@@ -155,8 +155,9 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
         // (purchase). A missing voucher would leave the counterparty
         // outstanding forever even after full settlement.
         try {
-          final invoice = await _businessRepository
-              .getInvoiceById(event.invoiceId);
+          final invoice = await _businessRepository.getInvoiceById(
+            event.invoiceId,
+          );
           await invoice.fold(
             onSuccess: (inv) async {
               await _autoVoucherService.generateInvoicePaymentVoucher(
@@ -229,8 +230,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
                     .where((i) => i.id == event.invoiceId)
                     .firstOrNull
               : null;
-          final wasCancelled =
-              oldInvoice?.status == InvoiceStatus.cancelled;
+          final wasCancelled = oldInvoice?.status == InvoiceStatus.cancelled;
           if (wasCancelled && oldInvoice != null) {
             try {
               await _autoVoucherService.generateInvoiceVoucher(

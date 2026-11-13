@@ -734,9 +734,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
               final totalQty = stockBefore + item.quantity;
               final newAvgMinor = totalQty > 0
                   ? ((stockBefore * product.avgCostMinor +
-                            item.quantity * item.unitPrice.minorUnits) /
-                        totalQty)
-                      .round()
+                                item.quantity * item.unitPrice.minorUnits) /
+                            totalQty)
+                        .round()
                   : item.unitPrice.minorUnits;
               await (_db.update(
                 _db.productsTable,
@@ -776,10 +776,10 @@ class BusinessRepositoryImpl implements BusinessRepository {
             )..where((t) => t.id.equals(item.productId!))).getSingleOrNull();
             if (product != null) {
               final isReturn = invoice.type == InvoiceType.salesReturn;
-              final newStock = (product.currentStock + (isReturn ? item.quantity : -item.quantity)).clamp(
-                0.0,
-                99999999.0,
-              );
+              final newStock =
+                  (product.currentStock +
+                          (isReturn ? item.quantity : -item.quantity))
+                      .clamp(0.0, 99999999.0);
               await (_db.update(
                 _db.productsTable,
               )..where((t) => t.id.equals(product.id))).write(
@@ -806,7 +806,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
                             : product.purchasePriceMinor,
                       ),
                       notes: Value(
-                        isReturn ? 'برگشت از فروش $invId' : 'فاکتور فروش $invId',
+                        isReturn
+                            ? 'برگشت از فروش $invId'
+                            : 'فاکتور فروش $invId',
                       ),
                       createdAt: now,
                       updatedAt: now,
@@ -1182,9 +1184,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
         final totalQty = stockBefore + item.quantity;
         final newAvgMinor = totalQty > 0
             ? ((stockBefore * product.avgCostMinor +
-                      item.quantity * item.unitPrice.minorUnits) /
-                  totalQty)
-                .round()
+                          item.quantity * item.unitPrice.minorUnits) /
+                      totalQty)
+                  .round()
             : item.unitPrice.minorUnits;
         await (_db.update(
           _db.productsTable,
@@ -1497,8 +1499,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
     try {
       final invoicesRes = await getInvoices();
       final invoices = invoicesRes.dataOrNull ?? const <InvoiceEntity>[];
-      final targetType =
-          receivables ? InvoiceType.sale : InvoiceType.purchase;
+      final targetType = receivables ? InvoiceType.sale : InvoiceType.purchase;
       final now = DateTime.now();
       final byContact = <String, ContactAgingEntry>{};
 
@@ -1514,7 +1515,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
         final daysPastDue = now.difference(inv.dueDate).inDays;
         final name = inv.contactName ?? 'بدون نام';
-        final existing = byContact[inv.contactId] ??
+        final existing =
+            byContact[inv.contactId] ??
             ContactAgingEntry(contactId: inv.contactId, contactName: name);
         byContact[inv.contactId] = existing.addBucket(
           daysPastDue: daysPastDue,
@@ -1570,7 +1572,9 @@ class BusinessRepositoryImpl implements BusinessRepository {
           throw StateError('این فاکتور قبلاً به طور کامل تسویه شده است.');
         }
         if (effectivePayment.minorUnits > remaining) {
-          throw ArgumentError('مبلغ پرداخت نمی‌تواند از مانده فاکتور بیشتر باشد.');
+          throw ArgumentError(
+            'مبلغ پرداخت نمی‌تواند از مانده فاکتور بیشتر باشد.',
+          );
         }
 
         final newPaid = invoice.paidMinor + effectivePayment.minorUnits;
