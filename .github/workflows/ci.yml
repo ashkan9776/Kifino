@@ -130,7 +130,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows Executable (Release Check)
-        run: flutter build windows --release
+        run: flutter build windows --release -v
 
       - name: Add Windows Summary
         shell: bash
