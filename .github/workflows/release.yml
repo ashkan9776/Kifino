@@ -129,6 +129,12 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -143,7 +149,15 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows Executable (Release)
-        run: flutter build windows --release -v
+        shell: bash
+        run: |
+          flutter build windows --release -v 2>&1 | tee build_windows.log || {
+            echo "### ❌ Windows Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            tail -n 80 build_windows.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Package Windows Release as Zip
         shell: pwsh
