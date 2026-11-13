@@ -1,0 +1,285 @@
+name: Kifino Release - Automated Cross-Platform Build & Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      is_draft:
+        description: 'Create as Draft Release'
+        type: boolean
+        default: false
+      is_prerelease:
+        description: 'Mark as Pre-release'
+        type: boolean
+        default: false
+      release_notes:
+        description: 'Custom Release Notes'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  pre_release_checks:
+    name: Verification (Analyze & Test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Cache Gradle Dependencies
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Static Analysis
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Run Test Suite
+        run: flutter test
+
+  build_android:
+    name: Build Android Binaries (APK & AAB)
+    needs: pre_release_checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Release Keystore (Optional Secrets)
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ] && [ -n "${{ secrets.KEY_ALIAS }}" ]; then
+            echo "Configuring production release keystore from GitHub Secrets..."
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+            cat <<EOF > android/key.properties
+storePassword=${{ secrets.STORE_PASSWORD }}
+keyPassword=${{ secrets.KEY_PASSWORD }}
+keyAlias=${{ secrets.KEY_ALIAS }}
+storeFile=upload-keystore.jks
+EOF
+          else
+            echo "No custom production keystore found in Secrets. Using fallback signing configuration."
+          fi
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Universal Release APK
+        run: flutter build apk --release
+
+      - name: Build Split-per-ABI Release APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build Android App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      - name: Collect & Organize Android Artifacts
+        run: |
+          mkdir -p artifacts/android
+          cp build/app/outputs/flutter-apk/app-release.apk artifacts/android/Kifino-Android-Universal.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk artifacts/android/Kifino-Android-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk artifacts/android/Kifino-Android-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk artifacts/android/Kifino-Android-x86_64.apk
+          cp build/app/outputs/bundle/release/app-release.aab artifacts/android/Kifino-Android.aab
+
+          cd artifacts/android
+          sha256sum Kifino-Android-*.apk Kifino-Android.aab > sha256_android.txt
+          cat sha256_android.txt
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-binaries
+          path: artifacts/android/*
+
+  build_windows:
+    name: Build Windows Desktop Binary (Zip)
+    needs: pre_release_checks
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\Pub\Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Windows Executable (Release)
+        run: flutter build windows --release
+
+      - name: Package Windows Release as Zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\windows | Out-Null
+          $ReleaseDir = "build\windows\x64\runner\Release"
+          $ZipPath = "artifacts\windows\Kifino-Windows-x64.zip"
+          Compress-Archive -Path "$ReleaseDir\*" -DestinationPath $ZipPath -CompressionLevel Optimal
+          
+          # Compute SHA256 checksum
+          $Hash = (Get-FileHash -Path $ZipPath -Algorithm SHA256).Hash.ToLower()
+          "$Hash  Kifino-Windows-x64.zip" | Out-File -FilePath artifacts\windows\sha256_windows.txt -Encoding utf8
+          Get-Content artifacts\windows\sha256_windows.txt
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-binary
+          path: artifacts/windows/*
+
+  publish_release:
+    name: Publish GitHub Release
+    needs: [build_android, build_windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Determine Release Tag
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.version_tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Release Tag: ${TAG}"
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-binaries
+          path: release_assets
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release-binary
+          path: release_assets
+
+      - name: Generate Checksums & Release Notes
+        run: |
+          cd release_assets
+          cat sha256_android.txt sha256_windows.txt > checksums.txt
+          rm -f sha256_android.txt sha256_windows.txt
+          cd ..
+
+          cat << 'EOF' > release_body.md
+## کیفینو — Kifino Release 🚀
+
+نسخه رسمی اپلیکیشن حسابداری و مدیریت مالی هوشمند کیفینو آماده دریافت است.
+
+### 📦 فایل‌های اجرایی پیوست‌شده:
+- **اندروید (Android):**
+  - `Kifino-Android-Universal.apk`: نسخه عمومی برای تمامی گوشی‌های اندروید
+  - `Kifino-Android-arm64-v8a.apk`: نسخه بهینه‌شده برای پردازنده‌های ۶۴ بیتی مدرن
+  - `Kifino-Android-armeabi-v7a.apk`: نسخه برای پردازنده‌های قدیمی‌تر ۳۲ بیتی
+  - `Kifino-Android.aab`: بسته استاندارد App Bundle برای انتشار در گوگل‌پلی و مارکت‌ها
+- **ویندوز دسکتاپ (Windows):**
+  - `Kifino-Windows-x64.zip`: بسته کامل اجرای نیتیو روی ویندوز ۱۰ و ۱۱
+
+### 🔒 کدهای صحت‌سنجی هش (SHA-256 Checksums):
+\`\`\`
+EOF
+          cat release_assets/checksums.txt >> release_body.md
+          cat << 'EOF' >> release_body.md
+\`\`\`
+
+---
+> ساخته شده با موتور فلاتر، دیتابیس لوکال SQLite/Drift و معماری پایدار Clean Architecture.
+EOF
+
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo -e "\n### 📝 یادداشت‌های انتشار:\n${{ github.event.inputs.release_notes }}" >> release_body.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: "کیفینو — Kifino ${{ steps.release_info.outputs.tag }}"
+          body_path: release_body.md
+          draft: ${{ github.event.inputs.is_draft || false }}
+          prerelease: ${{ github.event.inputs.is_prerelease || false }}
+          files: |
+            release_assets/Kifino-Android-Universal.apk
+            release_assets/Kifino-Android-arm64-v8a.apk
+            release_assets/Kifino-Android-armeabi-v7a.apk
+            release_assets/Kifino-Android-x86_64.apk
+            release_assets/Kifino-Android.aab
+            release_assets/Kifino-Windows-x64.zip
+            release_assets/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

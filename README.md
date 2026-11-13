@@ -44,13 +44,27 @@ Drift (SQLite) — offline-first با مهاجرت نسخه‌ای
 go_router • get_it • fl_chart
 ```
 
-## ساخت‌دادن
+## ساخت و خروجی نهایی (Build)
 
 ```bash
+# دریافت وابستگی‌ها
 flutter pub get
+
+# بیلد نسخه اندروید
 flutter build apk --release --split-per-abi
+
+# بیلد نسخه ویندوز
+flutter build windows --release
 ```
 
-خروجی: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`
+- خروجی اندروید: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`
+- خروجی ویندوز: `build/windows/x64/runner/Release/kifino.exe`
+
+## پایپ‌لاین CI/CD و انتشار خودکار
+
+پروژه به پایپ‌لاین‌های خودکار **GitHub Actions** مجهز است:
+- **اعتبارسنجی مداوم (CI):** تست خودکار فرمت، آنالیز ایستا (`flutter analyze`) و ۲۳۹+ تست واحد روی هر Push و PR.
+- **انتشار خودکار (CD):** ساخت باینری‌های بهینه‌شده اندروید (APK و AAB) و ویندوز (Zip) و انتشار رسمی در GitHub Releases با تگ زدن (مانند `v1.0.0`).
+- جزئیات کامل و نحوه تنظیم Keystore را در [مستند CI/CD](docs/CI_CD.md) بخوانید.
 
 </div>
