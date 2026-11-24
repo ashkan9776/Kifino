@@ -7,7 +7,7 @@ import 'package:kifino/core/database/app_database.dart';
 
 /// v9 → v10 adds transaction source links (and backfills them for check and
 /// installment transactions), sync_queue.last_attempt_at and
-/// installments.first_due_date.
+/// installments.first_due_date — and continues to v11 (recurring rules).
 void main() {
   late Directory dir;
   late File file;
@@ -64,7 +64,9 @@ void main() {
         setup: (dynamic raw) {
           final version =
               (raw.select('PRAGMA user_version').first['user_version'] as int);
-          if (version != 10) return;
+          // Seeded at the latest version; rewind to a v9 file once.
+          if (version < 10) return;
+          raw.execute('DROP TABLE IF EXISTS recurring_rules');
           raw.execute('ALTER TABLE transactions DROP COLUMN source_type');
           raw.execute('ALTER TABLE transactions DROP COLUMN source_id');
           raw.execute('ALTER TABLE sync_queue DROP COLUMN last_attempt_at');
@@ -86,5 +88,7 @@ void main() {
 
     expect(await db.select(db.syncQueueTable).get(), isEmpty);
     expect(await db.select(db.installmentsTable).get(), isEmpty);
+    // v11 created the recurring rules table on the way up.
+    expect(await db.select(db.recurringRulesTable).get(), isEmpty);
   });
 }

@@ -91,7 +91,7 @@ void main() {
     );
 
     // Navigation shell rendered — i.e. no grey screen / build exception.
-    expect(find.byIcon(Icons.dashboard_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.space_dashboard_rounded), findsOneWidget);
 
     // Company database file exists after first use.
     final dirList = tempDir

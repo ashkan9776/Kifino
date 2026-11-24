@@ -6,6 +6,7 @@ import '../../app/theme/app_typography.dart';
 import '../utils/date_utils.dart';
 import '../utils/icon_utils.dart';
 import '../../features/transactions/domain/entities/transaction_entity.dart';
+import 'app_card.dart';
 import 'app_money_text.dart';
 
 class AppTransactionTile extends StatelessWidget {
@@ -25,30 +26,36 @@ class AppTransactionTile extends StatelessWidget {
     final colors = context.customColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final (iconData, iconBg, iconColor) = switch (transaction.type) {
+    final categoryColor = _parseHex(transaction.categoryColorHex);
+    final (iconData, iconColor) = switch (transaction.type) {
       TransactionType.income => (
-        Icons.arrow_downward_rounded,
-        isDark ? colors.incomeBg : AppColors.incomeBgLight,
-        colors.income,
+        transaction.categoryIconCodePoint != null
+            ? IconUtils.getIconData(transaction.categoryIconCodePoint!)
+            : Icons.south_west_rounded,
+        categoryColor ?? colors.income,
       ),
       TransactionType.expense => (
         transaction.categoryIconCodePoint != null
             ? IconUtils.getIconData(transaction.categoryIconCodePoint!)
-            : Icons.arrow_upward_rounded,
-        isDark ? colors.expenseBg : AppColors.expenseBgLight,
-        colors.expense,
+            : Icons.north_east_rounded,
+        categoryColor ?? colors.expense,
       ),
-      TransactionType.transfer => (
-        Icons.swap_horiz_rounded,
-        isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
-        colors.transfer,
+      TransactionType.transfer => (Icons.swap_horiz_rounded, colors.transfer),
+      TransactionType.debtPayment => (
+        Icons.handshake_outlined,
+        isDark ? AppColors.debtOrangeDark : AppColors.debtOrangeLight,
       ),
-      _ => (
-        Icons.receipt_rounded,
-        isDark ? colors.surfaceVariant : AppColors.lightSurfaceVariant,
-        Theme.of(context).colorScheme.primary,
+      TransactionType.receivablePayment => (
+        Icons.handshake_outlined,
+        colors.receivable,
       ),
+      _ => (Icons.tune_rounded, Theme.of(context).colorScheme.primary),
     };
+    final secondary = colors.textSecondary;
+    final meta = [
+      if (transaction.accountName != null) transaction.accountName!,
+      AppDateFormatter.formatRelative(transaction.date, locale: 'fa'),
+    ].join('  ·  ');
 
     final tile = Material(
       color: Colors.transparent,
@@ -58,60 +65,54 @@ class AppTransactionTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+            vertical: 12,
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: AppSpacing.borderRadiusMd,
-                ),
-                child: Icon(iconData, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.md),
+              AppIconBadge(icon: iconData, color: iconColor),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      transaction.description.isNotEmpty
-                          ? transaction.description
-                          : (transaction.categoryName ?? 'تراکنش'),
-                      style: AppTypography.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
                     Row(
                       children: [
-                        if (transaction.accountName != null) ...[
-                          Text(
-                            transaction.accountName!,
-                            style: AppTypography.labelMedium.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface
-                                  .withValues(alpha: 0.6),
+                        Flexible(
+                          child: Text(
+                            transaction.description.isNotEmpty
+                                ? transaction.description
+                                : (transaction.categoryName ?? 'تراکنش'),
+                            style: AppTypography.titleSmall.copyWith(
+                              color: colors.textPrimary,
                             ),
-                          ),
-                          const Text(' • '),
-                        ],
-                        Text(
-                          AppDateFormatter.formatRelative(
-                            transaction.date,
-                            locale: 'fa',
-                          ),
-                          style: AppTypography.labelMedium.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (transaction.isAutoGenerated ||
+                            transaction.recurringRuleId != null) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            transaction.recurringRuleId != null
+                                ? Icons.event_repeat_rounded
+                                : Icons.link_rounded,
+                            size: 14,
+                            color: colors.textTertiary,
+                          ),
+                        ],
                       ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      meta,
+                      style: AppTypography.bodySmall.copyWith(color: secondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               AppMoneyText(
                 money: transaction.amount,
                 sign: transaction.type == TransactionType.income
@@ -119,7 +120,9 @@ class AppTransactionTile extends StatelessWidget {
                     : (transaction.type == TransactionType.expense
                           ? MoneyDisplaySign.negativeOnly
                           : MoneyDisplaySign.none),
-                style: AppTypography.moneyTile,
+                style: AppTypography.moneyTile.copyWith(
+                  color: colors.textPrimary,
+                ),
                 colorCode: true,
                 usePersianDigits: true,
               ),
@@ -149,4 +152,14 @@ class AppTransactionTile extends StatelessWidget {
 
     return tile;
   }
+}
+
+Color? _parseHex(String? hex) {
+  if (hex == null || hex.isEmpty) return null;
+  final cleaned = hex.replaceFirst('#', '');
+  final value = int.tryParse(
+    cleaned.length == 6 ? 'FF$cleaned' : cleaned,
+    radix: 16,
+  );
+  return value == null ? null : Color(value);
 }

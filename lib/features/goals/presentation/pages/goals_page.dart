@@ -325,7 +325,7 @@ class GoalsPage extends StatelessWidget {
       case GoalStatus.active:
         return AppColors.primary;
       case GoalStatus.cancelled:
-        return Colors.grey;
+        return AppColors.lightTextTertiary;
     }
   }
 

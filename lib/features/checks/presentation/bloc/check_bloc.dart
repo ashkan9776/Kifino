@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/utils/app_logger.dart';
 
+import '../../../../core/constants/app_currency.dart';
 import '../../../../core/utils/money.dart';
 import '../../../notifications/domain/entities/app_notification_entity.dart';
 import '../../../notifications/domain/services/notification_service.dart';
@@ -118,14 +119,18 @@ class CheckBloc extends Bloc<CheckEvent, CheckState> {
   void _onChecksUpdated(_ChecksUpdated event, Emitter<CheckState> emit) {
     int pendingIssuedMinor = 0;
     int pendingReceivedMinor = 0;
-    const currency = Currency.irr;
+    // Base currency, with Toman↔Rial converted (this was hard-coded to
+    // IRR and summed raw amounts of mixed units).
+    final currency = AppCurrency.base;
 
     for (final c in event.checks) {
       if (c.isDeleted || !c.isPending) continue;
+      if (!c.amount.isCompatibleWith(currency)) continue;
+      final minor = c.amount.normalizeTo(currency).minorUnits;
       if (c.type == CheckType.issued) {
-        pendingIssuedMinor += c.amount.minorUnits;
+        pendingIssuedMinor += minor;
       } else {
-        pendingReceivedMinor += c.amount.minorUnits;
+        pendingReceivedMinor += minor;
       }
     }
 

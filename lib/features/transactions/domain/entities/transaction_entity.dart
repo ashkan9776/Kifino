@@ -70,6 +70,11 @@ class TransactionEntity extends Equatable {
   /// Id of the owning record (installment, check, debt or goal).
   final String? sourceId;
 
+  /// Set when a recurring rule posted this transaction. Unlike [source],
+  /// it does not lock the row: a bill can differ month to month, so the
+  /// user may edit or delete a posted occurrence freely.
+  final String? recurringRuleId;
+
   // Joined presentation data (optional)
   final String? accountName;
   final String? destinationAccountName;
@@ -96,6 +101,7 @@ class TransactionEntity extends Equatable {
     this.version = 1,
     this.source,
     this.sourceId,
+    this.recurringRuleId,
     this.accountName,
     this.destinationAccountName,
     this.categoryName,
@@ -132,6 +138,7 @@ class TransactionEntity extends Equatable {
     int? version,
     TransactionSource? source,
     String? sourceId,
+    String? recurringRuleId,
     String? accountName,
     String? destinationAccountName,
     String? categoryName,
@@ -157,6 +164,7 @@ class TransactionEntity extends Equatable {
       version: version ?? this.version,
       source: source ?? this.source,
       sourceId: sourceId ?? this.sourceId,
+      recurringRuleId: recurringRuleId ?? this.recurringRuleId,
       accountName: accountName ?? this.accountName,
       destinationAccountName:
           destinationAccountName ?? this.destinationAccountName,
@@ -187,5 +195,6 @@ class TransactionEntity extends Equatable {
     version,
     source,
     sourceId,
+    recurringRuleId,
   ];
 }

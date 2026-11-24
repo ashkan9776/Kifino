@@ -81,11 +81,11 @@ class _BackupPageState extends State<BackupPage> {
           final isValid = password.length >= 8;
 
           final (strengthLabel, strengthColor) = switch (strength) {
-            4 => ('بسیار قوی', Colors.green),
-            3 => ('خوب', Colors.lightGreen),
-            2 => ('متوسط', Colors.orange),
-            1 => ('ضعیف', Colors.redAccent),
-            _ => ('بسیار ضعیف (حداقل ۸ کاراکتر)', Colors.grey),
+            4 => ('بسیار قوی', AppColors.income),
+            3 => ('خوب', AppColors.income),
+            2 => ('متوسط', AppColors.warning),
+            1 => ('ضعیف', AppColors.danger),
+            _ => ('بسیار ضعیف (حداقل ۸ کاراکتر)', AppColors.lightTextTertiary),
           };
 
           return AlertDialog(
@@ -132,7 +132,9 @@ class _BackupPageState extends State<BackupPage> {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: password.isEmpty ? 0 : (strength.clamp(1, 4) / 4),
-                    backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                    backgroundColor: AppColors.lightTextTertiary.withValues(
+                      alpha: 0.2,
+                    ),
                     valueColor: AlwaysStoppedAnimation<Color>(strengthColor),
                     minHeight: 6,
                   ),
@@ -247,7 +249,7 @@ class _BackupPageState extends State<BackupPage> {
                       ),
                       duration: const Duration(seconds: 5),
                       backgroundColor: metadata.isLegacyFormat
-                          ? Colors.orange.shade800
+                          ? AppColors.debtOrangeLight
                           : null,
                     ),
                   );

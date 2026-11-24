@@ -149,7 +149,9 @@ class _CreateAccountingDocumentPageState
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: Colors.grey.withValues(alpha: 0.2),
+                              color: AppColors.lightTextTertiary.withValues(
+                                alpha: 0.2,
+                              ),
                             ),
                           ),
                           child: Padding(
@@ -179,9 +181,8 @@ class _CreateAccountingDocumentPageState
                                     ),
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: Colors.grey.withValues(
-                                          alpha: 0.3,
-                                        ),
+                                        color: AppColors.lightTextTertiary
+                                            .withValues(alpha: 0.3),
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -256,7 +257,9 @@ class _CreateAccountingDocumentPageState
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
+        side: BorderSide(
+          color: AppColors.lightTextTertiary.withValues(alpha: 0.25),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -287,7 +290,9 @@ class _CreateAccountingDocumentPageState
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.08),
+                        color: AppColors.lightTextTertiary.withValues(
+                          alpha: 0.08,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -321,7 +326,7 @@ class _CreateAccountingDocumentPageState
                   IconButton(
                     icon: const Icon(
                       Icons.delete_outline,
-                      color: Colors.red,
+                      color: AppColors.danger,
                       size: 20,
                     ),
                     onPressed: () {
@@ -412,7 +417,9 @@ class _CreateAccountingDocumentPageState
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+        side: BorderSide(
+          color: AppColors.lightTextTertiary.withValues(alpha: 0.2),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),

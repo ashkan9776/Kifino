@@ -128,7 +128,9 @@ class _JournalPageState extends State<JournalPage>
                     color: Theme.of(context).cardColor,
                     border: Border(
                       top: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.2),
+                        color: AppColors.lightTextTertiary.withValues(
+                          alpha: 0.2,
+                        ),
                       ),
                     ),
                     boxShadow: [
@@ -188,7 +190,9 @@ class _JournalPageState extends State<JournalPage>
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
+        side: BorderSide(
+          color: AppColors.lightTextTertiary.withValues(alpha: 0.25),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +201,7 @@ class _JournalPageState extends State<JournalPage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.08),
+              color: AppColors.lightTextTertiary.withValues(alpha: 0.08),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(10),
               ),
@@ -262,7 +266,7 @@ class _JournalPageState extends State<JournalPage>
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
-                        color: Colors.red,
+                        color: AppColors.danger,
                       ),
                       textAlign: TextAlign.end,
                     ),
@@ -271,7 +275,7 @@ class _JournalPageState extends State<JournalPage>
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
-                        color: Colors.green,
+                        color: AppColors.income,
                       ),
                       textAlign: TextAlign.end,
                     ),
@@ -394,7 +398,7 @@ void _showLegalBooksSheet(BuildContext context) {
                 leading: const Icon(Icons.menu_book_outlined),
                 title: const Text('دفتر روزنامه قانونی'),
                 subtitle: const Text('برای بازه تاریخ انتخاب‌شده'),
-                trailing: const Icon(Icons.chevron_left_rounded),
+                trailing: const Icon(Icons.chevron_right_rounded),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppSpacing.borderRadiusMd,
                 ),
@@ -411,7 +415,7 @@ void _showLegalBooksSheet(BuildContext context) {
                 leading: const Icon(Icons.chrome_reader_mode_outlined),
                 title: const Text('دفتر کل قانونی'),
                 subtitle: const Text('گردش و مانده معین‌ها'),
-                trailing: const Icon(Icons.chevron_left_rounded),
+                trailing: const Icon(Icons.chevron_right_rounded),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppSpacing.borderRadiusMd,
                 ),

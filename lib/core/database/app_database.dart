@@ -11,6 +11,7 @@ import 'tables/accounting_tables.dart';
 import 'tables/budget_debt_tables.dart';
 import 'tables/business_tables.dart';
 import 'tables/goal_tables.dart';
+import 'tables/recurring_tables.dart';
 import 'tables/sync_tables.dart';
 import 'tables/transaction_tables.dart';
 
@@ -46,6 +47,7 @@ part 'app_database.g.dart';
     AccountingDetailLedgersTable,
     AccountingDetailValuesTable,
     AccountingDocumentDetailLinksTable,
+    RecurringRulesTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -158,6 +160,9 @@ class AppDatabase extends _$AppDatabase {
           installmentsTable.firstDueDate,
         );
         await _backfillTransactionSources();
+      }
+      if (from < 11) {
+        await m.createTable(recurringRulesTable);
       }
     },
   );

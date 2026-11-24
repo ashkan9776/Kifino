@@ -38,6 +38,10 @@ import 'package:kifino/features/transactions/domain/repositories/transaction_rep
 import 'package:kifino/features/ai_assistant/presentation/bloc/ai_assistant_bloc.dart';
 import 'package:kifino/features/backup/domain/services/backup_service.dart';
 import 'package:kifino/features/notifications/domain/services/notification_service.dart';
+import 'package:kifino/features/recurring/data/repositories/recurring_repository_impl.dart';
+import 'package:kifino/features/recurring/domain/repositories/recurring_repository.dart';
+import 'package:kifino/features/recurring/domain/services/recurring_service.dart';
+import 'package:kifino/features/recurring/presentation/cubit/recurring_cubit.dart';
 import 'package:kifino/features/security/domain/services/security_service.dart';
 import 'package:kifino/features/security/presentation/cubit/security_cubit.dart';
 import 'package:kifino/features/accounting/domain/services/voucher_settings_service.dart';
@@ -154,6 +158,22 @@ void main() {
     sl.registerLazySingleton<NotificationService>(
       () => NotificationService(db: db),
     );
+    sl.registerLazySingleton<RecurringRepository>(
+      () => RecurringRepositoryImpl(db),
+    );
+    sl.registerLazySingleton<RecurringService>(
+      () => RecurringService(
+        db: db,
+        rules: sl<RecurringRepository>(),
+        transactions: sl<TransactionRepository>(),
+      ),
+    );
+    sl.registerFactory<RecurringCubit>(
+      () => RecurringCubit(
+        repository: sl<RecurringRepository>(),
+        service: sl<RecurringService>(),
+      ),
+    );
 
     sl.registerLazySingleton<CompanyRegistry>(() => CompanyRegistry(prefs));
     sl.registerLazySingleton<CompanyController>(
@@ -183,8 +203,8 @@ void main() {
 
     // Verify the floating navigation dock (selected tab shows the rounded
     // icon variant; inactive tabs show outlined).
-    expect(find.byIcon(Icons.dashboard_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.space_dashboard_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.grid_view_outlined), findsOneWidget);
     expect(find.byIcon(Icons.add_rounded), findsWidgets);
 
     // Unmount and flush timers before tearDown

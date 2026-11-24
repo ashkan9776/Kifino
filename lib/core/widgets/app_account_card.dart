@@ -27,64 +27,70 @@ class AppAccountCard extends StatelessWidget {
       AccountType.crypto => Icons.currency_bitcoin_rounded,
     };
 
+    final colors = context.customColors;
+    final accent = switch (account.type) {
+      AccountType.cashWallet => colors.income,
+      AccountType.savings => colors.asset,
+      AccountType.credit => colors.expense,
+      AccountType.investment || AccountType.crypto => colors.business,
+      AccountType.bankCard => Theme.of(context).colorScheme.primary,
+    };
+    final subtitle = [
+      account.type.titleFa,
+      if (account.cardNumberLastFour != null)
+        '•••• ${TextNormalizer.auto(account.cardNumberLastFour!)}',
+    ].join('  ·  ');
+
     return AppCard(
       onTap: onTap,
-      width: 240,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      backgroundColor: isDark
-          ? AppColors.darkSurfaceVariant
-          : AppColors.lightSurface,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary
-                      .withValues(alpha: 0.1),
-                  borderRadius: AppSpacing.borderRadiusSm,
-                ),
-                child: Icon(
-                  iconData,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
+              AppIconBadge(
+                icon: iconData,
+                color: accent,
+                size: 38,
+                iconSize: 19,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      account.name,
+                      style: AppTypography.titleSmall.copyWith(
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-              if (account.cardNumberLastFour != null)
-                Text(
-                  '•••• ${TextNormalizer.auto(account.cardNumberLastFour!)}',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface
-                        .withValues(alpha: 0.6),
-                    fontFeatures: AppTypography.tabularFigures,
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                account.name,
-                style: AppTypography.labelLarge,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              AppMoneyText(
-                money: account.currentBalance,
-                style: AppTypography.moneyTile,
-                usePersianDigits: true,
-              ),
-            ],
+          AppMoneyText(
+            money: account.currentBalance,
+            style: AppTypography.moneyTile.copyWith(
+              fontSize: 17,
+              color: colors.textPrimary,
+            ),
+            usePersianDigits: true,
           ),
         ],
       ),

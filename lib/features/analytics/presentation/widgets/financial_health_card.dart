@@ -9,9 +9,14 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_money_text.dart';
 
 class FinancialHealthCard extends StatelessWidget {
-  final double runwayMonths;
-  final double savingsRatePercent;
-  final double budgetAdherencePercent;
+  /// Null when there is no spending to measure a runway against.
+  final double? runwayMonths;
+
+  /// Null when there is no income in the period.
+  final double? savingsRatePercent;
+
+  /// Null when no budget is set — "100%" would be a made-up score.
+  final double? budgetAdherencePercent;
   final Money dailyAverageExpense;
 
   const FinancialHealthCard({
@@ -27,6 +32,7 @@ class FinancialHealthCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = context.l10n;
+    final neutral = isDark ? AppColors.darkSubtext : AppColors.lightSubtext;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -63,14 +69,16 @@ class FinancialHealthCard extends StatelessWidget {
               Expanded(
                 child: _MetricItem(
                   label: l10n.runway,
-                  valueText: TextNormalizer.auto(
-                    TextNormalizer.auto(
-                      '${runwayMonths > 99 ? '> 99' : runwayMonths.toStringAsFixed(1)} ${l10n.months}',
-                    ),
-                  ),
-                  valueColor: runwayMonths >= 6
+                  valueText: runwayMonths == null
+                      ? '—'
+                      : TextNormalizer.auto(
+                          '${runwayMonths! > 99 ? '> 99' : runwayMonths!.toStringAsFixed(1)} ${l10n.months}',
+                        ),
+                  valueColor: runwayMonths == null
+                      ? neutral
+                      : runwayMonths! >= 6
                       ? AppColors.income
-                      : (runwayMonths >= 3
+                      : (runwayMonths! >= 3
                             ? AppColors.warning
                             : AppColors.danger),
                   icon: Icons.hourglass_top_rounded,
@@ -81,12 +89,16 @@ class FinancialHealthCard extends StatelessWidget {
               Expanded(
                 child: _MetricItem(
                   label: l10n.savingsRate,
-                  valueText: TextNormalizer.auto(
-                    '${savingsRatePercent.toStringAsFixed(1)}%',
-                  ),
-                  valueColor: savingsRatePercent >= 20
+                  valueText: savingsRatePercent == null
+                      ? '—'
+                      : TextNormalizer.auto(
+                          '${savingsRatePercent!.toStringAsFixed(1)}%',
+                        ),
+                  valueColor: savingsRatePercent == null
+                      ? neutral
+                      : savingsRatePercent! >= 20
                       ? AppColors.income
-                      : (savingsRatePercent >= 0
+                      : (savingsRatePercent! >= 0
                             ? AppColors.primary
                             : AppColors.danger),
                   icon: Icons.savings_outlined,
@@ -101,12 +113,16 @@ class FinancialHealthCard extends StatelessWidget {
               Expanded(
                 child: _MetricItem(
                   label: l10n.budgetAdherence,
-                  valueText: TextNormalizer.auto(
-                    '${budgetAdherencePercent.toStringAsFixed(0)}%',
-                  ),
-                  valueColor: budgetAdherencePercent >= 85
+                  valueText: budgetAdherencePercent == null
+                      ? '—'
+                      : TextNormalizer.auto(
+                          '${budgetAdherencePercent!.toStringAsFixed(0)}%',
+                        ),
+                  valueColor: budgetAdherencePercent == null
+                      ? neutral
+                      : budgetAdherencePercent! >= 85
                       ? AppColors.income
-                      : (budgetAdherencePercent >= 65
+                      : (budgetAdherencePercent! >= 65
                             ? AppColors.warning
                             : AppColors.danger),
                   icon: Icons.pie_chart_outline_rounded,

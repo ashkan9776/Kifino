@@ -187,7 +187,7 @@ class _TrialBalancePageState extends State<TrialBalancePage>
   ) {
     return DataTable(
       headingRowColor: WidgetStateProperty.all(
-        Colors.grey.withValues(alpha: 0.1),
+        AppColors.lightTextTertiary.withValues(alpha: 0.1),
       ),
       columnSpacing: 16,
       horizontalMargin: 12,
@@ -204,28 +204,40 @@ class _TrialBalancePageState extends State<TrialBalancePage>
         DataColumn(
           label: Text(
             'گردش بدهکار',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.danger,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'گردش بستانکار',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.income,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'مانده بدهکار',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.danger,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'مانده بستانکار',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.income,
+            ),
           ),
           numeric: true,
         ),
@@ -286,7 +298,7 @@ class _TrialBalancePageState extends State<TrialBalancePage>
   ) {
     return DataTable(
       headingRowColor: WidgetStateProperty.all(
-        Colors.grey.withValues(alpha: 0.1),
+        AppColors.lightTextTertiary.withValues(alpha: 0.1),
       ),
       columnSpacing: 14,
       horizontalMargin: 10,
@@ -321,7 +333,7 @@ class _TrialBalancePageState extends State<TrialBalancePage>
             'پایان بد',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.red,
+              color: AppColors.danger,
               fontSize: 11,
             ),
           ),
@@ -332,7 +344,7 @@ class _TrialBalancePageState extends State<TrialBalancePage>
             'پایان بس',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.green,
+              color: AppColors.income,
               fontSize: 11,
             ),
           ),
@@ -411,7 +423,7 @@ class _TrialBalancePageState extends State<TrialBalancePage>
   ) {
     return DataTable(
       headingRowColor: WidgetStateProperty.all(
-        Colors.grey.withValues(alpha: 0.1),
+        AppColors.lightTextTertiary.withValues(alpha: 0.1),
       ),
       columnSpacing: 14,
       horizontalMargin: 10,
@@ -444,28 +456,40 @@ class _TrialBalancePageState extends State<TrialBalancePage>
         DataColumn(
           label: Text(
             'مجموع بد',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.danger,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'مجموع بس',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.income,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'پایان بد',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.danger,
+            ),
           ),
           numeric: true,
         ),
         DataColumn(
           label: Text(
             'پایان بس',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.income,
+            ),
           ),
           numeric: true,
         ),
@@ -561,7 +585,9 @@ class _TrialBalancePageState extends State<TrialBalancePage>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: Border(
-          top: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
+          top: BorderSide(
+            color: AppColors.lightTextTertiary.withValues(alpha: 0.25),
+          ),
         ),
         boxShadow: [
           BoxShadow(

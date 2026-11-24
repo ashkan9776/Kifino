@@ -375,6 +375,11 @@ class _NotificationCard extends StatelessWidget {
         );
       case NotificationType.lowStock:
         return (Icons.inventory_2_rounded, AppColors.warning);
+      case NotificationType.recurringDue:
+        return (
+          Icons.event_repeat_rounded,
+          isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight,
+        );
       case NotificationType.budgetAlert:
         return (
           Icons.warning_amber_rounded,

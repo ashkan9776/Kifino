@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/design_system/tokens/radii.dart';
+import '../../../../core/design_system/tokens/colors.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -126,20 +130,13 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
+      // Same ink hero as the dashboard: white text needs a dark surface —
+      // on the bright dark-mode turquoise it was barely readable.
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [colors.primary, colors.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colors.primary.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        gradient: Theme.of(context).brightness == Brightness.dark
+            ? KifinoPalette.heroDark
+            : KifinoPalette.heroLight,
+        borderRadius: BorderRadius.circular(KifinoRadii.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,42 +282,42 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         title: 'اسناد حسابداری',
         subtitle: 'فهرست، ویرایش و تأیید اسناد',
         icon: Icons.receipt_long,
-        color: Colors.indigo,
+        color: AppColors.transferLight,
         route: '/accounting/documents',
       ),
       _ModuleItem(
         title: 'کدینگ سرفصل‌ها',
         subtitle: 'کل، معین و تفصیلی',
         icon: Icons.account_tree_outlined,
-        color: Colors.teal,
+        color: AppColors.primary,
         route: '/accounting/chart-of-accounts',
       ),
       _ModuleItem(
         title: 'دفتر روزنامه',
         subtitle: 'ثبت ترتیبی تراکنش‌ها',
         icon: Icons.menu_book,
-        color: Colors.blueGrey,
+        color: AppColors.lightTextSecondary,
         route: '/accounting/journal',
       ),
       _ModuleItem(
         title: 'دفتر کل و معین',
         subtitle: 'گردش و مانده با تشخیص بد/بس',
         icon: Icons.chrome_reader_mode,
-        color: Colors.purple,
+        color: AppColors.assetLight,
         route: '/accounting/ledger',
       ),
       _ModuleItem(
         title: 'تراز آزمایشی',
         subtitle: 'تراز ۴ و ۸ ستونی گردش و مانده',
         icon: Icons.balance,
-        color: Colors.deepOrange,
+        color: AppColors.debtOrangeLight,
         route: '/accounting/trial-balance',
       ),
       _ModuleItem(
         title: 'ترازنامه و سود/زیان',
         subtitle: 'صورت‌های مالی اساسی',
         icon: Icons.pie_chart_outline,
-        color: Colors.teal,
+        color: AppColors.primary,
         route: '/accounting/financial-statements',
       ),
     ];
@@ -337,21 +334,21 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         title: 'لاگ حسابرسی',
         subtitle: 'تاریخچه تغییرات اسناد',
         icon: Icons.history,
-        color: Colors.blueGrey,
+        color: AppColors.lightTextSecondary,
         route: '/accounting/audit-logs',
       ),
       const _ModuleItem(
         title: 'تفصیلی شناور',
         subtitle: 'تعریف ابعاد تحلیلی و مقادیر',
         icon: Icons.category_outlined,
-        color: Colors.teal,
+        color: AppColors.primary,
         route: '/accounting/detail-ledgers',
       ),
       const _ModuleItem(
         title: 'گزارش تفصیلی',
         subtitle: 'گردش و مانده به تفکیک مقدار',
         icon: Icons.assessment_outlined,
-        color: Colors.indigo,
+        color: AppColors.transferLight,
         route: '/accounting/detail-ledgers/report',
       ),
       const _ModuleItem(
@@ -365,14 +362,14 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
         title: 'حساب‌های سند خودکار',
         subtitle: 'تنظیم حساب‌های طرف مقابل فاکتور',
         icon: Icons.tune,
-        color: Colors.blue,
+        color: AppColors.info,
         route: '/accounting/voucher-settings',
       ),
       const _ModuleItem(
         title: 'خزانه',
         subtitle: 'موجودی نقد و بانک و مغایرت‌گیری چک',
         icon: Icons.account_balance_wallet_outlined,
-        color: Colors.teal,
+        color: AppColors.primary,
         route: '/accounting/treasury',
       ),
     ];
@@ -640,7 +637,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
               children: [
                 const Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.deepOrange,
+                  color: AppColors.debtOrangeLight,
                   size: 18,
                 ),
                 const SizedBox(width: 6),
@@ -933,7 +930,7 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
+                        color: AppColors.lightTextTertiary,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -996,7 +993,9 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.2),
+                          color: AppColors.lightTextTertiary.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -1009,14 +1008,16 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
                             ),
                             decoration: BoxDecoration(
                               color: isDeb
-                                  ? Colors.red.withValues(alpha: 0.1)
-                                  : Colors.green.withValues(alpha: 0.1),
+                                  ? AppColors.danger.withValues(alpha: 0.1)
+                                  : AppColors.income.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               isDeb ? 'بدهکار' : 'بستانکار',
                               style: TextStyle(
-                                color: isDeb ? Colors.red : Colors.green,
+                                color: isDeb
+                                    ? AppColors.danger
+                                    : AppColors.income,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),

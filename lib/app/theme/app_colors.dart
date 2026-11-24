@@ -3,25 +3,39 @@ import 'package:flutter/material.dart';
 import '../../core/design_system/tokens/colors.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────
-/// SEMANTIC COLOR LAYER (light/dark resolved values)
+/// SEMANTIC COLOR LAYER (light/dark resolved values) — Kifino 2
 ///
 /// Every value maps onto [KifinoPalette] primitives — screens never see raw
-/// hex. Key names are stable across the palette migration so existing
-/// screens keep compiling while the whole brand shifts underneath them.
+/// hex. Key names are stable across palette migrations so existing screens
+/// keep compiling while the whole brand shifts underneath them. (The
+/// `primaryBlue*` names are historical: the brand is now Firoozeh.)
 /// ─────────────────────────────────────────────────────────────────────────
 class AppColors {
-  // Brand — Electric Blue is the light-theme primary, Bright Blue the dark.
-  static const Color primaryBlueLight = KifinoPalette.blue600; // #247BFF
-  static const Color primaryBlueDark = KifinoPalette.blue500; // #3187FF
-  static const Color accentIndigo =
-      KifinoPalette.purple400; // #8B7CFF (asset accent)
-  static const Color accentIndigoLight = Color(0xFFA794FF);
+  // Brand — Firoozeh (turquoise).
+  static const Color primaryBlueLight = KifinoPalette.firoozeh700;
+  static const Color primaryBlueDark = KifinoPalette.firoozeh400;
+  static const Color primaryTintLight = KifinoPalette.firoozeh50;
+  static const Color primaryTintDark = Color(0xFF0E2F33);
+  static const Color accentIndigo = KifinoPalette.violet500;
+  static const Color accentIndigoLight = KifinoPalette.violet300;
+
+  // Ink — hero surfaces and strong text.
+  static const Color ink = KifinoPalette.ink900;
+  static const Color inkDeep = KifinoPalette.ink950;
+  static const Color onInk = KifinoPalette.night50;
+  static const Color onInkSecondary = Color(0xFF9FB3C8);
+
+  // Gold — goals, achievements, premium.
+  static const Color gold = KifinoPalette.gold600;
+  static const Color goldDark = KifinoPalette.gold400;
+  static const Color goldBgLight = KifinoPalette.gold100;
+  static const Color goldBgDark = Color(0xFF33290F);
 
   // Standard Semantic Shortcuts
   static const Color primary = primaryBlueLight;
   static const Color income = incomeLight;
   static const Color expense = expenseLight;
-  static const Color warning = Color(0xFFFFB547);
+  static const Color warning = KifinoPalette.warning;
   static const Color danger = expenseLight;
   static const Color info = KifinoPalette.info;
   static const Color receivable = receivableLight;
@@ -32,57 +46,57 @@ class AppColors {
   static const Color textSecondary = lightTextSecondary;
 
   // Financial Semantic — Income (Emerald)
-  static const Color incomeLight = KifinoPalette.emerald500; // #25C997
-  static const Color incomeDark = KifinoPalette.mint400; // #39E6A5
-  static const Color incomeBgLight = Color(0xFFE7FAF3);
-  static const Color incomeBgDark = Color(0xFF0B2E24);
+  static const Color incomeLight = KifinoPalette.success;
+  static const Color incomeDark = KifinoPalette.successDark;
+  static const Color incomeBgLight = Color(0xFFE4F4EA);
+  static const Color incomeBgDark = Color(0xFF0D2A1C);
 
-  // Financial Semantic — Expense (Coral)
-  static const Color expenseLight = KifinoPalette.error; // #FF5C6C
-  static const Color expenseDark = Color(0xFFFF7A87);
-  static const Color expenseBgLight = Color(0xFFFFECEE);
-  static const Color expenseBgDark = Color(0xFF3A1218);
+  // Financial Semantic — Expense (Pomegranate)
+  static const Color expenseLight = KifinoPalette.error;
+  static const Color expenseDark = KifinoPalette.errorDark;
+  static const Color expenseBgLight = Color(0xFFFBE7E7);
+  static const Color expenseBgDark = Color(0xFF34161A);
 
-  // Financial Semantic — Transfer (Blue) & Debt (Orange)
-  static const Color transferLight = KifinoPalette.blue600;
-  static const Color transferDark = KifinoPalette.cyan500;
-  static const Color debtOrangeLight = KifinoPalette.orange400; // #FF9F43
-  static const Color debtOrangeDark = KifinoPalette.yellow400; // #FFCA58
+  // Financial Semantic — Transfer (Indigo) & Debt (Amber)
+  static const Color transferLight = KifinoPalette.indigo500;
+  static const Color transferDark = KifinoPalette.indigo300;
+  static const Color debtOrangeLight = KifinoPalette.amber500;
+  static const Color debtOrangeDark = KifinoPalette.amber300;
 
-  // Financial Semantic — Receivable (Cyan) & Asset (Purple)
-  static const Color receivableLight = KifinoPalette.cyan500;
-  static const Color receivableDark = Color(0xFF4CD6F0);
-  static const Color receivableBgLight = Color(0xFFE4F8FC);
-  static const Color receivableBgDark = Color(0xFF082E38);
-  static const Color assetLight = KifinoPalette.purple400;
-  static const Color assetDark = Color(0xFFA794FF);
-  static const Color assetBgLight = Color(0xFFF0EEFE);
-  static const Color assetBgDark = Color(0xFF1D1638);
+  // Financial Semantic — Receivable (Sky) & Asset (Violet)
+  static const Color receivableLight = KifinoPalette.sky500;
+  static const Color receivableDark = KifinoPalette.sky300;
+  static const Color receivableBgLight = Color(0xFFE5F0FB);
+  static const Color receivableBgDark = Color(0xFF0E2238);
+  static const Color assetLight = KifinoPalette.violet500;
+  static const Color assetDark = KifinoPalette.violet300;
+  static const Color assetBgLight = Color(0xFFEFEAFC);
+  static const Color assetBgDark = Color(0xFF221A3D);
 
-  // Light Theme Neutrals
-  static const Color lightSurface = KifinoPalette.neutral0; // #FFFFFF
-  static const Color lightBackground = Color(0xFFF6F8FC);
-  static const Color lightSurfaceVariant = KifinoPalette.neutral100; // #F1F5F9
-  static const Color lightBorder = Color(0xFFE8EDF4); // subtle
-  static const Color lightTextPrimary = Color(0xFF0B1220);
-  static const Color lightTextSecondary = Color(0xFF687386);
-  static const Color lightTextTertiary = KifinoPalette.neutral400; // #94A3B8
+  // Light Theme Neutrals (warm sand)
+  static const Color lightSurface = KifinoPalette.sand0;
+  static const Color lightBackground = KifinoPalette.sand50;
+  static const Color lightSurfaceVariant = KifinoPalette.sand100;
+  static const Color lightBorder = KifinoPalette.sand200;
+  static const Color lightTextPrimary = KifinoPalette.ink900;
+  static const Color lightTextSecondary = KifinoPalette.sand600;
+  static const Color lightTextTertiary = KifinoPalette.sand400;
 
-  // Dark Theme Neutrals ( — intentionally designed, never pure black)
-  static const Color darkSurface = Color(0xFF0D1B2D);
-  static const Color darkBackground = KifinoPalette.neutral950; // #07111F
-  static const Color darkSurfaceVariant = Color(0xFF12243A);
-  static const Color darkSurfaceElevated = Color(0xFF12243A);
-  static const Color darkBorder = Color(0xFF1D3350);
-  static const Color darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color darkTextSecondary = KifinoPalette.neutral400; // #94A3B8
-  static const Color darkTextTertiary = KifinoPalette.neutral500; // #64748B
+  // Dark Theme Neutrals (night — never pure black)
+  static const Color darkSurface = KifinoPalette.night900;
+  static const Color darkBackground = KifinoPalette.night950;
+  static const Color darkSurfaceVariant = KifinoPalette.night800;
+  static const Color darkSurfaceElevated = KifinoPalette.night800;
+  static const Color darkBorder = KifinoPalette.night700;
+  static const Color darkTextPrimary = KifinoPalette.night50;
+  static const Color darkTextSecondary = KifinoPalette.night300;
+  static const Color darkTextTertiary = KifinoPalette.night400;
 
-  // Business Mode Accent (Purple)
-  static const Color businessPurpleLight = KifinoPalette.purple400;
-  static const Color businessPurpleDark = Color(0xFFA794FF);
-  static const Color businessBgLight = Color(0xFFF0EEFE);
-  static const Color businessBgDark = Color(0xFF1D1638);
+  // Business Mode Accent (Gold)
+  static const Color businessPurpleLight = KifinoPalette.gold600;
+  static const Color businessPurpleDark = KifinoPalette.gold400;
+  static const Color businessBgLight = KifinoPalette.gold100;
+  static const Color businessBgDark = Color(0xFF33290F);
 }
 
 @immutable

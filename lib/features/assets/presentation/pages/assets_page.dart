@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_currency.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -159,7 +162,7 @@ class _AssetsPageState extends State<AssetsPage> {
                         decoration: InputDecoration(
                           labelText: l10n.purchasePrice,
                           prefixIcon: const Icon(Icons.shopping_cart_outlined),
-                          suffixText: l10n.isPersian ? 'تومان' : '',
+                          suffixText: AppCurrency.base.symbol,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -174,7 +177,7 @@ class _AssetsPageState extends State<AssetsPage> {
                         decoration: InputDecoration(
                           labelText: l10n.currentValuation,
                           prefixIcon: const Icon(Icons.trending_up_rounded),
-                          suffixText: l10n.isPersian ? 'تومان' : '',
+                          suffixText: AppCurrency.base.symbol,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
@@ -211,11 +214,11 @@ class _AssetsPageState extends State<AssetsPage> {
                                   unit: unit.isNotEmpty ? unit : 'واحد',
                                   costBasis: Money.fromMinor(
                                     costVal,
-                                    Currency.irr,
+                                    AppCurrency.base,
                                   ),
                                   currentValue: Money.fromMinor(
                                     curVal,
-                                    Currency.irr,
+                                    AppCurrency.base,
                                   ),
                                   purchaseDate: now,
                                   createdAt: now,
@@ -292,7 +295,7 @@ class _AssetsPageState extends State<AssetsPage> {
                   decoration: InputDecoration(
                     labelText: l10n.currentValuation,
                     prefixIcon: const Icon(Icons.trending_up_rounded),
-                    suffixText: l10n.isPersian ? 'تومان' : '',
+                    suffixText: AppCurrency.base.symbol,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),

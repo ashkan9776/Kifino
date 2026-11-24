@@ -611,7 +611,10 @@ class _SendButton extends StatelessWidget {
                 ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [KifinoPalette.blue600, KifinoPalette.cyan500],
+                    colors: [
+                      KifinoPalette.firoozeh500,
+                      KifinoPalette.firoozeh700,
+                    ],
                   )
                 : null,
             color: enabled

@@ -21014,6 +21014,1424 @@ class AccountingDocumentDetailLinksTableCompanion
   }
 }
 
+class $RecurringRulesTableTable extends RecurringRulesTable
+    with TableInfo<$RecurringRulesTableTable, RecurringRuleData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecurringRulesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _destinationAccountIdMeta =
+      const VerificationMeta('destinationAccountId');
+  @override
+  late final GeneratedColumn<String> destinationAccountId =
+      GeneratedColumn<String>(
+        'destination_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+    'frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalCountMeta = const VerificationMeta(
+    'intervalCount',
+  );
+  @override
+  late final GeneratedColumn<int> intervalCount = GeneratedColumn<int>(
+    'interval_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nextIndexMeta = const VerificationMeta(
+    'nextIndex',
+  );
+  @override
+  late final GeneratedColumn<int> nextIndex = GeneratedColumn<int>(
+    'next_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextRunDateMeta = const VerificationMeta(
+    'nextRunDate',
+  );
+  @override
+  late final GeneratedColumn<int> nextRunDate = GeneratedColumn<int>(
+    'next_run_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maxOccurrencesMeta = const VerificationMeta(
+    'maxOccurrences',
+  );
+  @override
+  late final GeneratedColumn<int> maxOccurrences = GeneratedColumn<int>(
+    'max_occurrences',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postedCountMeta = const VerificationMeta(
+    'postedCount',
+  );
+  @override
+  late final GeneratedColumn<int> postedCount = GeneratedColumn<int>(
+    'posted_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _autoPostMeta = const VerificationMeta(
+    'autoPost',
+  );
+  @override
+  late final GeneratedColumn<bool> autoPost = GeneratedColumn<bool>(
+    'auto_post',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_post" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _remindDaysBeforeMeta = const VerificationMeta(
+    'remindDaysBefore',
+  );
+  @override
+  late final GeneratedColumn<int> remindDaysBefore = GeneratedColumn<int>(
+    'remind_days_before',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    type,
+    accountId,
+    destinationAccountId,
+    categoryId,
+    amountMinor,
+    currency,
+    frequency,
+    intervalCount,
+    startDate,
+    nextIndex,
+    nextRunDate,
+    endDate,
+    maxOccurrences,
+    postedCount,
+    autoPost,
+    remindDaysBefore,
+    isActive,
+    notes,
+    lastError,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncStatus,
+    version,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recurring_rules';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecurringRuleData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('destination_account_id')) {
+      context.handle(
+        _destinationAccountIdMeta,
+        destinationAccountId.isAcceptableOrUnknown(
+          data['destination_account_id']!,
+          _destinationAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('frequency')) {
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_frequencyMeta);
+    }
+    if (data.containsKey('interval_count')) {
+      context.handle(
+        _intervalCountMeta,
+        intervalCount.isAcceptableOrUnknown(
+          data['interval_count']!,
+          _intervalCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('next_index')) {
+      context.handle(
+        _nextIndexMeta,
+        nextIndex.isAcceptableOrUnknown(data['next_index']!, _nextIndexMeta),
+      );
+    }
+    if (data.containsKey('next_run_date')) {
+      context.handle(
+        _nextRunDateMeta,
+        nextRunDate.isAcceptableOrUnknown(
+          data['next_run_date']!,
+          _nextRunDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_nextRunDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    }
+    if (data.containsKey('max_occurrences')) {
+      context.handle(
+        _maxOccurrencesMeta,
+        maxOccurrences.isAcceptableOrUnknown(
+          data['max_occurrences']!,
+          _maxOccurrencesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('posted_count')) {
+      context.handle(
+        _postedCountMeta,
+        postedCount.isAcceptableOrUnknown(
+          data['posted_count']!,
+          _postedCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_post')) {
+      context.handle(
+        _autoPostMeta,
+        autoPost.isAcceptableOrUnknown(data['auto_post']!, _autoPostMeta),
+      );
+    }
+    if (data.containsKey('remind_days_before')) {
+      context.handle(
+        _remindDaysBeforeMeta,
+        remindDaysBefore.isAcceptableOrUnknown(
+          data['remind_days_before']!,
+          _remindDaysBeforeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecurringRuleData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecurringRuleData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      destinationAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination_account_id'],
+      ),
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      )!,
+      intervalCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_count'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      nextIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_index'],
+      )!,
+      nextRunDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_run_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      ),
+      maxOccurrences: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_occurrences'],
+      ),
+      postedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_count'],
+      )!,
+      autoPost: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_post'],
+      )!,
+      remindDaysBefore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remind_days_before'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+    );
+  }
+
+  @override
+  $RecurringRulesTableTable createAlias(String alias) {
+    return $RecurringRulesTableTable(attachedDatabase, alias);
+  }
+}
+
+class RecurringRuleData extends DataClass
+    implements Insertable<RecurringRuleData> {
+  final String id;
+  final String title;
+  final String type;
+  final String accountId;
+  final String? destinationAccountId;
+  final String? categoryId;
+  final int amountMinor;
+  final String currency;
+  final String frequency;
+  final int intervalCount;
+  final int startDate;
+  final int nextIndex;
+  final int nextRunDate;
+  final int? endDate;
+  final int? maxOccurrences;
+  final int postedCount;
+
+  /// True: post automatically when due. False: remind, the user confirms.
+  final bool autoPost;
+  final int remindDaysBefore;
+  final bool isActive;
+  final String? notes;
+  final String? lastError;
+  final int createdAt;
+  final int updatedAt;
+  final int? deletedAt;
+  final int syncStatus;
+  final int version;
+  const RecurringRuleData({
+    required this.id,
+    required this.title,
+    required this.type,
+    required this.accountId,
+    this.destinationAccountId,
+    this.categoryId,
+    required this.amountMinor,
+    required this.currency,
+    required this.frequency,
+    required this.intervalCount,
+    required this.startDate,
+    required this.nextIndex,
+    required this.nextRunDate,
+    this.endDate,
+    this.maxOccurrences,
+    required this.postedCount,
+    required this.autoPost,
+    required this.remindDaysBefore,
+    required this.isActive,
+    this.notes,
+    this.lastError,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.syncStatus,
+    required this.version,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['type'] = Variable<String>(type);
+    map['account_id'] = Variable<String>(accountId);
+    if (!nullToAbsent || destinationAccountId != null) {
+      map['destination_account_id'] = Variable<String>(destinationAccountId);
+    }
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    map['amount_minor'] = Variable<int>(amountMinor);
+    map['currency'] = Variable<String>(currency);
+    map['frequency'] = Variable<String>(frequency);
+    map['interval_count'] = Variable<int>(intervalCount);
+    map['start_date'] = Variable<int>(startDate);
+    map['next_index'] = Variable<int>(nextIndex);
+    map['next_run_date'] = Variable<int>(nextRunDate);
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<int>(endDate);
+    }
+    if (!nullToAbsent || maxOccurrences != null) {
+      map['max_occurrences'] = Variable<int>(maxOccurrences);
+    }
+    map['posted_count'] = Variable<int>(postedCount);
+    map['auto_post'] = Variable<bool>(autoPost);
+    map['remind_days_before'] = Variable<int>(remindDaysBefore);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['sync_status'] = Variable<int>(syncStatus);
+    map['version'] = Variable<int>(version);
+    return map;
+  }
+
+  RecurringRulesTableCompanion toCompanion(bool nullToAbsent) {
+    return RecurringRulesTableCompanion(
+      id: Value(id),
+      title: Value(title),
+      type: Value(type),
+      accountId: Value(accountId),
+      destinationAccountId: destinationAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destinationAccountId),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      amountMinor: Value(amountMinor),
+      currency: Value(currency),
+      frequency: Value(frequency),
+      intervalCount: Value(intervalCount),
+      startDate: Value(startDate),
+      nextIndex: Value(nextIndex),
+      nextRunDate: Value(nextRunDate),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+      maxOccurrences: maxOccurrences == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxOccurrences),
+      postedCount: Value(postedCount),
+      autoPost: Value(autoPost),
+      remindDaysBefore: Value(remindDaysBefore),
+      isActive: Value(isActive),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncStatus: Value(syncStatus),
+      version: Value(version),
+    );
+  }
+
+  factory RecurringRuleData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecurringRuleData(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      type: serializer.fromJson<String>(json['type']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      destinationAccountId: serializer.fromJson<String?>(
+        json['destinationAccountId'],
+      ),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      frequency: serializer.fromJson<String>(json['frequency']),
+      intervalCount: serializer.fromJson<int>(json['intervalCount']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      nextIndex: serializer.fromJson<int>(json['nextIndex']),
+      nextRunDate: serializer.fromJson<int>(json['nextRunDate']),
+      endDate: serializer.fromJson<int?>(json['endDate']),
+      maxOccurrences: serializer.fromJson<int?>(json['maxOccurrences']),
+      postedCount: serializer.fromJson<int>(json['postedCount']),
+      autoPost: serializer.fromJson<bool>(json['autoPost']),
+      remindDaysBefore: serializer.fromJson<int>(json['remindDaysBefore']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      syncStatus: serializer.fromJson<int>(json['syncStatus']),
+      version: serializer.fromJson<int>(json['version']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'type': serializer.toJson<String>(type),
+      'accountId': serializer.toJson<String>(accountId),
+      'destinationAccountId': serializer.toJson<String?>(destinationAccountId),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+      'currency': serializer.toJson<String>(currency),
+      'frequency': serializer.toJson<String>(frequency),
+      'intervalCount': serializer.toJson<int>(intervalCount),
+      'startDate': serializer.toJson<int>(startDate),
+      'nextIndex': serializer.toJson<int>(nextIndex),
+      'nextRunDate': serializer.toJson<int>(nextRunDate),
+      'endDate': serializer.toJson<int?>(endDate),
+      'maxOccurrences': serializer.toJson<int?>(maxOccurrences),
+      'postedCount': serializer.toJson<int>(postedCount),
+      'autoPost': serializer.toJson<bool>(autoPost),
+      'remindDaysBefore': serializer.toJson<int>(remindDaysBefore),
+      'isActive': serializer.toJson<bool>(isActive),
+      'notes': serializer.toJson<String?>(notes),
+      'lastError': serializer.toJson<String?>(lastError),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'syncStatus': serializer.toJson<int>(syncStatus),
+      'version': serializer.toJson<int>(version),
+    };
+  }
+
+  RecurringRuleData copyWith({
+    String? id,
+    String? title,
+    String? type,
+    String? accountId,
+    Value<String?> destinationAccountId = const Value.absent(),
+    Value<String?> categoryId = const Value.absent(),
+    int? amountMinor,
+    String? currency,
+    String? frequency,
+    int? intervalCount,
+    int? startDate,
+    int? nextIndex,
+    int? nextRunDate,
+    Value<int?> endDate = const Value.absent(),
+    Value<int?> maxOccurrences = const Value.absent(),
+    int? postedCount,
+    bool? autoPost,
+    int? remindDaysBefore,
+    bool? isActive,
+    Value<String?> notes = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+    Value<int?> deletedAt = const Value.absent(),
+    int? syncStatus,
+    int? version,
+  }) => RecurringRuleData(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    type: type ?? this.type,
+    accountId: accountId ?? this.accountId,
+    destinationAccountId: destinationAccountId.present
+        ? destinationAccountId.value
+        : this.destinationAccountId,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    amountMinor: amountMinor ?? this.amountMinor,
+    currency: currency ?? this.currency,
+    frequency: frequency ?? this.frequency,
+    intervalCount: intervalCount ?? this.intervalCount,
+    startDate: startDate ?? this.startDate,
+    nextIndex: nextIndex ?? this.nextIndex,
+    nextRunDate: nextRunDate ?? this.nextRunDate,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    maxOccurrences: maxOccurrences.present
+        ? maxOccurrences.value
+        : this.maxOccurrences,
+    postedCount: postedCount ?? this.postedCount,
+    autoPost: autoPost ?? this.autoPost,
+    remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+    isActive: isActive ?? this.isActive,
+    notes: notes.present ? notes.value : this.notes,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    version: version ?? this.version,
+  );
+  RecurringRuleData copyWithCompanion(RecurringRulesTableCompanion data) {
+    return RecurringRuleData(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      type: data.type.present ? data.type.value : this.type,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      destinationAccountId: data.destinationAccountId.present
+          ? data.destinationAccountId.value
+          : this.destinationAccountId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      intervalCount: data.intervalCount.present
+          ? data.intervalCount.value
+          : this.intervalCount,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      nextIndex: data.nextIndex.present ? data.nextIndex.value : this.nextIndex,
+      nextRunDate: data.nextRunDate.present
+          ? data.nextRunDate.value
+          : this.nextRunDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      maxOccurrences: data.maxOccurrences.present
+          ? data.maxOccurrences.value
+          : this.maxOccurrences,
+      postedCount: data.postedCount.present
+          ? data.postedCount.value
+          : this.postedCount,
+      autoPost: data.autoPost.present ? data.autoPost.value : this.autoPost,
+      remindDaysBefore: data.remindDaysBefore.present
+          ? data.remindDaysBefore.value
+          : this.remindDaysBefore,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      version: data.version.present ? data.version.value : this.version,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRuleData(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('type: $type, ')
+          ..write('accountId: $accountId, ')
+          ..write('destinationAccountId: $destinationAccountId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('frequency: $frequency, ')
+          ..write('intervalCount: $intervalCount, ')
+          ..write('startDate: $startDate, ')
+          ..write('nextIndex: $nextIndex, ')
+          ..write('nextRunDate: $nextRunDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('maxOccurrences: $maxOccurrences, ')
+          ..write('postedCount: $postedCount, ')
+          ..write('autoPost: $autoPost, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('isActive: $isActive, ')
+          ..write('notes: $notes, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    title,
+    type,
+    accountId,
+    destinationAccountId,
+    categoryId,
+    amountMinor,
+    currency,
+    frequency,
+    intervalCount,
+    startDate,
+    nextIndex,
+    nextRunDate,
+    endDate,
+    maxOccurrences,
+    postedCount,
+    autoPost,
+    remindDaysBefore,
+    isActive,
+    notes,
+    lastError,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncStatus,
+    version,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecurringRuleData &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.type == this.type &&
+          other.accountId == this.accountId &&
+          other.destinationAccountId == this.destinationAccountId &&
+          other.categoryId == this.categoryId &&
+          other.amountMinor == this.amountMinor &&
+          other.currency == this.currency &&
+          other.frequency == this.frequency &&
+          other.intervalCount == this.intervalCount &&
+          other.startDate == this.startDate &&
+          other.nextIndex == this.nextIndex &&
+          other.nextRunDate == this.nextRunDate &&
+          other.endDate == this.endDate &&
+          other.maxOccurrences == this.maxOccurrences &&
+          other.postedCount == this.postedCount &&
+          other.autoPost == this.autoPost &&
+          other.remindDaysBefore == this.remindDaysBefore &&
+          other.isActive == this.isActive &&
+          other.notes == this.notes &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.version == this.version);
+}
+
+class RecurringRulesTableCompanion extends UpdateCompanion<RecurringRuleData> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> type;
+  final Value<String> accountId;
+  final Value<String?> destinationAccountId;
+  final Value<String?> categoryId;
+  final Value<int> amountMinor;
+  final Value<String> currency;
+  final Value<String> frequency;
+  final Value<int> intervalCount;
+  final Value<int> startDate;
+  final Value<int> nextIndex;
+  final Value<int> nextRunDate;
+  final Value<int?> endDate;
+  final Value<int?> maxOccurrences;
+  final Value<int> postedCount;
+  final Value<bool> autoPost;
+  final Value<int> remindDaysBefore;
+  final Value<bool> isActive;
+  final Value<String?> notes;
+  final Value<String?> lastError;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<int> syncStatus;
+  final Value<int> version;
+  final Value<int> rowid;
+  const RecurringRulesTableCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.type = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.destinationAccountId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.intervalCount = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.nextIndex = const Value.absent(),
+    this.nextRunDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.maxOccurrences = const Value.absent(),
+    this.postedCount = const Value.absent(),
+    this.autoPost = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecurringRulesTableCompanion.insert({
+    required String id,
+    required String title,
+    required String type,
+    required String accountId,
+    this.destinationAccountId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    required int amountMinor,
+    required String currency,
+    required String frequency,
+    this.intervalCount = const Value.absent(),
+    required int startDate,
+    this.nextIndex = const Value.absent(),
+    required int nextRunDate,
+    this.endDate = const Value.absent(),
+    this.maxOccurrences = const Value.absent(),
+    this.postedCount = const Value.absent(),
+    this.autoPost = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       type = Value(type),
+       accountId = Value(accountId),
+       amountMinor = Value(amountMinor),
+       currency = Value(currency),
+       frequency = Value(frequency),
+       startDate = Value(startDate),
+       nextRunDate = Value(nextRunDate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<RecurringRuleData> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? type,
+    Expression<String>? accountId,
+    Expression<String>? destinationAccountId,
+    Expression<String>? categoryId,
+    Expression<int>? amountMinor,
+    Expression<String>? currency,
+    Expression<String>? frequency,
+    Expression<int>? intervalCount,
+    Expression<int>? startDate,
+    Expression<int>? nextIndex,
+    Expression<int>? nextRunDate,
+    Expression<int>? endDate,
+    Expression<int>? maxOccurrences,
+    Expression<int>? postedCount,
+    Expression<bool>? autoPost,
+    Expression<int>? remindDaysBefore,
+    Expression<bool>? isActive,
+    Expression<String>? notes,
+    Expression<String>? lastError,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<int>? syncStatus,
+    Expression<int>? version,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (type != null) 'type': type,
+      if (accountId != null) 'account_id': accountId,
+      if (destinationAccountId != null)
+        'destination_account_id': destinationAccountId,
+      if (categoryId != null) 'category_id': categoryId,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (currency != null) 'currency': currency,
+      if (frequency != null) 'frequency': frequency,
+      if (intervalCount != null) 'interval_count': intervalCount,
+      if (startDate != null) 'start_date': startDate,
+      if (nextIndex != null) 'next_index': nextIndex,
+      if (nextRunDate != null) 'next_run_date': nextRunDate,
+      if (endDate != null) 'end_date': endDate,
+      if (maxOccurrences != null) 'max_occurrences': maxOccurrences,
+      if (postedCount != null) 'posted_count': postedCount,
+      if (autoPost != null) 'auto_post': autoPost,
+      if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
+      if (isActive != null) 'is_active': isActive,
+      if (notes != null) 'notes': notes,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (version != null) 'version': version,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecurringRulesTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? type,
+    Value<String>? accountId,
+    Value<String?>? destinationAccountId,
+    Value<String?>? categoryId,
+    Value<int>? amountMinor,
+    Value<String>? currency,
+    Value<String>? frequency,
+    Value<int>? intervalCount,
+    Value<int>? startDate,
+    Value<int>? nextIndex,
+    Value<int>? nextRunDate,
+    Value<int?>? endDate,
+    Value<int?>? maxOccurrences,
+    Value<int>? postedCount,
+    Value<bool>? autoPost,
+    Value<int>? remindDaysBefore,
+    Value<bool>? isActive,
+    Value<String?>? notes,
+    Value<String?>? lastError,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int?>? deletedAt,
+    Value<int>? syncStatus,
+    Value<int>? version,
+    Value<int>? rowid,
+  }) {
+    return RecurringRulesTableCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      type: type ?? this.type,
+      accountId: accountId ?? this.accountId,
+      destinationAccountId: destinationAccountId ?? this.destinationAccountId,
+      categoryId: categoryId ?? this.categoryId,
+      amountMinor: amountMinor ?? this.amountMinor,
+      currency: currency ?? this.currency,
+      frequency: frequency ?? this.frequency,
+      intervalCount: intervalCount ?? this.intervalCount,
+      startDate: startDate ?? this.startDate,
+      nextIndex: nextIndex ?? this.nextIndex,
+      nextRunDate: nextRunDate ?? this.nextRunDate,
+      endDate: endDate ?? this.endDate,
+      maxOccurrences: maxOccurrences ?? this.maxOccurrences,
+      postedCount: postedCount ?? this.postedCount,
+      autoPost: autoPost ?? this.autoPost,
+      remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+      isActive: isActive ?? this.isActive,
+      notes: notes ?? this.notes,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      version: version ?? this.version,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (destinationAccountId.present) {
+      map['destination_account_id'] = Variable<String>(
+        destinationAccountId.value,
+      );
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (intervalCount.present) {
+      map['interval_count'] = Variable<int>(intervalCount.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (nextIndex.present) {
+      map['next_index'] = Variable<int>(nextIndex.value);
+    }
+    if (nextRunDate.present) {
+      map['next_run_date'] = Variable<int>(nextRunDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (maxOccurrences.present) {
+      map['max_occurrences'] = Variable<int>(maxOccurrences.value);
+    }
+    if (postedCount.present) {
+      map['posted_count'] = Variable<int>(postedCount.value);
+    }
+    if (autoPost.present) {
+      map['auto_post'] = Variable<bool>(autoPost.value);
+    }
+    if (remindDaysBefore.present) {
+      map['remind_days_before'] = Variable<int>(remindDaysBefore.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(syncStatus.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRulesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('type: $type, ')
+          ..write('accountId: $accountId, ')
+          ..write('destinationAccountId: $destinationAccountId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('frequency: $frequency, ')
+          ..write('intervalCount: $intervalCount, ')
+          ..write('startDate: $startDate, ')
+          ..write('nextIndex: $nextIndex, ')
+          ..write('nextRunDate: $nextRunDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('maxOccurrences: $maxOccurrences, ')
+          ..write('postedCount: $postedCount, ')
+          ..write('autoPost: $autoPost, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('isActive: $isActive, ')
+          ..write('notes: $notes, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -21069,6 +22487,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   accountingDocumentDetailLinksTable = $AccountingDocumentDetailLinksTableTable(
     this,
   );
+  late final $RecurringRulesTableTable recurringRulesTable =
+      $RecurringRulesTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -21102,6 +22522,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     accountingDetailLedgersTable,
     accountingDetailValuesTable,
     accountingDocumentDetailLinksTable,
+    recurringRulesTable,
   ];
 }
 
@@ -31564,6 +32985,650 @@ typedef $$AccountingDocumentDetailLinksTableTableProcessedTableManager =
       AccountingDocumentDetailLinkData,
       PrefetchHooks Function()
     >;
+typedef $$RecurringRulesTableTableCreateCompanionBuilder =
+    RecurringRulesTableCompanion Function({
+      required String id,
+      required String title,
+      required String type,
+      required String accountId,
+      Value<String?> destinationAccountId,
+      Value<String?> categoryId,
+      required int amountMinor,
+      required String currency,
+      required String frequency,
+      Value<int> intervalCount,
+      required int startDate,
+      Value<int> nextIndex,
+      required int nextRunDate,
+      Value<int?> endDate,
+      Value<int?> maxOccurrences,
+      Value<int> postedCount,
+      Value<bool> autoPost,
+      Value<int> remindDaysBefore,
+      Value<bool> isActive,
+      Value<String?> notes,
+      Value<String?> lastError,
+      required int createdAt,
+      required int updatedAt,
+      Value<int?> deletedAt,
+      Value<int> syncStatus,
+      Value<int> version,
+      Value<int> rowid,
+    });
+typedef $$RecurringRulesTableTableUpdateCompanionBuilder =
+    RecurringRulesTableCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> type,
+      Value<String> accountId,
+      Value<String?> destinationAccountId,
+      Value<String?> categoryId,
+      Value<int> amountMinor,
+      Value<String> currency,
+      Value<String> frequency,
+      Value<int> intervalCount,
+      Value<int> startDate,
+      Value<int> nextIndex,
+      Value<int> nextRunDate,
+      Value<int?> endDate,
+      Value<int?> maxOccurrences,
+      Value<int> postedCount,
+      Value<bool> autoPost,
+      Value<int> remindDaysBefore,
+      Value<bool> isActive,
+      Value<String?> notes,
+      Value<String?> lastError,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int?> deletedAt,
+      Value<int> syncStatus,
+      Value<int> version,
+      Value<int> rowid,
+    });
+
+class $$RecurringRulesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTableTable> {
+  $$RecurringRulesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destinationAccountId => $composableBuilder(
+    column: $table.destinationAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intervalCount => $composableBuilder(
+    column: $table.intervalCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextIndex => $composableBuilder(
+    column: $table.nextIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextRunDate => $composableBuilder(
+    column: $table.nextRunDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxOccurrences => $composableBuilder(
+    column: $table.maxOccurrences,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoPost => $composableBuilder(
+    column: $table.autoPost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecurringRulesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTableTable> {
+  $$RecurringRulesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destinationAccountId => $composableBuilder(
+    column: $table.destinationAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get intervalCount => $composableBuilder(
+    column: $table.intervalCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextIndex => $composableBuilder(
+    column: $table.nextIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextRunDate => $composableBuilder(
+    column: $table.nextRunDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxOccurrences => $composableBuilder(
+    column: $table.maxOccurrences,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoPost => $composableBuilder(
+    column: $table.autoPost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecurringRulesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTableTable> {
+  $$RecurringRulesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get destinationAccountId => $composableBuilder(
+    column: $table.destinationAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get frequency =>
+      $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<int> get intervalCount => $composableBuilder(
+    column: $table.intervalCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get nextIndex =>
+      $composableBuilder(column: $table.nextIndex, builder: (column) => column);
+
+  GeneratedColumn<int> get nextRunDate => $composableBuilder(
+    column: $table.nextRunDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<int> get maxOccurrences => $composableBuilder(
+    column: $table.maxOccurrences,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoPost =>
+      $composableBuilder(column: $table.autoPost, builder: (column) => column);
+
+  GeneratedColumn<int> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+}
+
+class $$RecurringRulesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecurringRulesTableTable,
+          RecurringRuleData,
+          $$RecurringRulesTableTableFilterComposer,
+          $$RecurringRulesTableTableOrderingComposer,
+          $$RecurringRulesTableTableAnnotationComposer,
+          $$RecurringRulesTableTableCreateCompanionBuilder,
+          $$RecurringRulesTableTableUpdateCompanionBuilder,
+          (
+            RecurringRuleData,
+            BaseReferences<
+              _$AppDatabase,
+              $RecurringRulesTableTable,
+              RecurringRuleData
+            >,
+          ),
+          RecurringRuleData,
+          PrefetchHooks Function()
+        > {
+  $$RecurringRulesTableTableTableManager(
+    _$AppDatabase db,
+    $RecurringRulesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecurringRulesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecurringRulesTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RecurringRulesTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
+                Value<String?> destinationAccountId = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String> frequency = const Value.absent(),
+                Value<int> intervalCount = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> nextIndex = const Value.absent(),
+                Value<int> nextRunDate = const Value.absent(),
+                Value<int?> endDate = const Value.absent(),
+                Value<int?> maxOccurrences = const Value.absent(),
+                Value<int> postedCount = const Value.absent(),
+                Value<bool> autoPost = const Value.absent(),
+                Value<int> remindDaysBefore = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRulesTableCompanion(
+                id: id,
+                title: title,
+                type: type,
+                accountId: accountId,
+                destinationAccountId: destinationAccountId,
+                categoryId: categoryId,
+                amountMinor: amountMinor,
+                currency: currency,
+                frequency: frequency,
+                intervalCount: intervalCount,
+                startDate: startDate,
+                nextIndex: nextIndex,
+                nextRunDate: nextRunDate,
+                endDate: endDate,
+                maxOccurrences: maxOccurrences,
+                postedCount: postedCount,
+                autoPost: autoPost,
+                remindDaysBefore: remindDaysBefore,
+                isActive: isActive,
+                notes: notes,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncStatus: syncStatus,
+                version: version,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String type,
+                required String accountId,
+                Value<String?> destinationAccountId = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                required int amountMinor,
+                required String currency,
+                required String frequency,
+                Value<int> intervalCount = const Value.absent(),
+                required int startDate,
+                Value<int> nextIndex = const Value.absent(),
+                required int nextRunDate,
+                Value<int?> endDate = const Value.absent(),
+                Value<int?> maxOccurrences = const Value.absent(),
+                Value<int> postedCount = const Value.absent(),
+                Value<bool> autoPost = const Value.absent(),
+                Value<int> remindDaysBefore = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRulesTableCompanion.insert(
+                id: id,
+                title: title,
+                type: type,
+                accountId: accountId,
+                destinationAccountId: destinationAccountId,
+                categoryId: categoryId,
+                amountMinor: amountMinor,
+                currency: currency,
+                frequency: frequency,
+                intervalCount: intervalCount,
+                startDate: startDate,
+                nextIndex: nextIndex,
+                nextRunDate: nextRunDate,
+                endDate: endDate,
+                maxOccurrences: maxOccurrences,
+                postedCount: postedCount,
+                autoPost: autoPost,
+                remindDaysBefore: remindDaysBefore,
+                isActive: isActive,
+                notes: notes,
+                lastError: lastError,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncStatus: syncStatus,
+                version: version,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RecurringRulesTableTable, RecurringRuleData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $RecurringRulesTableTable,
+                    RecurringRuleData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecurringRulesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecurringRulesTableTable,
+      RecurringRuleData,
+      $$RecurringRulesTableTableFilterComposer,
+      $$RecurringRulesTableTableOrderingComposer,
+      $$RecurringRulesTableTableAnnotationComposer,
+      $$RecurringRulesTableTableCreateCompanionBuilder,
+      $$RecurringRulesTableTableUpdateCompanionBuilder,
+      (
+        RecurringRuleData,
+        BaseReferences<
+          _$AppDatabase,
+          $RecurringRulesTableTable,
+          RecurringRuleData
+        >,
+      ),
+      RecurringRuleData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -31652,4 +33717,6 @@ class $AppDatabaseManager {
         _db,
         _db.accountingDocumentDetailLinksTable,
       );
+  $$RecurringRulesTableTableTableManager get recurringRulesTable =>
+      $$RecurringRulesTableTableTableManager(_db, _db.recurringRulesTable);
 }

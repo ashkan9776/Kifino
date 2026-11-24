@@ -41,6 +41,11 @@ class MorePage extends StatelessWidget {
         isPersian ? 'اهداف مالی و پس‌انداز' : 'Financial goals',
         '/goals',
       ),
+      (
+        Icons.event_repeat_rounded,
+        isPersian ? 'تراکنش‌های تکراری' : 'Recurring & bills',
+        '/recurring',
+      ),
       (Icons.handshake_outlined, l10n.debts, '/debts'),
       (Icons.calendar_month_outlined, l10n.installments, '/installments'),
       (Icons.fact_check_outlined, l10n.checks, '/checks'),
@@ -100,8 +105,8 @@ class MorePage extends StatelessWidget {
                       borderRadius: AppSpacing.borderRadiusMd,
                       gradient: LinearGradient(
                         colors: [
-                          Colors.indigo.withValues(alpha: 0.12),
-                          Colors.indigo.withValues(alpha: 0.04),
+                          AppColors.transferLight.withValues(alpha: 0.12),
+                          AppColors.transferLight.withValues(alpha: 0.04),
                         ],
                         begin: Alignment.topRight,
                         end: Alignment.bottomLeft,
@@ -131,7 +136,7 @@ class MorePage extends StatelessWidget {
                                   Flexible(
                                     child: Text(
                                       isPersian
-                                          ? 'سیستم حسابداری مالی (دوبل)'
+                                          ? 'حسابداری دوبل'
                                           : 'Financial Accounting OS',
                                       style: AppTypography.titleMedium.copyWith(
                                         fontWeight: FontWeight.bold,
@@ -180,7 +185,7 @@ class MorePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.chevron_left_rounded, color: accent),
+                        Icon(Icons.chevron_right_rounded, color: accent),
                       ],
                     ),
                   ),
@@ -278,7 +283,7 @@ class _CompanyCard extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_left_rounded,
+                Icons.chevron_right_rounded,
                 size: 20,
                 color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.4),
@@ -594,16 +599,15 @@ class _SettingRow extends StatelessWidget {
   }
 }
 
-/// Forward chevron that mirrors for RTL — 'go forward' always points toward
-/// the leading edge of reading direction.
+/// Forward chevron. `chevron_right` is auto-mirrored by Flutter, so it points
+/// left in RTL and right in LTR — 'go forward' along the reading direction.
 class _ForwardChevron extends StatelessWidget {
   const _ForwardChevron();
 
   @override
   Widget build(BuildContext context) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Icon(
-      isRtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+      Icons.chevron_right_rounded,
       size: 20,
       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
     );
@@ -663,7 +667,7 @@ class _MoreRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(child: Text(item.$2, style: AppTypography.titleMedium)),
             Icon(
-              Icons.chevron_left_rounded,
+              Icons.chevron_right_rounded,
               size: 20,
               color: Theme.of(context).colorScheme.onSurface
                   .withValues(alpha: 0.4),

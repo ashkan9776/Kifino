@@ -205,16 +205,16 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
     Color levelColor;
     switch (subject.level) {
       case AccountingSubjectLevel.group:
-        levelColor = Colors.brown;
+        levelColor = AppColors.gold;
         break;
       case AccountingSubjectLevel.kol:
-        levelColor = Colors.indigo;
+        levelColor = AppColors.transferLight;
         break;
       case AccountingSubjectLevel.moein:
-        levelColor = Colors.teal;
+        levelColor = AppColors.primary;
         break;
       case AccountingSubjectLevel.tafsili:
-        levelColor = Colors.purple;
+        levelColor = AppColors.assetLight;
         break;
     }
 
@@ -262,7 +262,9 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.15),
+                            color: AppColors.lightTextTertiary.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -278,8 +280,8 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                           ),
                           decoration: BoxDecoration(
                             color: subject.isPermanent
-                                ? Colors.blue.withValues(alpha: 0.1)
-                                : Colors.amber.withValues(alpha: 0.1),
+                                ? AppColors.info.withValues(alpha: 0.1)
+                                : AppColors.warning.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -289,8 +291,8 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                             style: TextStyle(
                               fontSize: 10,
                               color: subject.isPermanent
-                                  ? Colors.blue.shade700
-                                  : Colors.amber.shade900,
+                                  ? AppColors.info
+                                  : AppColors.gold,
                             ),
                           ),
                         ),
@@ -303,10 +305,10 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
                   color: subject.type == AccountingSubjectType.debtor
-                      ? Colors.red.withValues(alpha: 0.1)
+                      ? AppColors.danger.withValues(alpha: 0.1)
                       : subject.type == AccountingSubjectType.creditor
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.grey.withValues(alpha: 0.1),
+                      ? AppColors.income.withValues(alpha: 0.1)
+                      : AppColors.lightTextTertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -319,10 +321,10 @@ class _ChartOfAccountsPageState extends State<ChartOfAccountsPage> {
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: subject.type == AccountingSubjectType.debtor
-                        ? Colors.red
+                        ? AppColors.danger
                         : subject.type == AccountingSubjectType.creditor
-                        ? Colors.green
-                        : Colors.grey.shade700,
+                        ? AppColors.income
+                        : AppColors.lightTextSecondary,
                   ),
                 ),
               ),

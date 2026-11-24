@@ -249,15 +249,17 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                         ),
                         decoration: BoxDecoration(
                           color: doc.isManual
-                              ? Colors.purple.withValues(alpha: 0.1)
-                              : Colors.blue.withValues(alpha: 0.1),
+                              ? AppColors.assetLight.withValues(alpha: 0.1)
+                              : AppColors.info.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           doc.isManual ? 'دستی' : 'خودکار',
                           style: TextStyle(
                             fontSize: 10,
-                            color: doc.isManual ? Colors.purple : Colors.blue,
+                            color: doc.isManual
+                                ? AppColors.assetLight
+                                : AppColors.info,
                           ),
                         ),
                       ),
@@ -396,7 +398,7 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
+                        color: AppColors.lightTextTertiary,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -462,7 +464,9 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.2),
+                          color: AppColors.lightTextTertiary.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -475,14 +479,16 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                             ),
                             decoration: BoxDecoration(
                               color: isDeb
-                                  ? Colors.red.withValues(alpha: 0.1)
-                                  : Colors.green.withValues(alpha: 0.1),
+                                  ? AppColors.danger.withValues(alpha: 0.1)
+                                  : AppColors.income.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               isDeb ? 'بدهکار' : 'بستانکار',
                               style: TextStyle(
-                                color: isDeb ? Colors.red : Colors.green,
+                                color: isDeb
+                                    ? AppColors.danger
+                                    : AppColors.income,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -571,14 +577,14 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
                         },
                         icon: const Icon(
                           Icons.delete_outline,
-                          color: Colors.red,
+                          color: AppColors.danger,
                         ),
                         label: const Text(
                           'حذف',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red),
+                          side: const BorderSide(color: AppColors.danger),
                           padding: const EdgeInsets.symmetric(
                             vertical: 12,
                             horizontal: 16,

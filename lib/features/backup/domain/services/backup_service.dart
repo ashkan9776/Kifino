@@ -298,6 +298,7 @@ class BackupService {
       final accountingDocumentDetailLinks = await _db
           .select(_db.accountingDocumentDetailLinksTable)
           .get();
+      final recurringRules = await _db.select(_db.recurringRulesTable).get();
 
       final dataMap = {
         'accounts': accounts.map((a) => a.toJson()).toList(),
@@ -344,6 +345,7 @@ class BackupService {
         'accountingDocumentDetailLinks': accountingDocumentDetailLinks
             .map((link) => link.toJson())
             .toList(),
+        'recurringRules': recurringRules.map((r) => r.toJson()).toList(),
       };
 
       final jsonPayload = jsonEncode(dataMap);
@@ -383,6 +385,7 @@ class BackupService {
           'accountingDetailLedgers': accountingDetailLedgers.length,
           'accountingDetailValues': accountingDetailValues.length,
           'accountingDocumentDetailLinks': accountingDocumentDetailLinks.length,
+          'recurringRules': recurringRules.length,
         },
       );
 
@@ -525,6 +528,7 @@ class BackupService {
       // 2. Insert all restored records.
       await _db.transaction(() async {
         await _db.delete(_db.accountingDocumentDetailLinksTable).go();
+        await _db.delete(_db.recurringRulesTable).go();
         await _db.delete(_db.accountingDetailValuesTable).go();
         await _db.delete(_db.accountingDetailLedgersTable).go();
         await _db.delete(_db.accountingAuditLogsTable).go();
@@ -831,6 +835,16 @@ class BackupService {
               _withColumnDefaults(_db.accountingDocumentDetailLinksTable, item),
             );
             await _db.into(_db.accountingDocumentDetailLinksTable).insert(link);
+          }
+        }
+
+        // Recurring rules (v11)
+        if (dataMap.containsKey('recurringRules')) {
+          for (final item in (dataMap['recurringRules'] as List)) {
+            final rule = RecurringRuleData.fromJson(
+              _withColumnDefaults(_db.recurringRulesTable, item),
+            );
+            await _db.into(_db.recurringRulesTable).insert(rule);
           }
         }
       });

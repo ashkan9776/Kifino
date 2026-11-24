@@ -5,7 +5,8 @@ enum NotificationType {
   checkDue('checkDue', 'موعد چک'),
   debtDue('debtDue', 'سررسید بدهی / طلب'),
   budgetAlert('budgetAlert', 'هشدار بودجه'),
-  lowStock('lowStock', 'کسری موجودی کالا');
+  lowStock('lowStock', 'کسری موجودی کالا'),
+  recurringDue('recurringDue', 'تراکنش تکراری');
 
   final String code;
   final String titleFa;

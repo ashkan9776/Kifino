@@ -24,6 +24,8 @@ import '../features/notifications/domain/services/notification_service.dart';
 import '../features/installments/presentation/bloc/installment_bloc.dart';
 import '../features/security/presentation/cubit/security_cubit.dart';
 import '../features/security/presentation/cubit/security_state.dart';
+import '../features/recurring/domain/services/recurring_service.dart';
+import '../features/recurring/presentation/cubit/recurring_cubit.dart';
 import '../features/security/presentation/pages/lock_page.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
 import '../core/di/company_controller.dart';
@@ -76,6 +78,10 @@ class _LifecycleLockObserverState extends State<_LifecycleLockObserver>
         widget.cubit.onAppPaused();
       case AppLifecycleState.resumed:
         widget.cubit.onAppResumed();
+        // A bill may have come due while the app sat in the background.
+        if (sl.isRegistered<RecurringService>()) {
+          sl<RecurringService>().postDue();
+        }
       default:
         break;
     }
@@ -166,6 +172,9 @@ class KifinoApp extends StatelessWidget {
               ),
               BlocProvider<SecurityCubit>(
                 create: (context) => sl<SecurityCubit>()..init(),
+              ),
+              BlocProvider<RecurringCubit>(
+                create: (context) => sl<RecurringCubit>()..watch(),
               ),
               BlocProvider<AccountingDocumentBloc>(
                 create: (context) => sl<AccountingDocumentBloc>(),

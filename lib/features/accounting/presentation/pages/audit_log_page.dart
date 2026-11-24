@@ -111,13 +111,13 @@ class _AuditTile extends StatelessWidget {
   (IconData, Color, String) get _actionStyle {
     switch (log.action) {
       case AuditLogAction.create:
-        return (Icons.add_circle, Colors.blue, 'ایجاد سند');
+        return (Icons.add_circle, AppColors.info, 'ایجاد سند');
       case AuditLogAction.approve:
-        return (Icons.check_circle, Colors.green, 'تأیید سند');
+        return (Icons.check_circle, AppColors.income, 'تأیید سند');
       case AuditLogAction.update:
-        return (Icons.edit, Colors.orange, 'ویرایش سند');
+        return (Icons.edit, AppColors.warning, 'ویرایش سند');
       case AuditLogAction.delete:
-        return (Icons.delete, Colors.red, 'حذف سند');
+        return (Icons.delete, AppColors.danger, 'حذف سند');
     }
   }
 
@@ -270,7 +270,7 @@ class _AuditTile extends StatelessWidget {
           ),
         ),
         trailing: Icon(
-          Icons.chevron_left,
+          Icons.chevron_right,
           size: 20,
           color: colors.textSecondary,
         ),
