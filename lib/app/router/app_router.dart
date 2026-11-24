@@ -14,6 +14,8 @@ import '../../features/goals/presentation/pages/goals_page.dart';
 import '../../features/installments/presentation/pages/installments_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_flow_page.dart';
+import '../../features/recurring/presentation/pages/recurring_editor_page.dart';
+import '../../features/recurring/presentation/pages/recurring_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/security/presentation/pages/security_settings_page.dart';
 import '../../features/settings/presentation/pages/more_page.dart';
@@ -149,6 +151,20 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/installments',
         builder: (context, state) => const InstallmentsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/recurring',
+        builder: (context, state) => const RecurringPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/recurring/edit',
+        builder: (context, state) => RecurringEditorPage(
+          args: state.extra is RecurringEditorArgs
+              ? state.extra! as RecurringEditorArgs
+              : const RecurringEditorArgs(),
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

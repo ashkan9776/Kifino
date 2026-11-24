@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_currency.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -124,7 +127,7 @@ class InstallmentsPage extends StatelessWidget {
                                   ? 'مبلغ هر قسط'
                                   : 'Installment Amount',
                               prefixIcon: const Icon(Icons.payments_outlined),
-                              suffixText: l10n.isPersian ? 'تومان' : '',
+                              suffixText: AppCurrency.base.symbol,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -273,11 +276,11 @@ class InstallmentsPage extends StatelessWidget {
                                 final now = DateTime.now();
                                 final singleMoney = Money.fromMinor(
                                   singleAmountVal,
-                                  Currency.irr,
+                                  AppCurrency.base,
                                 );
                                 final totalMoney = Money.fromMinor(
                                   singleAmountVal * totalCount,
-                                  Currency.irr,
+                                  AppCurrency.base,
                                 );
 
                                 context.read<InstallmentBloc>().add(

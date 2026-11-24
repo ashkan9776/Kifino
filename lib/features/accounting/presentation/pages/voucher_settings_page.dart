@@ -189,7 +189,7 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
                             ),
                           ),
                           trailing: const Icon(
-                            Icons.chevron_left_rounded,
+                            Icons.chevron_right_rounded,
                             size: 20,
                           ),
                           onTap: () => _pickSubject(rows[i].$2, (code) {

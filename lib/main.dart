@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 import 'core/database/company_registry.dart';
 import 'core/di/injection.dart';
+import 'features/recurring/domain/services/recurring_service.dart';
 import 'features/sync/domain/services/sync_engine.dart';
 
 void main() async {
@@ -21,6 +22,9 @@ void main() async {
 
   // Keep the offline outbox bounded while no sync server exists.
   unawaited(sl<SyncEngine>().pruneIfNoBackend());
+
+  // Post rent, salary, subscriptions… that came due while the app was shut.
+  unawaited(sl<RecurringService>().postDue());
 
   runApp(const KifinoApp());
 }

@@ -189,8 +189,8 @@ class _AgingCard extends StatelessWidget {
     final buckets = [
       _bucket('جاری', entry.currentMinor, AppColors.income),
       _bucket('۱-۳۰', entry.days1To30Minor, AppColors.warning),
-      _bucket('۳۱-۶۰', entry.days31To60Minor, Colors.orange),
-      _bucket('۶۱-۹۰', entry.days61To90Minor, Colors.deepOrange),
+      _bucket('۳۱-۶۰', entry.days31To60Minor, AppColors.warning),
+      _bucket('۶۱-۹۰', entry.days61To90Minor, AppColors.debtOrangeLight),
       _bucket('+۹۰', entry.days90PlusMinor, AppColors.expense),
     ];
 

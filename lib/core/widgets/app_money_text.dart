@@ -47,9 +47,11 @@ class AppMoneyText extends StatelessWidget {
       }
     } else if (sign == MoneyDisplaySign.negativeOnly) {
       // Expenses are stored as positive amounts — this sign means "this row
-      // is a minus" so the prefix is unconditional.
-      prefix = '-';
-      if (colorCode ?? true) textColor = colors.expense;
+      // is a minus". A zero has no sign ("۰ تومان", never "۰ تومان -").
+      if (!money.isZero) {
+        prefix = '-';
+        if (colorCode ?? true) textColor = colors.expense;
+      }
     } else if (colorCode == true) {
       if (money.isPositive) {
         textColor = colors.income;
@@ -66,9 +68,20 @@ class AppMoneyText extends StatelessWidget {
         includeSymbol: includeSymbol,
         usePersianDigits: usePersianDigits,
       );
-      return isRtl && prefix.isNotEmpty
-          ? '$formatted $prefix'
-          : '$prefix$formatted';
+      if (prefix.isEmpty) return formatted;
+      if (!isRtl) return '$prefix$formatted';
+      // RTL: keep the sign glued to the digits inside a left-to-right
+      // isolate ("‎-۴۵۰,۰۰۰ تومان"), instead of drifting to the far end of
+      // the line as a lone "-" the eye reads as a dash.
+      final number = m.abs().format(
+        includeSymbol: false,
+        usePersianDigits: usePersianDigits,
+      );
+      final symbol = formatted.substring(number.length);
+      if (formatted.startsWith(number)) {
+        return '\u2066$prefix$number\u2069$symbol';
+      }
+      return '\u2066$prefix$formatted\u2069';
     }
 
     final textStyle = defaultStyle.copyWith(

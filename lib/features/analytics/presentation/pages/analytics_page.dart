@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_currency.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
@@ -123,7 +126,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 }
 
                 final filteredTxs = _filterByPeriod(txState.transactions);
-                const defaultCurrency = Currency.irr;
+                // The user's base currency — this was hard-coded to IRR,
+                // which mislabeled every figure and mixed Toman balances
+                // with ×10 Rial expenses in the runway.
+                final defaultCurrency = AppCurrency.base;
 
                 // Cash Flow calculations
                 final days = _selectedPeriod == AnalyticsPeriod.thisMonth
@@ -140,31 +146,33 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 // Accounts Balance for Runway
                 return BlocBuilder<AccountsBloc, AccountsState>(
                   builder: (context, accState) {
-                    int totalLiquidBalance = 0;
-                    if (accState is AccountsLoaded) {
-                      totalLiquidBalance = accState.totalBalance.minorUnits;
-                    }
-                    final liquidMoney = Money.fromMinor(
-                      totalLiquidBalance,
-                      defaultCurrency,
-                    );
-                    final runwayMonths = RunwayCalculator.calculate(
-                      liquidBalance: liquidMoney,
-                      averageMonthlyExpense: cashFlow.dailyAverageExpense * 30,
-                    );
+                    final liquidMoney = accState is AccountsLoaded
+                        ? accState.totalBalance.normalizeTo(defaultCurrency)
+                        : Money.zero(defaultCurrency);
+                    final hasSpending = !cashFlow.totalExpense.isZero;
+                    final runwayMonths = hasSpending
+                        ? RunwayCalculator.calculate(
+                            liquidBalance: liquidMoney,
+                            averageMonthlyExpense:
+                                cashFlow.dailyAverageExpense * 30,
+                          )
+                        : null;
 
-                    final savingsRate = SavingsRateCalculator.calculate(
-                      totalIncome: cashFlow.totalIncome,
-                      totalExpense: cashFlow.totalExpense,
-                    );
+                    final savingsRate = cashFlow.totalIncome.isZero
+                        ? null
+                        : SavingsRateCalculator.calculate(
+                            totalIncome: cashFlow.totalIncome,
+                            totalExpense: cashFlow.totalExpense,
+                          ).percentage;
 
                     return BlocBuilder<BudgetBloc, BudgetState>(
                       builder: (context, budgetState) {
-                        double adherencePercent = 100.0;
+                        double? adherencePercent;
                         final activeBudgets = budgetState is BudgetLoaded
                             ? budgetState.budgets
                             : [];
-                        if (budgetState is BudgetLoaded) {
+                        if (budgetState is BudgetLoaded &&
+                            activeBudgets.isNotEmpty) {
                           adherencePercent =
                               budgetState.health.overallAdherencePercent;
                         }
@@ -211,7 +219,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             // Financial Health Scorecard
                             FinancialHealthCard(
                               runwayMonths: runwayMonths,
-                              savingsRatePercent: savingsRate.percentage,
+                              savingsRatePercent: savingsRate,
                               budgetAdherencePercent: adherencePercent,
                               dailyAverageExpense: cashFlow.dailyAverageExpense,
                             ),

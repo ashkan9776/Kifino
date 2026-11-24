@@ -10,6 +10,10 @@ import '../../features/assets/data/repositories/asset_repository_impl.dart';
 import '../../features/assets/domain/repositories/asset_repository.dart';
 import '../../features/backup/domain/services/backup_service.dart';
 import '../../features/notifications/domain/services/notification_service.dart';
+import '../../features/recurring/data/repositories/recurring_repository_impl.dart';
+import '../../features/recurring/domain/repositories/recurring_repository.dart';
+import '../../features/recurring/domain/services/recurring_service.dart';
+import '../../features/recurring/presentation/cubit/recurring_cubit.dart';
 import '../../features/security/domain/services/security_service.dart';
 import '../../features/security/presentation/cubit/security_cubit.dart';
 import '../../features/business/data/repositories/business_repository_impl.dart';
@@ -49,7 +53,10 @@ import '../../features/accounting/presentation/bloc/fiscal_year_cubit.dart';
 import '../../features/accounting/presentation/bloc/financial_statements_bloc.dart';
 import '../../features/accounting/presentation/bloc/ledger_bloc.dart';
 import '../../features/accounting/presentation/bloc/trial_balance_bloc.dart';
+import '../constants/app_currency.dart';
 import '../database/app_database.dart';
+import '../database/currency_label_repair.dart';
+import '../utils/money.dart';
 import 'company_controller.dart';
 import '../database/company_registry.dart';
 
@@ -207,6 +214,25 @@ class ServiceLocator {
       () => NotificationService(db: sl<AppDatabase>()),
     );
 
+    // Recurring transactions & bills
+    sl.registerLazySingleton<RecurringRepository>(
+      () => RecurringRepositoryImpl(sl<AppDatabase>()),
+    );
+    sl.registerLazySingleton<RecurringService>(
+      () => RecurringService(
+        db: sl<AppDatabase>(),
+        rules: sl<RecurringRepository>(),
+        transactions: sl<TransactionRepository>(),
+        notifications: sl<NotificationService>(),
+      ),
+    );
+    sl.registerFactory<RecurringCubit>(
+      () => RecurringCubit(
+        repository: sl<RecurringRepository>(),
+        service: sl<RecurringService>(),
+      ),
+    );
+
     // 8. User settings (locale, currency, theme, onboarding)
     sl.registerLazySingleton<SettingsService>(
       () => SettingsService(sl<SharedPreferences>()),
@@ -274,6 +300,18 @@ class ServiceLocator {
     );
 
     // 10. Default reference data (categories) & services
+    final baseCurrency = Currency.fromCode(
+      sl<SettingsService>().loadCurrencyCode(),
+    );
+    // Services that run before the settings screen state exists (recurring
+    // posting, repairs) must already speak the user's base currency.
+    AppCurrency.set(baseCurrency);
+    await CurrencyLabelRepair.runIfNeeded(
+      db: sl<AppDatabase>(),
+      prefs: sl<SharedPreferences>(),
+      companyId: companyId ?? CompanyRegistry.defaultCompanyId,
+      base: baseCurrency,
+    );
     await sl<CategoryRepository>().seedDefaultCategoriesIfEmpty();
     await sl<AccountingRepository>().seedChartOfAccountsIfNotExists();
     await sl<NotificationService>().init();

@@ -46,6 +46,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
       version: tx.version,
       source: TransactionSource.fromCode(tx.sourceType),
       sourceId: tx.sourceId,
+      recurringRuleId: tx.recurringRuleId,
       accountName: accountName,
       destinationAccountName: destAccountName,
       categoryName: categoryName,
@@ -399,6 +400,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
           attachmentUri: Value(transaction.attachmentUri),
           sourceType: Value(transaction.source?.code),
           sourceId: Value(transaction.sourceId),
+          recurringRuleId: Value(transaction.recurringRuleId),
           createdAt: now,
           updatedAt: now,
           syncStatus: const Value(1), // Pending sync

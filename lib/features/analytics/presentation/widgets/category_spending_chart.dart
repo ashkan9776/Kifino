@@ -44,56 +44,91 @@ class CategorySpendingChart extends StatefulWidget {
 class _CategorySpendingChartState extends State<CategorySpendingChart> {
   int _touchedIndex = -1;
 
-  static const List<Color> _chartColors = [
-    Color(0xFF3B82F6), // Blue
-    Color(0xFF10B981), // Emerald
-    Color(0xFFF59E0B), // Amber
-    Color(0xFFEF4444), // Red
-    Color(0xFF8B5CF6), // Purple
-    Color(0xFFEC4899), // Pink
-    Color(0xFF14B8A6), // Teal
-    Color(0xFFF97316), // Orange
+  /// Fallback for categories without a color: Kifino 2 categorical order,
+  /// validated (lightness band, chroma, CVD ΔE ≥ 8 between neighbours,
+  /// ≥ 3:1 contrast) on both the light and dark card surfaces.
+  static const List<Color> _fallbackColors = [
+    Color(0xFF14A39B),
+    Color(0xFF7C5CE0),
+    Color(0xFFC0701E),
+    Color(0xFF2F7DD1),
+    Color(0xFFC2477A),
+    Color(0xFFA8800F),
+    Color(0xFF4F5BD5),
+    Color(0xFFA3532E),
   ];
+
+  /// Slices shown individually; the rest fold into «سایر» so no colour is
+  /// ever reused for two categories.
+  static const int _maxSlices = 6;
+
+  static Color? _hex(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final v = int.tryParse(
+      hex.replaceFirst('#', '').padLeft(8, 'F'),
+      radix: 16,
+    );
+    return v == null ? null : Color(v);
+  }
 
   List<CategorySpendingItem> _calculateSpending() {
     final Map<String, int> expenseByCategory = {};
     int totalExpenseMinor = 0;
 
     for (final tx in widget.transactions) {
-      if (tx.type == TransactionType.expense && !tx.isDeleted) {
-        final catId = tx.categoryId ?? 'uncategorized';
-        expenseByCategory[catId] =
-            (expenseByCategory[catId] ?? 0) + tx.amount.minorUnits;
-        totalExpenseMinor += tx.amount.minorUnits;
-      }
+      if (tx.type != TransactionType.expense || tx.isDeleted) continue;
+      // Sum in one currency: Rial rows are converted, foreign rows skipped
+      // (they used to be added raw, mixing ×10 Rial into Toman totals).
+      if (!tx.amount.isCompatibleWith(widget.currency)) continue;
+      final minor = tx.amount.normalizeTo(widget.currency).minorUnits;
+      final catId = tx.categoryId ?? 'uncategorized';
+      expenseByCategory[catId] = (expenseByCategory[catId] ?? 0) + minor;
+      totalExpenseMinor += minor;
     }
 
     if (totalExpenseMinor <= 0) return [];
 
     final categoryMap = {for (final c in widget.categories) c.id: c};
-    final items = <CategorySpendingItem>[];
-
-    int colorIdx = 0;
     final sortedEntries = expenseByCategory.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final otherColor = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.lightTextTertiary;
 
-    for (final entry in sortedEntries) {
+    final items = <CategorySpendingItem>[];
+    var otherMinor = 0;
+    for (final (rank, entry) in sortedEntries.indexed) {
       final category = categoryMap[entry.key];
-      final name = category?.name ?? 'سایر';
-      final color = _chartColors[colorIdx % _chartColors.length];
-      colorIdx++;
-
-      final percent = (entry.value / totalExpenseMinor) * 100;
+      if (rank >= _maxSlices || category == null) {
+        otherMinor += entry.value;
+        continue;
+      }
+      // Colour follows the category (same as its icon everywhere else), so
+      // changing the period never repaints the surviving slices.
+      final stable = widget.categories.indexWhere((c) => c.id == entry.key);
+      final color =
+          _hex(category.colorHex) ??
+          _fallbackColors[stable.clamp(0, _fallbackColors.length - 1)];
       items.add(
         CategorySpendingItem(
-          categoryName: name,
+          categoryName: category.name,
           color: color,
           totalAmount: Money.fromMinor(entry.value, widget.currency),
-          percentage: percent,
+          percentage: entry.value * 100 / totalExpenseMinor,
         ),
       );
     }
-
+    if (otherMinor > 0) {
+      items.add(
+        CategorySpendingItem(
+          categoryName: 'سایر',
+          color: otherColor,
+          totalAmount: Money.fromMinor(otherMinor, widget.currency),
+          percentage: otherMinor * 100 / totalExpenseMinor,
+        ),
+      );
+    }
     return items;
   }
 

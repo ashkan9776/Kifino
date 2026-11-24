@@ -43,6 +43,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
         () => context.push('/transaction/new', extra: 'transfer'),
       ),
       (
+        Icons.event_repeat_rounded,
+        l10n.isPersian ? 'تکراری' : 'Recurring',
+        isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight,
+        () => context.push('/recurring'),
+      ),
+      (
         Icons.handshake_rounded,
         l10n.isPersian ? 'بدهی' : 'Debt',
         isDark ? AppColors.debtOrangeDark : AppColors.debtOrangeLight,
@@ -53,12 +59,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
         l10n.isPersian ? 'قسط' : 'Installment',
         isDark ? AppColors.accentIndigoLight : AppColors.accentIndigo,
         () => context.push('/installments'),
-      ),
-      (
-        Icons.receipt_long_rounded,
-        l10n.isPersian ? 'فاکتور' : 'Invoice',
-        isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight,
-        () => context.push('/business'),
       ),
     ];
 
@@ -77,9 +77,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
+            // The theme's drag handle already gives the top breathing room.
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              AppSpacing.lg,
+              0,
               AppSpacing.lg,
               AppSpacing.lg,
             ),
@@ -278,9 +279,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
   }
 }
 
-/// Modern floating dock: a pill with the five destinations plus a detached
-/// gradient add-button beside it. Replaces the old center-docked FAB that
-/// overlapped the middle tab.
+/// Kifino 2 bottom bar: a full-width surface attached to the screen edge
+/// (hairline on top, no floating shadow) holding the five destinations and
+/// the add button as one calm row.
 class _FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -298,69 +299,52 @@ class _FloatingNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final destinations = [
-      (Icons.dashboard_outlined, Icons.dashboard_rounded, l10n.navHome),
+      (
+        Icons.space_dashboard_outlined,
+        Icons.space_dashboard_rounded,
+        l10n.navHome,
+      ),
       (
         Icons.receipt_long_outlined,
         Icons.receipt_long_rounded,
         l10n.navActivity,
       ),
       (Icons.insights_outlined, Icons.insights_rounded, l10n.navAnalytics),
-      (
-        Icons.business_center_outlined,
-        Icons.business_center_rounded,
-        l10n.navBusiness,
-      ),
-      (Icons.more_horiz_rounded, Icons.more_horiz_rounded, l10n.navMore),
+      (Icons.storefront_outlined, Icons.storefront_rounded, l10n.navBusiness),
+      (Icons.grid_view_outlined, Icons.grid_view_rounded, l10n.navMore),
     ];
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 62,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurface
-                      : AppColors.lightSurface,
-                  borderRadius: AppSpacing.borderRadiusXl,
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder
-                        : AppColors.lightBorder,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 70,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                for (final (index, (icon, selectedIcon, label))
+                    in destinations.indexed)
+                  _NavItem(
+                    icon: icon,
+                    selectedIcon: selectedIcon,
+                    label: label,
+                    selected: currentIndex == index,
+                    onTap: () => onTap(index),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.35 : 0.10,
-                      ),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    for (final (index, (icon, selectedIcon, label))
-                        in destinations.indexed)
-                      _NavItem(
-                        icon: icon,
-                        selectedIcon: selectedIcon,
-                        label: label,
-                        selected: currentIndex == index,
-                        onTap: () => onTap(index),
-                      ),
-                  ],
-                ),
-              ),
+                const SizedBox(width: 6),
+                _NavAddButton(onTap: onAdd),
+              ],
             ),
-            const SizedBox(width: 10),
-            _NavAddButton(onTap: onAdd),
-          ],
+          ),
         ),
       ),
     );
@@ -388,52 +372,54 @@ class _NavItem extends StatelessWidget {
     final primary = isDark
         ? AppColors.primaryBlueDark
         : AppColors.primaryBlueLight;
+    final tint = isDark
+        ? AppColors.primaryTintDark
+        : AppColors.primaryTintLight;
     final idle = isDark
         ? AppColors.darkTextTertiary
         : AppColors.lightTextTertiary;
     final color = selected ? primary : idle;
 
     return Expanded(
-      child: Tooltip(
-        message: label,
-        preferBelow: false,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: AppSpacing.borderRadiusMd,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              decoration: BoxDecoration(
-                color: selected
-                    ? primary.withValues(alpha: 0.12)
-                    : Colors.transparent,
-                borderRadius: AppSpacing.borderRadiusMd,
+      child: Semantics(
+        selected: selected,
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppSpacing.borderRadiusMd,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                width: selected ? 48 : 36,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: selected ? tint : Colors.transparent,
+                  borderRadius: AppSpacing.borderRadiusPill,
+                ),
+                child: Icon(
+                  selected ? selectedIcon : icon,
+                  size: 22,
+                  color: color,
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(selected ? selectedIcon : icon, size: 22, color: color),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      style: AppTypography.labelMedium.copyWith(
-                        fontSize: 9.5,
-                        color: color,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: color,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -453,28 +439,21 @@ class _NavAddButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: context.l10n.addTransaction,
+      excludeSemantics: true,
       child: Material(
-        color: Colors.transparent,
+        color: isDark ? AppColors.primaryBlueDark : AppColors.primaryBlueLight,
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              gradient: isDark
-                  ? KifinoPalette.actionDark
-                  : KifinoPalette.actionLight,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: KifinoPalette.cyan500.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            width: 52,
+            height: 52,
+            child: Icon(
+              Icons.add_rounded,
+              color: isDark ? AppColors.darkBackground : Colors.white,
+              size: 28,
             ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
           ),
         ),
       ),

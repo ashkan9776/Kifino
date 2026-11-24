@@ -213,7 +213,7 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         const Divider(height: 28),
 
         // 2. Liabilities (بدهی‌ها)
-        _buildSectionHeader('بدهی‌ها (Liabilities)', Colors.deepOrange),
+        _buildSectionHeader('بدهی‌ها (Liabilities)', AppColors.debtOrangeLight),
         const SizedBox(height: 8),
         _buildStatementGroupCard(
           title: 'بدهی‌های جاری',
@@ -225,12 +225,12 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         _buildTotalRow(
           'جمع کل بدهی‌ها:',
           bs.totalLiabilities,
-          Colors.deepOrange,
+          AppColors.debtOrangeLight,
         ),
         const Divider(height: 28),
 
         // 3. Equity (حقوق صاحبان سهام و سرمایه)
-        _buildSectionHeader('حقوق صاحبان سهام (Equity)', Colors.teal),
+        _buildSectionHeader('حقوق صاحبان سهام (Equity)', AppColors.primary),
         const SizedBox(height: 8),
         AppCard(
           child: Padding(
@@ -308,7 +308,11 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
           isDeduction: true,
         ),
         const SizedBox(height: 8),
-        _buildTotalRow('سود (زیان) ناخالص:', inc.grossProfit, Colors.indigo),
+        _buildTotalRow(
+          'سود (زیان) ناخالص:',
+          inc.grossProfit,
+          AppColors.transferLight,
+        ),
         const Divider(height: 24),
 
         // Operating Expenses
@@ -323,7 +327,7 @@ class _FinancialStatementsPageState extends State<FinancialStatementsPage>
         _buildTotalRow(
           'سود (زیان) عملیاتی:',
           inc.operatingProfit,
-          Colors.purple,
+          AppColors.assetLight,
         ),
         const Divider(height: 24),
 

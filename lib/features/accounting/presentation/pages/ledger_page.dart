@@ -118,9 +118,11 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.08),
+                  color: AppColors.lightTextTertiary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.lightTextTertiary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -185,7 +187,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                       Container(
                         width: 1,
                         height: 30,
-                        color: Colors.grey.withValues(alpha: 0.3),
+                        color: AppColors.lightTextTertiary.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                       Column(
                         children: [
@@ -196,7 +200,7 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: Colors.red,
+                              color: AppColors.danger,
                             ),
                           ),
                         ],
@@ -204,7 +208,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                       Container(
                         width: 1,
                         height: 30,
-                        color: Colors.grey.withValues(alpha: 0.3),
+                        color: AppColors.lightTextTertiary.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                       Column(
                         children: [
@@ -215,7 +221,7 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: Colors.green,
+                              color: AppColors.income,
                             ),
                           ),
                         ],
@@ -223,7 +229,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                       Container(
                         width: 1,
                         height: 30,
-                        color: Colors.grey.withValues(alpha: 0.3),
+                        color: AppColors.lightTextTertiary.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                       Column(
                         children: [
@@ -245,9 +253,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: _report!.closingSide == 'بد'
-                                      ? Colors.red
+                                      ? AppColors.danger
                                       : _report!.closingSide == 'بس'
-                                      ? Colors.green
+                                      ? AppColors.income
                                       : colors.textPrimary,
                                 ),
                               ),
@@ -323,7 +331,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.1),
+                          color: AppColors.lightTextTertiary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -358,28 +368,34 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                       if (entry.debit.minorUnits > 0) ...[
                         const Text(
                           'بدهکار: ',
-                          style: TextStyle(fontSize: 11, color: Colors.red),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.danger,
+                          ),
                         ),
                         AppMoneyText(
                           money: entry.debit,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                            color: AppColors.danger,
                           ),
                         ),
                       ],
                       if (entry.credit.minorUnits > 0) ...[
                         const Text(
                           'بستانکار: ',
-                          style: TextStyle(fontSize: 11, color: Colors.green),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.income,
+                          ),
                         ),
                         AppMoneyText(
                           money: entry.credit,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: AppColors.income,
                           ),
                         ),
                       ],
@@ -402,10 +418,12 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                         ),
                         decoration: BoxDecoration(
                           color: entry.balanceSide == 'بد'
-                              ? Colors.red.withValues(alpha: 0.1)
+                              ? AppColors.danger.withValues(alpha: 0.1)
                               : entry.balanceSide == 'بس'
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : Colors.grey.withValues(alpha: 0.1),
+                              ? AppColors.income.withValues(alpha: 0.1)
+                              : AppColors.lightTextTertiary.withValues(
+                                  alpha: 0.1,
+                                ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -414,9 +432,9 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: entry.balanceSide == 'بد'
-                                ? Colors.red
+                                ? AppColors.danger
                                 : entry.balanceSide == 'بس'
-                                ? Colors.green
+                                ? AppColors.income
                                 : colors.textPrimary,
                           ),
                         ),

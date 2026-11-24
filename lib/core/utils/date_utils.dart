@@ -209,9 +209,46 @@ class AppDateFormatter {
         : formatted;
   }
 
+  /// Calendar-day phrasing for due dates, past or future: «امروز»,
+  /// «فردا», «۳ روز دیگر», «دیروز», «۲ روز پیش», else «۳ دی».
+  static String formatDue(
+    DateTime date, {
+    String locale = 'fa',
+    DateTime? now,
+  }) {
+    final ref = now ?? DateTime.now();
+    final today = DateTime(ref.year, ref.month, ref.day);
+    final day = DateTime(date.year, date.month, date.day);
+    final days = (day.difference(today).inHours / 24).round();
+    final fa = locale.startsWith('fa');
+    String n(int v) => fa ? TextNormalizer.toPersianDigits('$v') : '$v';
+    if (days == 0) return fa ? 'امروز' : 'Today';
+    if (days == 1) return fa ? 'فردا' : 'Tomorrow';
+    if (days == -1) return fa ? 'دیروز' : 'Yesterday';
+    if (days > 1 && days < 7) {
+      return fa ? '${n(days)} روز دیگر' : 'in $days days';
+    }
+    if (days < -1 && days > -7) {
+      return fa ? '${n(-days)} روز پیش' : '${-days} days ago';
+    }
+    if (fa) {
+      final j = JalaliDate.fromDateTime(date);
+      final sameYear = j.year == JalaliDate.fromDateTime(ref).year;
+      return sameYear
+          ? '${n(j.day)} ${j.monthName}'
+          : '${n(j.day)} ${j.monthName} ${n(j.year)}';
+    }
+    return DateFormat('MMM d').format(date);
+  }
+
   static String formatRelative(DateTime date, {String locale = 'fa'}) {
     final now = DateTime.now();
     final difference = now.difference(date);
+    // Future dates (scheduled items, post-dated entries) used to fall into
+    // "just now" because the difference is negative.
+    if (difference.isNegative && difference.inMinutes.abs() >= 1) {
+      return formatDue(date, locale: locale, now: now);
+    }
 
     if (locale.startsWith('fa')) {
       if (difference.inSeconds < 60) return 'همین الان';

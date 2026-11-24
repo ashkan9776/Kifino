@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_currency.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -118,7 +121,7 @@ class _DebtsPageState extends State<DebtsPage> {
                       decoration: InputDecoration(
                         labelText: l10n.amount,
                         prefixIcon: const Icon(Icons.payments_outlined),
-                        suffixText: l10n.isPersian ? 'تومان' : '',
+                        suffixText: AppCurrency.base.symbol,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -198,7 +201,7 @@ class _DebtsPageState extends State<DebtsPage> {
                                 type: selectedType,
                                 totalAmount: Money.fromMinor(
                                   amountVal,
-                                  Currency.irr,
+                                  AppCurrency.base,
                                 ),
                                 dueDate: dueDate,
                                 createdAt: now,
@@ -289,7 +292,7 @@ class _DebtsPageState extends State<DebtsPage> {
                             ? 'مبلغ پرداختی'
                             : 'Payment Amount',
                         prefixIcon: const Icon(Icons.payment_rounded),
-                        suffixText: l10n.isPersian ? 'تومان' : '',
+                        suffixText: AppCurrency.base.symbol,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),

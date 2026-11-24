@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_currency.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -230,7 +233,7 @@ class _ChecksPageState extends State<ChecksPage> {
                             decoration: InputDecoration(
                               labelText: l10n.amount,
                               prefixIcon: const Icon(Icons.payments_outlined),
-                              suffixText: l10n.isPersian ? 'تومان' : '',
+                              suffixText: AppCurrency.base.symbol,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -402,7 +405,7 @@ class _ChecksPageState extends State<ChecksPage> {
                                       type: selectedType,
                                       amount: Money.fromMinor(
                                         amountVal,
-                                        Currency.irr,
+                                        AppCurrency.base,
                                       ),
                                       partyName: party,
                                       dueDate: dueDate,
@@ -549,7 +552,7 @@ class _ChecksPageState extends State<ChecksPage> {
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Icon(
-                                Icons.chevron_left_rounded,
+                                Icons.chevron_right_rounded,
                                 size: 18,
                                 color: isDark
                                     ? AppColors.darkSubtext
@@ -730,12 +733,12 @@ class _ChecksPageState extends State<ChecksPage> {
       final pendingList = typeChecks.where((c) => c.isPending);
       final clearedList = typeChecks.where((c) => c.isCleared);
       final pendingSum = Money.fromMinor(
-        pendingList.fold<int>(0, (sum, c) => sum + c.amount.minorUnits),
-        Currency.irr,
+        pendingList.fold<int>(0, (sum, c) => sum + _inBase(c.amount)),
+        AppCurrency.base,
       );
       final clearedSum = Money.fromMinor(
-        clearedList.fold<int>(0, (sum, c) => sum + c.amount.minorUnits),
-        Currency.irr,
+        clearedList.fold<int>(0, (sum, c) => sum + _inBase(c.amount)),
+        AppCurrency.base,
       );
 
       Widget statCell({
@@ -1261,3 +1264,8 @@ class _ToneIcon extends StatelessWidget {
     );
   }
 }
+
+/// [amount] in the base currency's minor units (Toman↔Rial converted).
+int _inBase(Money amount) => amount.isCompatibleWith(AppCurrency.base)
+    ? amount.normalizeTo(AppCurrency.base).minorUnits
+    : 0;

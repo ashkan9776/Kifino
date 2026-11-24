@@ -247,7 +247,7 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
                         child: Text(
                           submitError!,
                           style: AppTypography.bodySmall.copyWith(
-                            color: Colors.red,
+                            color: AppColors.danger,
                           ),
                         ),
                       ),
