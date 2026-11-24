@@ -3,6 +3,9 @@ import '../../../../core/errors/result.dart';
 import '../entities/sync_operation_entity.dart';
 
 abstract interface class RemoteSyncClient {
+  /// False when no real backend exists — the queue then has nowhere to go.
+  bool get isConfigured;
+
   Future<Result<void>> pushOperation(SyncOperationEntity operation);
   Future<Result<List<Map<String, dynamic>>>> pullChanges({DateTime? since});
 }
@@ -12,6 +15,9 @@ class FakeRemoteSyncClient implements RemoteSyncClient {
   final bool simulateSuccess;
 
   const FakeRemoteSyncClient({this.simulateSuccess = true});
+
+  @override
+  bool get isConfigured => true;
 
   @override
   Future<Result<void>> pushOperation(SyncOperationEntity operation) async {
@@ -53,6 +59,9 @@ typedef ProductionRemoteSyncClient = FakeRemoteSyncClient;
 /// the queue is never falsely marked as synced to a phantom cloud server.
 class UnavailableRemoteSyncClient implements RemoteSyncClient {
   const UnavailableRemoteSyncClient();
+
+  @override
+  bool get isConfigured => false;
 
   @override
   Future<Result<void>> pushOperation(SyncOperationEntity operation) async {

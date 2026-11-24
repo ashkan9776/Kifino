@@ -135,8 +135,69 @@ class AppDatabase extends _$AppDatabase {
         // Phase 1 COGS: weighted-average unit cost per product.
         await _addColumnIfMissing(m, productsTable, productsTable.avgCostMinor);
       }
+      if (from < 10) {
+        // Source links: auto-generated transactions remember their owner.
+        await _addColumnIfMissing(
+          m,
+          transactionsTable,
+          transactionsTable.sourceType,
+        );
+        await _addColumnIfMissing(
+          m,
+          transactionsTable,
+          transactionsTable.sourceId,
+        );
+        await _addColumnIfMissing(
+          m,
+          syncQueueTable,
+          syncQueueTable.lastAttemptAt,
+        );
+        await _addColumnIfMissing(
+          m,
+          installmentsTable,
+          installmentsTable.firstDueDate,
+        );
+        await _backfillTransactionSources();
+      }
     },
   );
+
+  /// Links transactions that installments and checks created before v10 to
+  /// their owners, so they get the same edit/delete protection as new ones.
+  /// Debt and goal payments from before v10 carry no reliable link and stay
+  /// as ordinary transactions.
+  Future<void> _backfillTransactionSources() async {
+    if (!await _tableExists('transactions')) return;
+    if (await _tableExists('installment_payments')) {
+      await customStatement('''
+        UPDATE transactions
+        SET source_type = 'installment',
+            source_id = (
+              SELECT ip.installment_id FROM installment_payments ip
+              WHERE ip.ledger_transaction_id = transactions.id
+              LIMIT 1
+            )
+        WHERE source_type IS NULL
+          AND id IN (
+            SELECT ledger_transaction_id FROM installment_payments
+            WHERE ledger_transaction_id IS NOT NULL
+          )
+      ''');
+    }
+    await customStatement('''
+      UPDATE transactions
+      SET source_type = 'check', source_id = substr(id, 11)
+      WHERE source_type IS NULL AND id LIKE 'cheque\\_tx\\_%' ESCAPE '\\'
+    ''');
+  }
+
+  Future<bool> _tableExists(String name) async {
+    final rows = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable.withString(name)],
+    ).get();
+    return rows.isNotEmpty;
+  }
 
   Future<void> _addColumnIfMissing(
     Migrator m,
@@ -146,6 +207,9 @@ class AppDatabase extends _$AppDatabase {
     final cols = await customSelect(
       'PRAGMA table_info(${table.actualTableName})',
     ).get();
+    // An empty result means the table itself does not exist (only possible
+    // on partial test schemas) — there is nothing to alter then.
+    if (cols.isEmpty) return;
     final existing = cols.map((r) => r.read<String>('name')).toSet();
     if (!existing.contains(column.name)) {
       await m.addColumn(table, column);

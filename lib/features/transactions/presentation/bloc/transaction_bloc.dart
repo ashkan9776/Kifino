@@ -240,7 +240,12 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         );
         add(const WatchTransactionsStarted());
       },
-      onFailure: (failure) => emit(TransactionFailure(failure.message)),
+      onFailure: (failure) {
+        emit(TransactionFailure(failure.message));
+        // Swipe-to-delete already removed the row on screen: reload the
+        // list so a refused delete puts it back.
+        add(const WatchTransactionsStarted());
+      },
     );
   }
 
@@ -254,7 +259,12 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         emit(const TransactionOperationSuccess('Transaction restored'));
         add(const WatchTransactionsStarted());
       },
-      onFailure: (failure) => emit(TransactionFailure(failure.message)),
+      onFailure: (failure) {
+        emit(TransactionFailure(failure.message));
+        // Swipe-to-delete already removed the row on screen: reload the
+        // list so a refused delete puts it back.
+        add(const WatchTransactionsStarted());
+      },
     );
   }
 

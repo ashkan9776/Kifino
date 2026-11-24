@@ -738,11 +738,13 @@ class _DashboardPageState extends State<DashboardPage> {
                             transaction: tx,
                             onTap: () =>
                                 context.push('/transaction/new', extra: tx),
-                            onDelete: () {
-                              context.read<TransactionBloc>().add(
-                                TransactionDeleteSubmitted(tx.id),
-                              );
-                            },
+                            onDelete: tx.isOwnedByModule
+                                ? null
+                                : () {
+                                    context.read<TransactionBloc>().add(
+                                      TransactionDeleteSubmitted(tx.id),
+                                    );
+                                  },
                           );
                         },
                       ),

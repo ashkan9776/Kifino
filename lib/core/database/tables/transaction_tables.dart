@@ -21,6 +21,10 @@ class TransactionsTable extends Table {
   TextColumn get locationName => text().nullable()();
   TextColumn get attachmentUri => text().nullable()();
   TextColumn get recurringRuleId => text().nullable()();
+  // v10: which module created this row automatically (installment, check,
+  // debt, goal) and the id of the owning record. Null for manual entries.
+  TextColumn get sourceType => text().nullable()();
+  TextColumn get sourceId => text().nullable()();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
   IntColumn get deletedAt => integer().nullable()();

@@ -23,7 +23,7 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'kifino_local.db';
-  static const int databaseVersion = 9;
+  static const int databaseVersion = 10;
 
   // Sync
   static const int defaultSyncIntervalMinutes = 15;

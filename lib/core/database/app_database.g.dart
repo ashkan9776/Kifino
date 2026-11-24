@@ -2421,6 +2421,28 @@ class $TransactionsTableTable extends TransactionsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2496,6 +2518,8 @@ class $TransactionsTableTable extends TransactionsTable
     locationName,
     attachmentUri,
     recurringRuleId,
+    sourceType,
+    sourceId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2648,6 +2672,18 @@ class $TransactionsTableTable extends TransactionsTable
         ),
       );
     }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2755,6 +2791,14 @@ class $TransactionsTableTable extends TransactionsTable
         DriftSqlType.string,
         data['${effectivePrefix}recurring_rule_id'],
       ),
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      ),
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -2801,6 +2845,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
   final String? locationName;
   final String? attachmentUri;
   final String? recurringRuleId;
+  final String? sourceType;
+  final String? sourceId;
   final int createdAt;
   final int updatedAt;
   final int? deletedAt;
@@ -2823,6 +2869,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     this.locationName,
     this.attachmentUri,
     this.recurringRuleId,
+    this.sourceType,
+    this.sourceId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -2863,6 +2911,12 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     }
     if (!nullToAbsent || recurringRuleId != null) {
       map['recurring_rule_id'] = Variable<String>(recurringRuleId);
+    }
+    if (!nullToAbsent || sourceType != null) {
+      map['source_type'] = Variable<String>(sourceType);
+    }
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<String>(sourceId);
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -2908,6 +2962,12 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       recurringRuleId: recurringRuleId == null && nullToAbsent
           ? const Value.absent()
           : Value(recurringRuleId),
+      sourceType: sourceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceType),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -2942,6 +3002,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       locationName: serializer.fromJson<String?>(json['locationName']),
       attachmentUri: serializer.fromJson<String?>(json['attachmentUri']),
       recurringRuleId: serializer.fromJson<String?>(json['recurringRuleId']),
+      sourceType: serializer.fromJson<String?>(json['sourceType']),
+      sourceId: serializer.fromJson<String?>(json['sourceId']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
@@ -2969,6 +3031,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       'locationName': serializer.toJson<String?>(locationName),
       'attachmentUri': serializer.toJson<String?>(attachmentUri),
       'recurringRuleId': serializer.toJson<String?>(recurringRuleId),
+      'sourceType': serializer.toJson<String?>(sourceType),
+      'sourceId': serializer.toJson<String?>(sourceId),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
@@ -2994,6 +3058,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     Value<String?> locationName = const Value.absent(),
     Value<String?> attachmentUri = const Value.absent(),
     Value<String?> recurringRuleId = const Value.absent(),
+    Value<String?> sourceType = const Value.absent(),
+    Value<String?> sourceId = const Value.absent(),
     int? createdAt,
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
@@ -3022,6 +3088,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     recurringRuleId: recurringRuleId.present
         ? recurringRuleId.value
         : this.recurringRuleId,
+    sourceType: sourceType.present ? sourceType.value : this.sourceType,
+    sourceId: sourceId.present ? sourceId.value : this.sourceId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3068,6 +3136,10 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       recurringRuleId: data.recurringRuleId.present
           ? data.recurringRuleId.value
           : this.recurringRuleId,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3097,6 +3169,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
           ..write('locationName: $locationName, ')
           ..write('attachmentUri: $attachmentUri, ')
           ..write('recurringRuleId: $recurringRuleId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3124,6 +3198,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     locationName,
     attachmentUri,
     recurringRuleId,
+    sourceType,
+    sourceId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3150,6 +3226,8 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
           other.locationName == this.locationName &&
           other.attachmentUri == this.attachmentUri &&
           other.recurringRuleId == this.recurringRuleId &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -3174,6 +3252,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
   final Value<String?> locationName;
   final Value<String?> attachmentUri;
   final Value<String?> recurringRuleId;
+  final Value<String?> sourceType;
+  final Value<String?> sourceId;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
@@ -3197,6 +3277,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     this.locationName = const Value.absent(),
     this.attachmentUri = const Value.absent(),
     this.recurringRuleId = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3221,6 +3303,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     this.locationName = const Value.absent(),
     this.attachmentUri = const Value.absent(),
     this.recurringRuleId = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3253,6 +3337,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     Expression<String>? locationName,
     Expression<String>? attachmentUri,
     Expression<String>? recurringRuleId,
+    Expression<String>? sourceType,
+    Expression<String>? sourceId,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
@@ -3278,6 +3364,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
       if (locationName != null) 'location_name': locationName,
       if (attachmentUri != null) 'attachment_uri': attachmentUri,
       if (recurringRuleId != null) 'recurring_rule_id': recurringRuleId,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3304,6 +3392,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     Value<String?>? locationName,
     Value<String?>? attachmentUri,
     Value<String?>? recurringRuleId,
+    Value<String?>? sourceType,
+    Value<String?>? sourceId,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
@@ -3328,6 +3418,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
       locationName: locationName ?? this.locationName,
       attachmentUri: attachmentUri ?? this.attachmentUri,
       recurringRuleId: recurringRuleId ?? this.recurringRuleId,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3390,6 +3482,12 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     if (recurringRuleId.present) {
       map['recurring_rule_id'] = Variable<String>(recurringRuleId.value);
     }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -3430,6 +3528,8 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
           ..write('locationName: $locationName, ')
           ..write('attachmentUri: $attachmentUri, ')
           ..write('recurringRuleId: $recurringRuleId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -5636,6 +5736,17 @@ class $InstallmentsTableTable extends InstallmentsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _firstDueDateMeta = const VerificationMeta(
+    'firstDueDate',
+  );
+  @override
+  late final GeneratedColumn<int> firstDueDate = GeneratedColumn<int>(
+    'first_due_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -5724,6 +5835,7 @@ class $InstallmentsTableTable extends InstallmentsTable
     startDate,
     recurrenceIntervalDays,
     nextDueDate,
+    firstDueDate,
     status,
     notes,
     createdAt,
@@ -5843,6 +5955,15 @@ class $InstallmentsTableTable extends InstallmentsTable
     } else if (isInserting) {
       context.missing(_nextDueDateMeta);
     }
+    if (data.containsKey('first_due_date')) {
+      context.handle(
+        _firstDueDateMeta,
+        firstDueDate.isAcceptableOrUnknown(
+          data['first_due_date']!,
+          _firstDueDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('status')) {
       context.handle(
         _statusMeta,
@@ -5944,6 +6065,10 @@ class $InstallmentsTableTable extends InstallmentsTable
         DriftSqlType.int,
         data['${effectivePrefix}next_due_date'],
       )!,
+      firstDueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}first_due_date'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -5993,6 +6118,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
   final int startDate;
   final int recurrenceIntervalDays;
   final int nextDueDate;
+  final int? firstDueDate;
   final String status;
   final String? notes;
   final int createdAt;
@@ -6012,6 +6138,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
     required this.startDate,
     required this.recurrenceIntervalDays,
     required this.nextDueDate,
+    this.firstDueDate,
     required this.status,
     this.notes,
     required this.createdAt,
@@ -6034,6 +6161,9 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
     map['start_date'] = Variable<int>(startDate);
     map['recurrence_interval_days'] = Variable<int>(recurrenceIntervalDays);
     map['next_due_date'] = Variable<int>(nextDueDate);
+    if (!nullToAbsent || firstDueDate != null) {
+      map['first_due_date'] = Variable<int>(firstDueDate);
+    }
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -6061,6 +6191,9 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
       startDate: Value(startDate),
       recurrenceIntervalDays: Value(recurrenceIntervalDays),
       nextDueDate: Value(nextDueDate),
+      firstDueDate: firstDueDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstDueDate),
       status: Value(status),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
@@ -6100,6 +6233,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
         json['recurrenceIntervalDays'],
       ),
       nextDueDate: serializer.fromJson<int>(json['nextDueDate']),
+      firstDueDate: serializer.fromJson<int?>(json['firstDueDate']),
       status: serializer.fromJson<String>(json['status']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
@@ -6124,6 +6258,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
       'startDate': serializer.toJson<int>(startDate),
       'recurrenceIntervalDays': serializer.toJson<int>(recurrenceIntervalDays),
       'nextDueDate': serializer.toJson<int>(nextDueDate),
+      'firstDueDate': serializer.toJson<int?>(firstDueDate),
       'status': serializer.toJson<String>(status),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<int>(createdAt),
@@ -6146,6 +6281,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
     int? startDate,
     int? recurrenceIntervalDays,
     int? nextDueDate,
+    Value<int?> firstDueDate = const Value.absent(),
     String? status,
     Value<String?> notes = const Value.absent(),
     int? createdAt,
@@ -6167,6 +6303,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
     recurrenceIntervalDays:
         recurrenceIntervalDays ?? this.recurrenceIntervalDays,
     nextDueDate: nextDueDate ?? this.nextDueDate,
+    firstDueDate: firstDueDate.present ? firstDueDate.value : this.firstDueDate,
     status: status ?? this.status,
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
@@ -6200,6 +6337,9 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
       nextDueDate: data.nextDueDate.present
           ? data.nextDueDate.value
           : this.nextDueDate,
+      firstDueDate: data.firstDueDate.present
+          ? data.firstDueDate.value
+          : this.firstDueDate,
       status: data.status.present ? data.status.value : this.status,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -6226,6 +6366,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
           ..write('startDate: $startDate, ')
           ..write('recurrenceIntervalDays: $recurrenceIntervalDays, ')
           ..write('nextDueDate: $nextDueDate, ')
+          ..write('firstDueDate: $firstDueDate, ')
           ..write('status: $status, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
@@ -6250,6 +6391,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
     startDate,
     recurrenceIntervalDays,
     nextDueDate,
+    firstDueDate,
     status,
     notes,
     createdAt,
@@ -6273,6 +6415,7 @@ class InstallmentData extends DataClass implements Insertable<InstallmentData> {
           other.startDate == this.startDate &&
           other.recurrenceIntervalDays == this.recurrenceIntervalDays &&
           other.nextDueDate == this.nextDueDate &&
+          other.firstDueDate == this.firstDueDate &&
           other.status == this.status &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
@@ -6294,6 +6437,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
   final Value<int> startDate;
   final Value<int> recurrenceIntervalDays;
   final Value<int> nextDueDate;
+  final Value<int?> firstDueDate;
   final Value<String> status;
   final Value<String?> notes;
   final Value<int> createdAt;
@@ -6314,6 +6458,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
     this.startDate = const Value.absent(),
     this.recurrenceIntervalDays = const Value.absent(),
     this.nextDueDate = const Value.absent(),
+    this.firstDueDate = const Value.absent(),
     this.status = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6335,6 +6480,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
     required int startDate,
     this.recurrenceIntervalDays = const Value.absent(),
     required int nextDueDate,
+    this.firstDueDate = const Value.absent(),
     required String status,
     this.notes = const Value.absent(),
     required int createdAt,
@@ -6367,6 +6513,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
     Expression<int>? startDate,
     Expression<int>? recurrenceIntervalDays,
     Expression<int>? nextDueDate,
+    Expression<int>? firstDueDate,
     Expression<String>? status,
     Expression<String>? notes,
     Expression<int>? createdAt,
@@ -6392,6 +6539,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
       if (recurrenceIntervalDays != null)
         'recurrence_interval_days': recurrenceIntervalDays,
       if (nextDueDate != null) 'next_due_date': nextDueDate,
+      if (firstDueDate != null) 'first_due_date': firstDueDate,
       if (status != null) 'status': status,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
@@ -6415,6 +6563,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
     Value<int>? startDate,
     Value<int>? recurrenceIntervalDays,
     Value<int>? nextDueDate,
+    Value<int?>? firstDueDate,
     Value<String>? status,
     Value<String?>? notes,
     Value<int>? createdAt,
@@ -6439,6 +6588,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
       recurrenceIntervalDays:
           recurrenceIntervalDays ?? this.recurrenceIntervalDays,
       nextDueDate: nextDueDate ?? this.nextDueDate,
+      firstDueDate: firstDueDate ?? this.firstDueDate,
       status: status ?? this.status,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
@@ -6492,6 +6642,9 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
     if (nextDueDate.present) {
       map['next_due_date'] = Variable<int>(nextDueDate.value);
     }
+    if (firstDueDate.present) {
+      map['first_due_date'] = Variable<int>(firstDueDate.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
@@ -6533,6 +6686,7 @@ class InstallmentsTableCompanion extends UpdateCompanion<InstallmentData> {
           ..write('startDate: $startDate, ')
           ..write('recurrenceIntervalDays: $recurrenceIntervalDays, ')
           ..write('nextDueDate: $nextDueDate, ')
+          ..write('firstDueDate: $firstDueDate, ')
           ..write('status: $status, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
@@ -13954,6 +14108,17 @@ class $SyncQueueTableTable extends SyncQueueTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _lastAttemptAtMeta = const VerificationMeta(
+    'lastAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastAttemptAt = GeneratedColumn<int>(
+    'last_attempt_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     queueId,
@@ -13965,6 +14130,7 @@ class $SyncQueueTableTable extends SyncQueueTable
     retryCount,
     lastError,
     queuedAt,
+    lastAttemptAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14053,6 +14219,15 @@ class $SyncQueueTableTable extends SyncQueueTable
     } else if (isInserting) {
       context.missing(_queuedAtMeta);
     }
+    if (data.containsKey('last_attempt_at')) {
+      context.handle(
+        _lastAttemptAtMeta,
+        lastAttemptAt.isAcceptableOrUnknown(
+          data['last_attempt_at']!,
+          _lastAttemptAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14098,6 +14273,10 @@ class $SyncQueueTableTable extends SyncQueueTable
         DriftSqlType.int,
         data['${effectivePrefix}queued_at'],
       )!,
+      lastAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_attempt_at'],
+      ),
     );
   }
 
@@ -14117,6 +14296,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final int retryCount;
   final String? lastError;
   final int queuedAt;
+  final int? lastAttemptAt;
   const SyncQueueData({
     required this.queueId,
     required this.syncEntityName,
@@ -14127,6 +14307,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     required this.retryCount,
     this.lastError,
     required this.queuedAt,
+    this.lastAttemptAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14142,6 +14323,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       map['last_error'] = Variable<String>(lastError);
     }
     map['queued_at'] = Variable<int>(queuedAt);
+    if (!nullToAbsent || lastAttemptAt != null) {
+      map['last_attempt_at'] = Variable<int>(lastAttemptAt);
+    }
     return map;
   }
 
@@ -14158,6 +14342,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ? const Value.absent()
           : Value(lastError),
       queuedAt: Value(queuedAt),
+      lastAttemptAt: lastAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAttemptAt),
     );
   }
 
@@ -14176,6 +14363,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastError: serializer.fromJson<String?>(json['lastError']),
       queuedAt: serializer.fromJson<int>(json['queuedAt']),
+      lastAttemptAt: serializer.fromJson<int?>(json['lastAttemptAt']),
     );
   }
   @override
@@ -14191,6 +14379,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       'retryCount': serializer.toJson<int>(retryCount),
       'lastError': serializer.toJson<String?>(lastError),
       'queuedAt': serializer.toJson<int>(queuedAt),
+      'lastAttemptAt': serializer.toJson<int?>(lastAttemptAt),
     };
   }
 
@@ -14204,6 +14393,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     int? retryCount,
     Value<String?> lastError = const Value.absent(),
     int? queuedAt,
+    Value<int?> lastAttemptAt = const Value.absent(),
   }) => SyncQueueData(
     queueId: queueId ?? this.queueId,
     syncEntityName: syncEntityName ?? this.syncEntityName,
@@ -14214,6 +14404,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     retryCount: retryCount ?? this.retryCount,
     lastError: lastError.present ? lastError.value : this.lastError,
     queuedAt: queuedAt ?? this.queuedAt,
+    lastAttemptAt: lastAttemptAt.present
+        ? lastAttemptAt.value
+        : this.lastAttemptAt,
   );
   SyncQueueData copyWithCompanion(SyncQueueTableCompanion data) {
     return SyncQueueData(
@@ -14234,6 +14427,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           : this.retryCount,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
       queuedAt: data.queuedAt.present ? data.queuedAt.value : this.queuedAt,
+      lastAttemptAt: data.lastAttemptAt.present
+          ? data.lastAttemptAt.value
+          : this.lastAttemptAt,
     );
   }
 
@@ -14248,7 +14444,8 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ..write('idempotencyKey: $idempotencyKey, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastError: $lastError, ')
-          ..write('queuedAt: $queuedAt')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('lastAttemptAt: $lastAttemptAt')
           ..write(')'))
         .toString();
   }
@@ -14264,6 +14461,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     retryCount,
     lastError,
     queuedAt,
+    lastAttemptAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -14277,7 +14475,8 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           other.idempotencyKey == this.idempotencyKey &&
           other.retryCount == this.retryCount &&
           other.lastError == this.lastError &&
-          other.queuedAt == this.queuedAt);
+          other.queuedAt == this.queuedAt &&
+          other.lastAttemptAt == this.lastAttemptAt);
 }
 
 class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
@@ -14290,6 +14489,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<int> retryCount;
   final Value<String?> lastError;
   final Value<int> queuedAt;
+  final Value<int?> lastAttemptAt;
   const SyncQueueTableCompanion({
     this.queueId = const Value.absent(),
     this.syncEntityName = const Value.absent(),
@@ -14300,6 +14500,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
     this.retryCount = const Value.absent(),
     this.lastError = const Value.absent(),
     this.queuedAt = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
   });
   SyncQueueTableCompanion.insert({
     this.queueId = const Value.absent(),
@@ -14311,6 +14512,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
     this.retryCount = const Value.absent(),
     this.lastError = const Value.absent(),
     required int queuedAt,
+    this.lastAttemptAt = const Value.absent(),
   }) : syncEntityName = Value(syncEntityName),
        entityId = Value(entityId),
        operation = Value(operation),
@@ -14327,6 +14529,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
     Expression<int>? retryCount,
     Expression<String>? lastError,
     Expression<int>? queuedAt,
+    Expression<int>? lastAttemptAt,
   }) {
     return RawValuesInsertable({
       if (queueId != null) 'queue_id': queueId,
@@ -14338,6 +14541,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
       if (retryCount != null) 'retry_count': retryCount,
       if (lastError != null) 'last_error': lastError,
       if (queuedAt != null) 'queued_at': queuedAt,
+      if (lastAttemptAt != null) 'last_attempt_at': lastAttemptAt,
     });
   }
 
@@ -14351,6 +14555,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
     Value<int>? retryCount,
     Value<String?>? lastError,
     Value<int>? queuedAt,
+    Value<int?>? lastAttemptAt,
   }) {
     return SyncQueueTableCompanion(
       queueId: queueId ?? this.queueId,
@@ -14362,6 +14567,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
       retryCount: retryCount ?? this.retryCount,
       lastError: lastError ?? this.lastError,
       queuedAt: queuedAt ?? this.queuedAt,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
     );
   }
 
@@ -14395,6 +14601,9 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
     if (queuedAt.present) {
       map['queued_at'] = Variable<int>(queuedAt.value);
     }
+    if (lastAttemptAt.present) {
+      map['last_attempt_at'] = Variable<int>(lastAttemptAt.value);
+    }
     return map;
   }
 
@@ -14409,7 +14618,8 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueData> {
           ..write('idempotencyKey: $idempotencyKey, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastError: $lastError, ')
-          ..write('queuedAt: $queuedAt')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('lastAttemptAt: $lastAttemptAt')
           ..write(')'))
         .toString();
   }
@@ -21991,6 +22201,8 @@ typedef $$TransactionsTableTableCreateCompanionBuilder =
       Value<String?> locationName,
       Value<String?> attachmentUri,
       Value<String?> recurringRuleId,
+      Value<String?> sourceType,
+      Value<String?> sourceId,
       required int createdAt,
       required int updatedAt,
       Value<int?> deletedAt,
@@ -22016,6 +22228,8 @@ typedef $$TransactionsTableTableUpdateCompanionBuilder =
       Value<String?> locationName,
       Value<String?> attachmentUri,
       Value<String?> recurringRuleId,
+      Value<String?> sourceType,
+      Value<String?> sourceId,
       Value<int> createdAt,
       Value<int> updatedAt,
       Value<int?> deletedAt,
@@ -22110,6 +22324,16 @@ class $$TransactionsTableTableFilterComposer
 
   ColumnFilters<String> get recurringRuleId => $composableBuilder(
     column: $table.recurringRuleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22228,6 +22452,16 @@ class $$TransactionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -22333,6 +22567,14 @@ class $$TransactionsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -22407,6 +22649,8 @@ class $$TransactionsTableTableTableManager
                 Value<String?> locationName = const Value.absent(),
                 Value<String?> attachmentUri = const Value.absent(),
                 Value<String?> recurringRuleId = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
@@ -22430,6 +22674,8 @@ class $$TransactionsTableTableTableManager
                 locationName: locationName,
                 attachmentUri: attachmentUri,
                 recurringRuleId: recurringRuleId,
+                sourceType: sourceType,
+                sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -22455,6 +22701,8 @@ class $$TransactionsTableTableTableManager
                 Value<String?> locationName = const Value.absent(),
                 Value<String?> attachmentUri = const Value.absent(),
                 Value<String?> recurringRuleId = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<int?> deletedAt = const Value.absent(),
@@ -22478,6 +22726,8 @@ class $$TransactionsTableTableTableManager
                 locationName: locationName,
                 attachmentUri: attachmentUri,
                 recurringRuleId: recurringRuleId,
+                sourceType: sourceType,
+                sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -23678,6 +23928,7 @@ typedef $$InstallmentsTableTableCreateCompanionBuilder =
       required int startDate,
       Value<int> recurrenceIntervalDays,
       required int nextDueDate,
+      Value<int?> firstDueDate,
       required String status,
       Value<String?> notes,
       required int createdAt,
@@ -23700,6 +23951,7 @@ typedef $$InstallmentsTableTableUpdateCompanionBuilder =
       Value<int> startDate,
       Value<int> recurrenceIntervalDays,
       Value<int> nextDueDate,
+      Value<int?> firstDueDate,
       Value<String> status,
       Value<String?> notes,
       Value<int> createdAt,
@@ -23771,6 +24023,11 @@ class $$InstallmentsTableTableFilterComposer
 
   ColumnFilters<int> get nextDueDate => $composableBuilder(
     column: $table.nextDueDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get firstDueDate => $composableBuilder(
+    column: $table.firstDueDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -23874,6 +24131,11 @@ class $$InstallmentsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get firstDueDate => $composableBuilder(
+    column: $table.firstDueDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -23964,6 +24226,11 @@ class $$InstallmentsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get firstDueDate => $composableBuilder(
+    column: $table.firstDueDate,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -24039,6 +24306,7 @@ class $$InstallmentsTableTableTableManager
                 Value<int> startDate = const Value.absent(),
                 Value<int> recurrenceIntervalDays = const Value.absent(),
                 Value<int> nextDueDate = const Value.absent(),
+                Value<int?> firstDueDate = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
@@ -24059,6 +24327,7 @@ class $$InstallmentsTableTableTableManager
                 startDate: startDate,
                 recurrenceIntervalDays: recurrenceIntervalDays,
                 nextDueDate: nextDueDate,
+                firstDueDate: firstDueDate,
                 status: status,
                 notes: notes,
                 createdAt: createdAt,
@@ -24081,6 +24350,7 @@ class $$InstallmentsTableTableTableManager
                 required int startDate,
                 Value<int> recurrenceIntervalDays = const Value.absent(),
                 required int nextDueDate,
+                Value<int?> firstDueDate = const Value.absent(),
                 required String status,
                 Value<String?> notes = const Value.absent(),
                 required int createdAt,
@@ -24101,6 +24371,7 @@ class $$InstallmentsTableTableTableManager
                 startDate: startDate,
                 recurrenceIntervalDays: recurrenceIntervalDays,
                 nextDueDate: nextDueDate,
+                firstDueDate: firstDueDate,
                 status: status,
                 notes: notes,
                 createdAt: createdAt,
@@ -27640,6 +27911,7 @@ typedef $$SyncQueueTableTableCreateCompanionBuilder =
       Value<int> retryCount,
       Value<String?> lastError,
       required int queuedAt,
+      Value<int?> lastAttemptAt,
     });
 typedef $$SyncQueueTableTableUpdateCompanionBuilder =
     SyncQueueTableCompanion Function({
@@ -27652,6 +27924,7 @@ typedef $$SyncQueueTableTableUpdateCompanionBuilder =
       Value<int> retryCount,
       Value<String?> lastError,
       Value<int> queuedAt,
+      Value<int?> lastAttemptAt,
     });
 
 class $$SyncQueueTableTableFilterComposer
@@ -27705,6 +27978,11 @@ class $$SyncQueueTableTableFilterComposer
 
   ColumnFilters<int> get queuedAt => $composableBuilder(
     column: $table.queuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -27762,6 +28040,11 @@ class $$SyncQueueTableTableOrderingComposer
     column: $table.queuedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncQueueTableTableAnnotationComposer
@@ -27807,6 +28090,11 @@ class $$SyncQueueTableTableAnnotationComposer
 
   GeneratedColumn<int> get queuedAt =>
       $composableBuilder(column: $table.queuedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => column,
+  );
 }
 
 class $$SyncQueueTableTableTableManager
@@ -27851,6 +28139,7 @@ class $$SyncQueueTableTableTableManager
                 Value<int> retryCount = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> queuedAt = const Value.absent(),
+                Value<int?> lastAttemptAt = const Value.absent(),
               }) => SyncQueueTableCompanion(
                 queueId: queueId,
                 syncEntityName: syncEntityName,
@@ -27861,6 +28150,7 @@ class $$SyncQueueTableTableTableManager
                 retryCount: retryCount,
                 lastError: lastError,
                 queuedAt: queuedAt,
+                lastAttemptAt: lastAttemptAt,
               ),
           createCompanionCallback:
               ({
@@ -27873,6 +28163,7 @@ class $$SyncQueueTableTableTableManager
                 Value<int> retryCount = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 required int queuedAt,
+                Value<int?> lastAttemptAt = const Value.absent(),
               }) => SyncQueueTableCompanion.insert(
                 queueId: queueId,
                 syncEntityName: syncEntityName,
@@ -27883,6 +28174,7 @@ class $$SyncQueueTableTableTableManager
                 retryCount: retryCount,
                 lastError: lastError,
                 queuedAt: queuedAt,
+                lastAttemptAt: lastAttemptAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(

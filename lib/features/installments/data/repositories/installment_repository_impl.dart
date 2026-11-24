@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/text_normalizer.dart';
 
+import '../../../../core/database/account_balance.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
@@ -12,12 +13,51 @@ import '../../../../core/utils/money.dart';
 import '../../domain/entities/installment_entity.dart';
 import '../../domain/entities/installment_payment_entity.dart';
 import '../../domain/repositories/installment_repository.dart';
+import '../../domain/services/installment_schedule.dart';
 
 class InstallmentRepositoryImpl implements InstallmentRepository {
   final AppDatabase _db;
   final Uuid _uuid = const Uuid();
 
   InstallmentRepositoryImpl(this._db);
+
+  /// Due date of installment #1 — stored since v10, inferred for older rows.
+  DateTime _firstDue(InstallmentData inst) {
+    if (inst.firstDueDate != null) {
+      return DateTime.fromMillisecondsSinceEpoch(inst.firstDueDate!);
+    }
+    return InstallmentSchedule.inferFirstDue(
+      nextDue: DateTime.fromMillisecondsSinceEpoch(inst.nextDueDate),
+      intervalDays: inst.recurrenceIntervalDays,
+      paidCount: inst.paidInstallmentsCount,
+    );
+  }
+
+  /// Next due date once [paidCount] installments are paid.
+  int _nextDueAfter(InstallmentData inst, int paidCount) {
+    final index = paidCount >= inst.numberOfInstallments
+        ? inst.numberOfInstallments
+        : paidCount + 1;
+    return InstallmentSchedule.dueDateFor(
+      firstDue: _firstDue(inst),
+      intervalDays: inst.recurrenceIntervalDays,
+      index: index,
+    ).millisecondsSinceEpoch;
+  }
+
+  /// Takes [amountMinor] (in the plan's currency) out of the linked account.
+  Future<void> _debitAccount(
+    InstallmentData inst,
+    int amountMinor,
+    int now,
+  ) async {
+    await applyAccountBalanceDelta(
+      _db,
+      accountId: inst.accountId,
+      delta: Money.fromMinor(-amountMinor, Currency.fromCode(inst.currency)),
+      now: now,
+    );
+  }
 
   InstallmentEntity _toEntity(InstallmentData data) {
     final currency = Currency.fromCode(data.currency);
@@ -86,6 +126,13 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
           startDate: installment.startDate.millisecondsSinceEpoch,
           recurrenceIntervalDays: Value(installment.recurrenceIntervalDays),
           nextDueDate: installment.nextDueDate.millisecondsSinceEpoch,
+          firstDueDate: Value(
+            InstallmentSchedule.inferFirstDue(
+              nextDue: installment.nextDueDate,
+              intervalDays: installment.recurrenceIntervalDays,
+              paidCount: installment.paidInstallmentsCount,
+            ).millisecondsSinceEpoch,
+          ),
           status: installment.status.code,
           notes: Value(installment.notes),
           createdAt: now,
@@ -127,12 +174,19 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         final inst = await (_db.select(
           _db.installmentsTable,
         )..where((t) => t.id.equals(id))).getSingleOrNull();
-        if (inst == null) throw Exception('Installment not found');
+        if (inst == null || inst.deletedAt != null) {
+          throw StateError('قسط پیدا نشد.');
+        }
+        // Guard in the repository, not just the UI: a double tap or a stale
+        // screen must never pay more installments than the plan has.
+        if (inst.status == InstallmentStatus.completed.code ||
+            inst.paidInstallmentsCount >= inst.numberOfInstallments) {
+          throw StateError('این قسط قبلاً کامل پرداخت شده است.');
+        }
 
         final nextPaidCount = inst.paidInstallmentsCount + 1;
         final isCompleted = nextPaidCount >= inst.numberOfInstallments;
-        final nextDueEpoch =
-            inst.nextDueDate + (inst.recurrenceIntervalDays * 86400000);
+        final nextDueEpoch = _nextDueAfter(inst, nextPaidCount);
 
         await (_db.update(
           _db.installmentsTable,
@@ -147,22 +201,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
           ),
         );
 
-        // Deduct balance from linked account
-        final account = await (_db.select(
-          _db.accountsTable,
-        )..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
-        if (account != null) {
-          final newBalance =
-              account.currentBalanceMinor - inst.installmentAmountMinor;
-          await (_db.update(
-            _db.accountsTable,
-          )..where((t) => t.id.equals(inst.accountId))).write(
-            AccountsTableCompanion(
-              currentBalanceMinor: Value(newBalance),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        // Deduct balance from linked account (Toman/Rial aware)
+        await _debitAccount(inst, inst.installmentAmountMinor, now);
 
         // Ledger integrity: the money left the account, so the payment must
         // exist as a real expense transaction — otherwise analytics and the
@@ -181,6 +221,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 description: TextNormalizer.auto(
                   'قسط ${inst.title} — $nextPaidCount از ${inst.numberOfInstallments}',
                 ),
+                sourceType: const Value('installment'),
+                sourceId: Value(id),
                 createdAt: now,
                 updatedAt: now,
                 syncStatus: const Value(1),
@@ -241,6 +283,7 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
 
       return const Success(null);
     } catch (e) {
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
       return DatabaseFailure('پرداخت قسط انجام نشد. دوباره تلاش کنید.')
           .asFailure();
     }
@@ -291,27 +334,14 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
         )..where((t) => t.id.equals(id))).write(
           InstallmentsTableCompanion(
             paidInstallmentsCount: Value(inst.numberOfInstallments),
+            nextDueDate: Value(_nextDueAfter(inst, inst.numberOfInstallments)),
             status: const Value('completed'),
             updatedAt: Value(now),
           ),
         );
 
-        // Deduct the remaining total once.
-        final account = await (_db.select(
-          _db.accountsTable,
-        )..where((t) => t.id.equals(inst.accountId))).getSingleOrNull();
-        if (account != null) {
-          await (_db.update(
-            _db.accountsTable,
-          )..where((t) => t.id.equals(inst.accountId))).write(
-            AccountsTableCompanion(
-              currentBalanceMinor: Value(
-                account.currentBalanceMinor - remainingMinor,
-              ),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        // Deduct the remaining total once (Toman/Rial aware).
+        await _debitAccount(inst, remainingMinor, now);
 
         // Dedicated expense transaction & history row for every settled قسط.
         // 1:1 ledger pairing guarantees that deleting one payment later reverts
@@ -336,6 +366,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                   description: TextNormalizer.auto(
                     'تسویه قسط ${inst.title} — $i از ${inst.numberOfInstallments}',
                   ),
+                  sourceType: const Value('installment'),
+                  sourceId: Value(id),
                   createdAt: now,
                   updatedAt: now,
                   syncStatus: const Value(1),
@@ -418,6 +450,15 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
           numberOfInstallments: Value(installment.numberOfInstallments),
           recurrenceIntervalDays: Value(installment.recurrenceIntervalDays),
           nextDueDate: Value(installment.nextDueDate.millisecondsSinceEpoch),
+          // The user may move the next due date or change the interval:
+          // re-anchor the schedule on what they chose.
+          firstDueDate: Value(
+            InstallmentSchedule.inferFirstDue(
+              nextDue: installment.nextDueDate,
+              intervalDays: installment.recurrenceIntervalDays,
+              paidCount: installment.paidInstallmentsCount,
+            ).millisecondsSinceEpoch,
+          ),
           notes: Value(installment.notes),
           updatedAt: Value(now),
         ),
@@ -489,22 +530,8 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
                 .getSingleOrNull();
         if (inst == null) return;
 
-        // 1. Money returns to the linked account.
-        final account = await (_db.select(
-          _db.accountsTable,
-        )..where((tbl) => tbl.id.equals(inst.accountId))).getSingleOrNull();
-        if (account != null) {
-          await (_db.update(
-            _db.accountsTable,
-          )..where((tbl) => tbl.id.equals(inst.accountId))).write(
-            AccountsTableCompanion(
-              currentBalanceMinor: Value(
-                account.currentBalanceMinor + payment.amountMinor,
-              ),
-              updatedAt: Value(now),
-            ),
-          );
-        }
+        // 1. Money returns to the linked account (Toman/Rial aware).
+        await _debitAccount(inst, -payment.amountMinor, now);
 
         // 2. The linked ledger expense is soft-deleted (reverts analytics).
         final txId = payment.ledgerTransactionId;
@@ -530,9 +557,9 @@ class InstallmentRepositoryImpl implements InstallmentRepository {
           inst.numberOfInstallments,
         );
         final isCompleted = newPaidCount >= inst.numberOfInstallments;
-        final nextDueEpoch =
-            inst.startDate +
-            newPaidCount * inst.recurrenceIntervalDays * 86400000;
+        // Anchored on the first due date — the old formula used the plan's
+        // creation date, which is not when installment #1 is due.
+        final nextDueEpoch = _nextDueAfter(inst, newPaidCount);
 
         await (_db.update(
           _db.installmentsTable,

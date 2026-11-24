@@ -14,6 +14,9 @@ class SyncQueueTable extends Table {
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
   IntColumn get queuedAt => integer()();
+  // v10: time of the last failed push, so retry backoff is measured from
+  // the latest attempt instead of from the original enqueue time.
+  IntColumn get lastAttemptAt => integer().nullable()();
 }
 
 @DataClassName('NotificationData')

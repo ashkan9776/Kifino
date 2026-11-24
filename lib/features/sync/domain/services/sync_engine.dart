@@ -31,6 +31,21 @@ class SyncEngine {
     return min(delay, 300);
   }
 
+  /// How long queued operations are kept while no backend is configured.
+  static const Duration offlineRetention = Duration(days: 30);
+
+  /// With no backend the outbox only grows (every edit adds a row and none
+  /// is ever sent), inflating the database and every backup. Drops entries
+  /// older than [offlineRetention]; a future server must start from a full
+  /// snapshot anyway, since data from before the queue existed is not in it.
+  /// Returns the number of removed operations (0 when a backend exists).
+  Future<int> pruneIfNoBackend({DateTime? now}) async {
+    if (_remoteClient.isConfigured) return 0;
+    final cutoff = (now ?? DateTime.now()).subtract(offlineRetention);
+    final result = await _syncRepository.pruneOlderThan(cutoff);
+    return result.dataOrNull ?? 0;
+  }
+
   /// Drains the pending outbox queue
   Future<SyncCycleResult> runSyncCycle() async {
     if (_isSyncing) {
@@ -66,7 +81,10 @@ class SyncEngine {
         // Check exponential backoff window
         if (op.retryCount > 0) {
           final backoffSec = calculateBackoffSeconds(op.retryCount);
-          final allowedAfter = op.queuedAt.add(Duration(seconds: backoffSec));
+          // Measured from the LAST failed attempt; measuring from queuedAt
+          // made old operations skip the backoff entirely.
+          final lastTry = op.lastAttemptAt ?? op.queuedAt;
+          final allowedAfter = lastTry.add(Duration(seconds: backoffSec));
           if (now.isBefore(allowedAfter)) {
             // Still in cooldown, skip this cycle
             continue;

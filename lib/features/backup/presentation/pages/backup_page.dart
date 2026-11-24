@@ -5,6 +5,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../domain/services/backup_service.dart';
 
 class BackupPage extends StatefulWidget {
@@ -21,6 +22,7 @@ class _BackupPageState extends State<BackupPage> {
 
   bool _isLoading = false;
   bool _isExportingCsv = false;
+  bool _isRepairing = false;
   String? _lastBackupPath;
 
   Future<void> _exportCsv() async {
@@ -44,6 +46,27 @@ class _BackupPageState extends State<BackupPage> {
       );
     } finally {
       if (mounted) setState(() => _isExportingCsv = false);
+    }
+  }
+
+  /// Rebuilds every account balance from its opening balance plus all
+  /// active transactions — fixes drift left by older app versions.
+  Future<void> _repairBalances() async {
+    setState(() => _isRepairing = true);
+    try {
+      final result = await sl<TransactionRepository>().recomputeBalances();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.isSuccess
+                ? 'مانده همه حساب‌ها از روی تراکنش‌ها بازسازی شد.'
+                : result.failureOrNull!.message,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isRepairing = false);
     }
   }
 
@@ -453,6 +476,38 @@ class _BackupPageState extends State<BackupPage> {
                         variant: AppButtonVariant.outline,
                         icon: const Icon(Icons.upload_file_rounded, size: 20),
                         onPressed: _isLoading ? null : _showRestoreDialog,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // 3. Integrity tools
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'بازسازی مانده حساب‌ها',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        'اگر مانده یک حساب با تراکنش‌هایش نمی‌خواند، مانده همه حساب‌ها از موجودی اولیه و تراکنش‌های ثبت‌شده دوباره محاسبه می‌شود.',
+                        style: TextStyle(fontSize: 13, height: 1.5),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppButton(
+                        label: 'بازسازی مانده‌ها',
+                        variant: AppButtonVariant.outline,
+                        icon: const Icon(Icons.build_circle_outlined, size: 20),
+                        isLoading: _isRepairing,
+                        onPressed: _isRepairing ? null : _repairBalances,
                       ),
                     ],
                   ),

@@ -217,6 +217,9 @@ class _EditInstallmentSheetState extends State<EditInstallmentSheet> {
                       ],
                       decoration: InputDecoration(
                         labelText: isFa ? 'فاصله (روز)' : 'Interval (days)',
+                        helperText: isFa
+                            ? '۳۰ = ماهانه (روز ثابت ماه شمسی)'
+                            : '30 = monthly (same Jalali day)',
                         prefixIcon: const Icon(Icons.date_range_rounded),
                       ),
                     ),
