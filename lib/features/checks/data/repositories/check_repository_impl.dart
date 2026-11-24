@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/database/account_balance.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
@@ -198,15 +199,14 @@ class CheckRepositoryImpl implements CheckRepository {
                 ? -check.amountMinor
                 : check.amountMinor;
             final applied = nowCleared ? signedDiff : -signedDiff;
-            await (_db.update(
-              _db.accountsTable,
-            )..where((t) => t.id.equals(account.id))).write(
-              AccountsTableCompanion(
-                currentBalanceMinor: Value(
-                  account.currentBalanceMinor + applied,
-                ),
-                updatedAt: Value(now),
+            await applyAccountBalanceDelta(
+              _db,
+              accountId: account.id,
+              delta: Money.fromMinor(
+                applied,
+                Currency.fromCode(check.currency),
               ),
+              now: now,
             );
 
             final txId = 'cheque_tx_${check.id}';
@@ -229,6 +229,11 @@ class CheckRepositoryImpl implements CheckRepository {
                       transactionDate: now,
                       description: desc,
                       notes: Value('cheque:${check.id}'),
+                      sourceType: const Value('check'),
+                      sourceId: Value(check.id),
+                      // Re-clearing after an un-clear hits the old soft-deleted
+                      // row: the upsert must bring it back to life.
+                      deletedAt: const Value(null),
                       createdAt: now,
                       updatedAt: now,
                       syncStatus: const Value(1),
@@ -322,6 +327,7 @@ class CheckRepositoryImpl implements CheckRepository {
 
       return const Success(null);
     } catch (e) {
+      if (e is StateError) return DatabaseFailure(e.message).asFailure();
       return DatabaseFailure('تغییر وضعیت چک انجام نشد.').asFailure();
     }
   }
@@ -345,15 +351,14 @@ class CheckRepositoryImpl implements CheckRepository {
               final signedDiff = isIssued
                   ? -check.amountMinor
                   : check.amountMinor;
-              await (_db.update(
-                _db.accountsTable,
-              )..where((t) => t.id.equals(account.id))).write(
-                AccountsTableCompanion(
-                  currentBalanceMinor: Value(
-                    account.currentBalanceMinor - signedDiff,
-                  ),
-                  updatedAt: Value(now),
+              await applyAccountBalanceDelta(
+                _db,
+                accountId: account.id,
+                delta: Money.fromMinor(
+                  -signedDiff,
+                  Currency.fromCode(check.currency),
                 ),
+                now: now,
               );
               final txId = 'cheque_tx_${check.id}';
               await (_db.update(

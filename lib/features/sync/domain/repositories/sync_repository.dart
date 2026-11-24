@@ -14,4 +14,7 @@ abstract interface class SyncRepository {
   Future<Result<void>> retryAllFailed();
   Future<Result<void>> clearQueue();
   Future<Result<void>> enqueueOperation(SyncOperationEntity operation);
+
+  /// Deletes queued operations older than [cutoff]; returns how many.
+  Future<Result<int>> pruneOlderThan(DateTime cutoff);
 }

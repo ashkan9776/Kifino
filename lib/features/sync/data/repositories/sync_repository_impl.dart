@@ -22,6 +22,9 @@ class SyncRepositoryImpl implements SyncRepository {
       retryCount: row.retryCount,
       lastError: row.lastError,
       queuedAt: DateTime.fromMillisecondsSinceEpoch(row.queuedAt),
+      lastAttemptAt: row.lastAttemptAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.lastAttemptAt!),
     );
   }
 
@@ -97,6 +100,7 @@ class SyncRepositoryImpl implements SyncRepository {
           SyncQueueTableCompanion(
             retryCount: Value(row.retryCount + 1),
             lastError: Value(error),
+            lastAttemptAt: Value(DateTime.now().millisecondsSinceEpoch),
           ),
         );
       }
@@ -155,6 +159,22 @@ class SyncRepositoryImpl implements SyncRepository {
       return const Success(null);
     } catch (e) {
       return FailureResult(DatabaseFailure('خطا در درج در صف همگام‌سازی: $e'));
+    }
+  }
+
+  @override
+  Future<Result<int>> pruneOlderThan(DateTime cutoff) async {
+    try {
+      final deleted =
+          await (_db.delete(_db.syncQueueTable)..where(
+                (t) => t.queuedAt.isSmallerThanValue(
+                  cutoff.millisecondsSinceEpoch,
+                ),
+              ))
+              .go();
+      return Success(deleted);
+    } catch (e) {
+      return FailureResult(DatabaseFailure('خطا در پاکسازی صف قدیمی: $e'));
     }
   }
 }

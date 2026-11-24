@@ -29,6 +29,15 @@ enum Currency {
     }
     return Currency.usd; // Default fallback
   }
+
+  /// Like [fromCode] but returns null for unknown codes instead of guessing.
+  static Currency? fromCodeOrNull(String code) {
+    final upper = code.toUpperCase().trim();
+    for (final c in values) {
+      if (c.code == upper) return c;
+    }
+    return null;
+  }
 }
 
 class Money extends Equatable implements Comparable<Money> {

@@ -9,6 +9,9 @@ class SecurityState extends Equatable {
   final String? errorMessage;
   final bool isAuthenticating;
 
+  /// While set and in the future, PIN entry is blocked (too many wrong PINs).
+  final DateTime? lockedUntil;
+
   const SecurityState({
     this.isLocked = false,
     this.isPinSet = false,
@@ -17,7 +20,10 @@ class SecurityState extends Equatable {
     this.isScreenshotProtected = true,
     this.errorMessage,
     this.isAuthenticating = false,
+    this.lockedUntil,
   });
+
+  static const Object _keep = Object();
 
   SecurityState copyWith({
     bool? isLocked,
@@ -27,6 +33,7 @@ class SecurityState extends Equatable {
     bool? isScreenshotProtected,
     String? errorMessage,
     bool? isAuthenticating,
+    Object? lockedUntil = _keep,
   }) {
     return SecurityState(
       isLocked: isLocked ?? this.isLocked,
@@ -37,6 +44,9 @@ class SecurityState extends Equatable {
           isScreenshotProtected ?? this.isScreenshotProtected,
       errorMessage: errorMessage,
       isAuthenticating: isAuthenticating ?? this.isAuthenticating,
+      lockedUntil: identical(lockedUntil, _keep)
+          ? this.lockedUntil
+          : lockedUntil as DateTime?,
     );
   }
 
@@ -49,5 +59,6 @@ class SecurityState extends Equatable {
     isScreenshotProtected,
     errorMessage,
     isAuthenticating,
+    lockedUntil,
   ];
 }

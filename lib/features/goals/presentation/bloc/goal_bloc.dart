@@ -237,6 +237,8 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
             description: 'پس‌انداز برای هدف: ${goal.name}',
             createdAt: now,
             updatedAt: now,
+            source: TransactionSource.goal,
+            sourceId: goal.id,
           );
           final txResult = await transactionRepository!.createTransaction(tx);
           if (txResult.isFailure) {

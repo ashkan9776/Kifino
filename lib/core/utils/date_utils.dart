@@ -268,3 +268,34 @@ DateTime endOfJalaliYear(DateTime dateTime) {
     1,
   ).toDateTime().subtract(const Duration(seconds: 1));
 }
+
+/// Number of days in Jalali [month] of [year] (Esfand is 30 in leap years).
+int jalaliMonthLength(int year, int month) {
+  if (month <= 6) return 31;
+  if (month <= 11) return 30;
+  // Esfand: day 30 exists only if it round-trips as 30 Esfand.
+  final probe = JalaliDate.fromDateTime(JalaliDate(year, 12, 30).toDateTime());
+  return (probe.month == 12 && probe.day == 30) ? 30 : 29;
+}
+
+/// Moves [date] by [months] Jalali months (negative goes back), keeping the
+/// day of month and time of day. Days that do not exist in the target month
+/// (e.g. 31 Shahrivar → Mehr) are clamped to the month's last day.
+DateTime addJalaliMonths(DateTime date, int months) {
+  final j = JalaliDate.fromDateTime(date);
+  final total = j.year * 12 + (j.month - 1) + months;
+  final year = total ~/ 12;
+  final month = total % 12 + 1;
+  final maxDay = jalaliMonthLength(year, month);
+  final day = j.day > maxDay ? maxDay : j.day;
+  final target = JalaliDate(year, month, day).toDateTime();
+  return DateTime(
+    target.year,
+    target.month,
+    target.day,
+    date.hour,
+    date.minute,
+    date.second,
+    date.millisecond,
+  );
+}

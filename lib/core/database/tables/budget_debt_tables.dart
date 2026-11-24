@@ -79,6 +79,9 @@ class InstallmentsTable extends Table {
   IntColumn get recurrenceIntervalDays =>
       integer().withDefault(const Constant(30))();
   IntColumn get nextDueDate => integer()();
+  // v10: due date of installment #1 — the anchor every later due date is
+  // derived from (see installment_schedule.dart). Null on legacy rows.
+  IntColumn get firstDueDate => integer().nullable()();
   TextColumn get status => text()(); // ongoing, completed, overdue
   TextColumn get notes => text().nullable()();
   IntColumn get createdAt => integer()();

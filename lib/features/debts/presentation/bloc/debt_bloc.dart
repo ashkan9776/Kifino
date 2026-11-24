@@ -240,6 +240,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
             description: description,
             createdAt: now,
             updatedAt: now,
+            source: TransactionSource.debt,
+            sourceId: event.id,
           );
           final txResult = await transactionRepository!.createTransaction(tx);
           if (txResult.isFailure) {

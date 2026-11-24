@@ -27,6 +27,9 @@ class SyncOperationEntity extends Equatable {
   final String? lastError;
   final DateTime queuedAt;
 
+  /// When the last failed push happened (null if never tried).
+  final DateTime? lastAttemptAt;
+
   const SyncOperationEntity({
     this.queueId,
     required this.syncEntityName,
@@ -37,6 +40,7 @@ class SyncOperationEntity extends Equatable {
     this.retryCount = 0,
     this.lastError,
     required this.queuedAt,
+    this.lastAttemptAt,
   });
 
   bool get isFailed => retryCount >= 3;
@@ -51,6 +55,7 @@ class SyncOperationEntity extends Equatable {
     int? retryCount,
     String? lastError,
     DateTime? queuedAt,
+    DateTime? lastAttemptAt,
   }) {
     return SyncOperationEntity(
       queueId: queueId ?? this.queueId,
@@ -62,6 +67,7 @@ class SyncOperationEntity extends Equatable {
       retryCount: retryCount ?? this.retryCount,
       lastError: lastError ?? this.lastError,
       queuedAt: queuedAt ?? this.queuedAt,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
     );
   }
 
@@ -76,5 +82,6 @@ class SyncOperationEntity extends Equatable {
     retryCount,
     lastError,
     queuedAt,
+    lastAttemptAt,
   ];
 }

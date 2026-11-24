@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../utils/app_logger.dart';
 import '../database/app_database.dart';
 import '../database/company_registry.dart';
 import 'injection.dart';
@@ -90,7 +91,13 @@ class CompanyController extends ChangeNotifier {
       if (sl.isRegistered<AppDatabase>()) {
         await sl<AppDatabase>().close();
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'Closing the previous company database failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Convenience used by pages: the user-facing name of a company id.

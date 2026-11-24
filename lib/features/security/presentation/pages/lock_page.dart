@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,8 +20,51 @@ class LockPage extends StatefulWidget {
 class _LockPageState extends State<LockPage> {
   String _enteredPin = '';
   static const int _pinLength = 4;
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    // Repaint the countdown every second while a lockout is running.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final until = context.read<SecurityCubit>().state.lockedUntil;
+      if (until == null) return;
+      if (DateTime.now().isAfter(until)) {
+        context.read<SecurityCubit>().refreshLockout();
+      } else {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  /// Live countdown while PIN entry is blocked, else null.
+  String? _lockoutText(SecurityState state) {
+    final until = state.lockedUntil;
+    if (until == null) return null;
+    final left = until.difference(DateTime.now());
+    if (left.isNegative) return null;
+    final total = left.inSeconds + 1;
+    final mm = (total ~/ 60).toString().padLeft(2, '0');
+    final ss = (total % 60).toString().padLeft(2, '0');
+    return TextNormalizer.auto(
+      'تلاش‌های نادرست زیاد بود. $mm:$ss دیگر دوباره امتحان کنید.',
+    );
+  }
+
+  bool get _isLockedOut {
+    final until = context.read<SecurityCubit>().state.lockedUntil;
+    return until != null && DateTime.now().isBefore(until);
+  }
 
   void _onDigitPressed(String digit) {
+    if (_isLockedOut) return;
     if (_enteredPin.length < _pinLength) {
       setState(() {
         _enteredPin += digit;
@@ -42,6 +87,7 @@ class _LockPageState extends State<LockPage> {
   Future<void> _verifyPin() async {
     final cubit = context.read<SecurityCubit>();
     final success = await cubit.verifyPin(_enteredPin);
+    if (!mounted) return;
     if (!success) {
       setState(() {
         _enteredPin = '';
@@ -139,7 +185,16 @@ class _LockPageState extends State<LockPage> {
                       SizedBox(
                         height: 36,
                         child: Center(
-                          child: state.errorMessage != null
+                          child: _lockoutText(state) != null
+                              ? Text(
+                                  _lockoutText(state)!,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.expense,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              : state.errorMessage != null
                               ? Text(
                                   state.errorMessage!,
                                   style: AppTypography.bodyMedium.copyWith(

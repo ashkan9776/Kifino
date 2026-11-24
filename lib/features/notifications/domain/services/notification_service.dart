@@ -1,3 +1,5 @@
+import '../../../../core/utils/app_logger.dart';
+
 import 'package:drift/drift.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -55,7 +57,13 @@ class NotificationService {
   Future<void> requestPermissions() async {
     try {
       await _requestAndroidPermission();
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'Notification permission request failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   Future<void> _requestAndroidPermission() async {
@@ -188,13 +196,25 @@ class NotificationService {
           .go();
       _initTimeZonesSafely();
       await _localNotifications.cancel(id: numericIdFor(entityId));
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'Cancelling scheduled notification failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   void _initTimeZonesSafely() {
     try {
       _initTimezone();
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'Time zone initialisation failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   Stream<List<AppNotificationEntity>> watchNotifications() {
@@ -236,7 +256,13 @@ class NotificationService {
       await _localNotifications.cancel(
         id: numericIdFor(row?.referenceId ?? id),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.warning(
+        'Cancelling OS notification failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   Future<void> markAllAsRead() async {

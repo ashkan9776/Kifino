@@ -52,6 +52,11 @@ class _ActivityPageState extends State<ActivityPage> {
           body: AppResponsiveContainer.feed(
             child: BlocConsumer<TransactionBloc, TransactionState>(
               listener: (context, state) {
+                if (state is TransactionFailure) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(state.message)));
+                  return;
+                }
                 if (state is TransactionOperationSuccess &&
                     state.deletedTransactionId != null) {
                   final deletedId = state.deletedTransactionId!;
@@ -169,11 +174,19 @@ class _ActivityPageState extends State<ActivityPage> {
                                         '/transaction/new',
                                         extra: tx,
                                       ),
-                                      onDelete: () {
-                                        context.read<TransactionBloc>().add(
-                                          TransactionDeleteSubmitted(tx.id),
-                                        );
-                                      },
+                                      // Installment & check rows are
+                                      // removed from their own module.
+                                      onDelete: tx.isOwnedByModule
+                                          ? null
+                                          : () {
+                                              context
+                                                  .read<TransactionBloc>()
+                                                  .add(
+                                                    TransactionDeleteSubmitted(
+                                                      tx.id,
+                                                    ),
+                                                  );
+                                            },
                                     ),
                                   );
                                 },

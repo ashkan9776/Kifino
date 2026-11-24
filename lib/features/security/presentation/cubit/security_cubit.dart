@@ -18,6 +18,8 @@ class SecurityCubit extends Cubit<SecurityState> {
     final isBioEnabled = await securityService.isBiometricEnabled();
     final isSecProt = await securityService.isScreenshotProtectionEnabled();
     await securityService.syncSecurityFlags();
+    // A lockout survives app restarts — killing the app must not reset it.
+    final lockout = await securityService.lockoutRemaining();
 
     emit(
       state.copyWith(
@@ -26,6 +28,7 @@ class SecurityCubit extends Cubit<SecurityState> {
         isBiometricEnabled: isBioEnabled,
         isScreenshotProtected: isSecProt,
         isLocked: isPinSet, // Automatically lock if PIN is configured
+        lockedUntil: lockout == null ? null : DateTime.now().add(lockout),
       ),
     );
 
@@ -43,12 +46,49 @@ class SecurityCubit extends Cubit<SecurityState> {
     emit(state.copyWith(errorMessage: null));
     final isValid = await securityService.verifyPin(pin);
     if (isValid) {
-      emit(state.copyWith(isLocked: false, errorMessage: null));
+      emit(
+        state.copyWith(isLocked: false, errorMessage: null, lockedUntil: null),
+      );
       return true;
-    } else {
-      emit(state.copyWith(errorMessage: 'رمز عبور وارد شده نادرست است.'));
-      return false;
     }
+    await _emitPinFailure();
+    return false;
+  }
+
+  /// Re-reads the lockout window (e.g. when the lock page opens or its
+  /// countdown ends) so the keypad state matches secure storage.
+  Future<void> refreshLockout() async {
+    final remaining = await securityService.lockoutRemaining();
+    emit(
+      state.copyWith(
+        errorMessage: state.errorMessage,
+        lockedUntil: remaining == null ? null : DateTime.now().add(remaining),
+      ),
+    );
+  }
+
+  Future<void> _emitPinFailure() async {
+    final remaining = await securityService.lockoutRemaining();
+    if (remaining != null) {
+      final seconds = remaining.inSeconds + 1;
+      emit(
+        state.copyWith(
+          errorMessage:
+              'تلاش‌های نادرست زیاد بود. $seconds ثانیه دیگر دوباره امتحان کنید.',
+          lockedUntil: DateTime.now().add(remaining),
+        ),
+      );
+      return;
+    }
+    final left = await securityService.attemptsBeforeLockout();
+    emit(
+      state.copyWith(
+        errorMessage: left > 0 && left <= 2
+            ? 'رمز عبور نادرست است. $left تلاش دیگر تا قفل موقت.'
+            : 'رمز عبور وارد شده نادرست است.',
+        lockedUntil: null,
+      ),
+    );
   }
 
   Future<bool> authenticateBiometric() async {
@@ -56,7 +96,13 @@ class SecurityCubit extends Cubit<SecurityState> {
 
     emit(state.copyWith(isAuthenticating: true));
     final authenticated = await securityService.authenticateBiometric();
-    emit(state.copyWith(isAuthenticating: false, isLocked: !authenticated));
+    emit(
+      state.copyWith(
+        isAuthenticating: false,
+        isLocked: !authenticated,
+        lockedUntil: authenticated ? null : state.lockedUntil,
+      ),
+    );
     return authenticated;
   }
 

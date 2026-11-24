@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:drift/drift.dart' show Constant, OrderingTerm, Table, TableInfo;
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +15,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/utils/money.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 
 class BackupMetadata {
@@ -62,6 +63,36 @@ class BackupService {
 
   const BackupService(this._db);
 
+  /// Backups written by older app versions lack columns added later (e.g.
+  /// products.avgCostMinor in v9). Drift's generated `fromJson` throws on a
+  /// missing non-nullable field, which made those backups unrestorable.
+  /// Fills every missing column that has a constant default with that default
+  /// (and leaves nullable ones absent, which `fromJson` reads as null).
+  static Map<String, dynamic> _withColumnDefaults(
+    TableInfo<Table, dynamic> table,
+    Object? item,
+  ) {
+    final json = Map<String, dynamic>.from(item as Map);
+    for (final column in table.$columns) {
+      final key = _camelCase(column.name);
+      if (json.containsKey(key)) continue;
+      final defaultValue = column.defaultValue;
+      if (defaultValue is Constant) {
+        json[key] = defaultValue.value;
+      }
+    }
+    return json;
+  }
+
+  static String _camelCase(String snake) {
+    final parts = snake.split('_');
+    return parts.first +
+        parts.skip(1).map((p) {
+          if (p.isEmpty) return p;
+          return p[0].toUpperCase() + p.substring(1);
+        }).join();
+  }
+
   /// Exports all non-deleted transactions to an Excel-compatible CSV file
   /// (comma-separated, UTF-8 with BOM so Excel renders Persian correctly).
   /// Returns the written file path.
@@ -90,7 +121,7 @@ class BackupService {
         final jalali = JalaliDate.fromDateTime(date)
             .format(usePersianDigits: false);
         final type = TransactionType.fromCode(tx.type);
-        final majorValue = _majorValue(tx.amountMinor, tx.currency);
+        final majorValue = majorValueForCsv(tx.amountMinor, tx.currency);
 
         buffer.writeln(
           [
@@ -100,7 +131,7 @@ class BackupService {
             esc(tx.description),
             esc(accounts[tx.accountId] ?? ''),
             esc(tx.categoryId != null ? (categories[tx.categoryId] ?? '') : ''),
-            majorValue.toString(),
+            majorValue,
             esc(tx.currency),
           ].join(','),
         );
@@ -119,19 +150,16 @@ class BackupService {
   }
 
   /// Converts stored minor units to the human-readable major value the user
-  /// actually thinks in (Toman for zero-decimal IRR-family currencies).
-  int _majorValue(int minor, String currencyCode) {
-    switch (currencyCode.toUpperCase()) {
-      case 'IRR':
-      case 'TOMAN':
-        return minor; // already integer-sized units for Iranian currencies
-      case 'USD':
-      case 'EUR':
-      case 'GBP':
-        return minor ~/ 100;
-      default:
-        return minor;
-    }
+  /// actually thinks in, keeping fractional units (12.50 USD stays 12.50 —
+  /// the old integer division exported it as 12).
+  static String majorValueForCsv(int minor, String currencyCode) {
+    final decimals = Currency.fromCodeOrNull(currencyCode)?.decimals ?? 0;
+    if (decimals == 0) return minor.toString();
+    final factor = pow(10, decimals).toInt();
+    final sign = minor < 0 ? '-' : '';
+    final abs = minor.abs();
+    final fraction = (abs % factor).toString().padLeft(decimals, '0');
+    return '$sign${abs ~/ factor}.$fraction';
   }
 
   /// Evaluates password strength:
@@ -528,7 +556,9 @@ class BackupService {
         // Accounts
         if (dataMap.containsKey('accounts')) {
           for (final item in (dataMap['accounts'] as List)) {
-            final acc = AccountData.fromJson(item as Map<String, dynamic>);
+            final acc = AccountData.fromJson(
+              _withColumnDefaults(_db.accountsTable, item),
+            );
             await _db.into(_db.accountsTable).insert(acc);
           }
         }
@@ -536,7 +566,9 @@ class BackupService {
         // Categories
         if (dataMap.containsKey('categories')) {
           for (final item in (dataMap['categories'] as List)) {
-            final cat = CategoryData.fromJson(item as Map<String, dynamic>);
+            final cat = CategoryData.fromJson(
+              _withColumnDefaults(_db.categoriesTable, item),
+            );
             await _db.into(_db.categoriesTable).insert(cat);
           }
         }
@@ -544,7 +576,9 @@ class BackupService {
         // Tags
         if (dataMap.containsKey('tags')) {
           for (final item in (dataMap['tags'] as List)) {
-            final tag = TagData.fromJson(item as Map<String, dynamic>);
+            final tag = TagData.fromJson(
+              _withColumnDefaults(_db.tagsTable, item),
+            );
             await _db.into(_db.tagsTable).insert(tag);
           }
         }
@@ -552,7 +586,9 @@ class BackupService {
         // Transactions
         if (dataMap.containsKey('transactions')) {
           for (final item in (dataMap['transactions'] as List)) {
-            final tx = TransactionData.fromJson(item as Map<String, dynamic>);
+            final tx = TransactionData.fromJson(
+              _withColumnDefaults(_db.transactionsTable, item),
+            );
             await _db.into(_db.transactionsTable).insert(tx);
           }
         }
@@ -561,7 +597,7 @@ class BackupService {
         if (dataMap.containsKey('transactionTags')) {
           for (final item in (dataMap['transactionTags'] as List)) {
             final tt = TransactionTagData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.transactionTagsTable, item),
             );
             await _db.into(_db.transactionTagsTable).insert(tt);
           }
@@ -570,7 +606,9 @@ class BackupService {
         // Budgets
         if (dataMap.containsKey('budgets')) {
           for (final item in (dataMap['budgets'] as List)) {
-            final b = BudgetData.fromJson(item as Map<String, dynamic>);
+            final b = BudgetData.fromJson(
+              _withColumnDefaults(_db.budgetsTable, item),
+            );
             await _db.into(_db.budgetsTable).insert(b);
           }
         }
@@ -579,7 +617,7 @@ class BackupService {
         if (dataMap.containsKey('budgetCategories')) {
           for (final item in (dataMap['budgetCategories'] as List)) {
             final bc = BudgetCategoryData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.budgetCategoriesTable, item),
             );
             await _db.into(_db.budgetCategoriesTable).insert(bc);
           }
@@ -588,7 +626,9 @@ class BackupService {
         // Debts
         if (dataMap.containsKey('debts')) {
           for (final item in (dataMap['debts'] as List)) {
-            final d = DebtReceivableData.fromJson(item as Map<String, dynamic>);
+            final d = DebtReceivableData.fromJson(
+              _withColumnDefaults(_db.debtsReceivablesTable, item),
+            );
             await _db.into(_db.debtsReceivablesTable).insert(d);
           }
         }
@@ -596,7 +636,9 @@ class BackupService {
         // Installments
         if (dataMap.containsKey('installments')) {
           for (final item in (dataMap['installments'] as List)) {
-            final inst = InstallmentData.fromJson(item as Map<String, dynamic>);
+            final inst = InstallmentData.fromJson(
+              _withColumnDefaults(_db.installmentsTable, item),
+            );
             await _db.into(_db.installmentsTable).insert(inst);
           }
         }
@@ -605,7 +647,7 @@ class BackupService {
         if (dataMap.containsKey('installmentPayments')) {
           for (final item in (dataMap['installmentPayments'] as List)) {
             final ip = InstallmentPaymentData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.installmentPaymentsTable, item),
             );
             await _db.into(_db.installmentPaymentsTable).insert(ip);
           }
@@ -614,7 +656,9 @@ class BackupService {
         // Checks
         if (dataMap.containsKey('checks')) {
           for (final item in (dataMap['checks'] as List)) {
-            final chk = CheckData.fromJson(item as Map<String, dynamic>);
+            final chk = CheckData.fromJson(
+              _withColumnDefaults(_db.checksTable, item),
+            );
             await _db.into(_db.checksTable).insert(chk);
           }
         }
@@ -622,7 +666,9 @@ class BackupService {
         // Assets
         if (dataMap.containsKey('assets')) {
           for (final item in (dataMap['assets'] as List)) {
-            final ast = AssetData.fromJson(item as Map<String, dynamic>);
+            final ast = AssetData.fromJson(
+              _withColumnDefaults(_db.assetsTable, item),
+            );
             await _db.into(_db.assetsTable).insert(ast);
           }
         }
@@ -630,7 +676,9 @@ class BackupService {
         // Financial Goals
         if (dataMap.containsKey('financialGoals')) {
           for (final item in (dataMap['financialGoals'] as List)) {
-            final g = FinancialGoalData.fromJson(item as Map<String, dynamic>);
+            final g = FinancialGoalData.fromJson(
+              _withColumnDefaults(_db.financialGoalsTable, item),
+            );
             await _db.into(_db.financialGoalsTable).insert(g);
           }
         }
@@ -639,7 +687,7 @@ class BackupService {
         if (dataMap.containsKey('contacts')) {
           for (final item in (dataMap['contacts'] as List)) {
             final c = BusinessContactData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.businessContactsTable, item),
             );
             await _db.into(_db.businessContactsTable).insert(c);
           }
@@ -648,7 +696,9 @@ class BackupService {
         // Products
         if (dataMap.containsKey('products')) {
           for (final item in (dataMap['products'] as List)) {
-            final pr = ProductData.fromJson(item as Map<String, dynamic>);
+            final pr = ProductData.fromJson(
+              _withColumnDefaults(_db.productsTable, item),
+            );
             await _db.into(_db.productsTable).insert(pr);
           }
         }
@@ -656,7 +706,9 @@ class BackupService {
         // Inventory Logs
         if (dataMap.containsKey('inventoryLogs')) {
           for (final item in (dataMap['inventoryLogs'] as List)) {
-            final il = InventoryLogData.fromJson(item as Map<String, dynamic>);
+            final il = InventoryLogData.fromJson(
+              _withColumnDefaults(_db.inventoryLogsTable, item),
+            );
             await _db.into(_db.inventoryLogsTable).insert(il);
           }
         }
@@ -664,7 +716,9 @@ class BackupService {
         // Invoices
         if (dataMap.containsKey('invoices')) {
           for (final item in (dataMap['invoices'] as List)) {
-            final inv = InvoiceData.fromJson(item as Map<String, dynamic>);
+            final inv = InvoiceData.fromJson(
+              _withColumnDefaults(_db.invoicesTable, item),
+            );
             await _db.into(_db.invoicesTable).insert(inv);
           }
         }
@@ -673,7 +727,7 @@ class BackupService {
         if (dataMap.containsKey('invoiceItems')) {
           for (final item in (dataMap['invoiceItems'] as List)) {
             final invItem = InvoiceItemData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.invoiceItemsTable, item),
             );
             await _db.into(_db.invoiceItemsTable).insert(invItem);
           }
@@ -682,7 +736,9 @@ class BackupService {
         // Sync Queue
         if (dataMap.containsKey('syncQueue')) {
           for (final item in (dataMap['syncQueue'] as List)) {
-            final sq = SyncQueueData.fromJson(item as Map<String, dynamic>);
+            final sq = SyncQueueData.fromJson(
+              _withColumnDefaults(_db.syncQueueTable, item),
+            );
             await _db.into(_db.syncQueueTable).insert(sq);
           }
         }
@@ -690,7 +746,9 @@ class BackupService {
         // Notifications
         if (dataMap.containsKey('notifications')) {
           for (final item in (dataMap['notifications'] as List)) {
-            final n = NotificationData.fromJson(item as Map<String, dynamic>);
+            final n = NotificationData.fromJson(
+              _withColumnDefaults(_db.notificationsTable, item),
+            );
             await _db.into(_db.notificationsTable).insert(n);
           }
         }
@@ -698,7 +756,9 @@ class BackupService {
         // Fiscal Years
         if (dataMap.containsKey('fiscalYears')) {
           for (final item in (dataMap['fiscalYears'] as List)) {
-            final fy = FiscalYearData.fromJson(item as Map<String, dynamic>);
+            final fy = FiscalYearData.fromJson(
+              _withColumnDefaults(_db.fiscalYearsTable, item),
+            );
             await _db.into(_db.fiscalYearsTable).insert(fy);
           }
         }
@@ -707,7 +767,7 @@ class BackupService {
         if (dataMap.containsKey('accountingSubjects')) {
           for (final item in (dataMap['accountingSubjects'] as List)) {
             final s = AccountingSubjectData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingSubjectsTable, item),
             );
             await _db.into(_db.accountingSubjectsTable).insert(s);
           }
@@ -717,7 +777,7 @@ class BackupService {
         if (dataMap.containsKey('accountingDocuments')) {
           for (final item in (dataMap['accountingDocuments'] as List)) {
             final d = AccountingDocumentData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingDocumentsTable, item),
             );
             await _db.into(_db.accountingDocumentsTable).insert(d);
           }
@@ -727,7 +787,7 @@ class BackupService {
         if (dataMap.containsKey('accountingTransactions')) {
           for (final item in (dataMap['accountingTransactions'] as List)) {
             final at = AccountingTransactionData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingTransactionsTable, item),
             );
             await _db.into(_db.accountingTransactionsTable).insert(at);
           }
@@ -737,7 +797,7 @@ class BackupService {
         if (dataMap.containsKey('accountingAuditLogs')) {
           for (final item in (dataMap['accountingAuditLogs'] as List)) {
             final al = AccountingAuditLogData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingAuditLogsTable, item),
             );
             await _db.into(_db.accountingAuditLogsTable).insert(al);
           }
@@ -747,7 +807,7 @@ class BackupService {
         if (dataMap.containsKey('accountingDetailLedgers')) {
           for (final item in (dataMap['accountingDetailLedgers'] as List)) {
             final adl = AccountingDetailLedgerData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingDetailLedgersTable, item),
             );
             await _db.into(_db.accountingDetailLedgersTable).insert(adl);
           }
@@ -757,7 +817,7 @@ class BackupService {
         if (dataMap.containsKey('accountingDetailValues')) {
           for (final item in (dataMap['accountingDetailValues'] as List)) {
             final adv = AccountingDetailValueData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingDetailValuesTable, item),
             );
             await _db.into(_db.accountingDetailValuesTable).insert(adv);
           }
@@ -768,7 +828,7 @@ class BackupService {
           for (final item
               in (dataMap['accountingDocumentDetailLinks'] as List)) {
             final link = AccountingDocumentDetailLinkData.fromJson(
-              item as Map<String, dynamic>,
+              _withColumnDefaults(_db.accountingDocumentDetailLinksTable, item),
             );
             await _db.into(_db.accountingDocumentDetailLinksTable).insert(link);
           }
