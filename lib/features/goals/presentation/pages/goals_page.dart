@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/widgets/app_kit.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/localization/app_localizations.dart';
@@ -428,103 +431,22 @@ class GoalsPage extends StatelessWidget {
                       return ListView(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         children: [
-                          // Summary Card
-                          AppCard(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      l10n.isPersian
-                                          ? 'کل پس‌انداز'
-                                          : 'Total saved',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: isDark
-                                                ? AppColors.darkSubtext
-                                                : AppColors.lightSubtext,
-                                          ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.12,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        TextNormalizer.auto(
-                                          '${state.overallPercent.toStringAsFixed(0)}%',
-                                        ),
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                AppMoneyText(
-                                  money: state.totalSaved,
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusSm,
-                                  ),
-                                  child: LinearProgressIndicator(
-                                    value: (state.overallPercent / 100.0).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                    minHeight: 8,
-                                    backgroundColor: isDark
-                                        ? AppColors.darkBorder
-                                        : AppColors.lightBorder,
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                          AppColors.primary,
-                                        ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      l10n.isPersian
-                                          ? 'هدف کل'
-                                          : 'Total target',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: isDark
-                                                ? AppColors.darkSubtext
-                                                : AppColors.lightSubtext,
-                                          ),
-                                    ),
-                                    AppMoneyText(
-                                      money: state.totalTarget,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          // Summary: saved vs target across goals (gold =
+                          // the goals accent).
+                          AppSummaryHero(
+                            caption: l10n.isPersian
+                                ? 'کل پس‌انداز اهداف'
+                                : 'Saved across goals',
+                            headline: AppMoneyText(
+                              money: state.totalSaved,
+                              usePersianDigits: true,
+                            ),
+                            progress: state.overallPercent / 100.0,
+                            progressColor: AppColors.goldDark,
+                            footnote: TextNormalizer.auto(
+                              l10n.isPersian
+                                  ? '${state.overallPercent.toStringAsFixed(0)}٪ از هدف کل ${state.totalTarget.format(usePersianDigits: true)}'
+                                  : '${state.overallPercent.toStringAsFixed(0)}% of ${state.totalTarget.format()}',
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),

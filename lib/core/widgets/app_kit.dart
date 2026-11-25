@@ -6,6 +6,12 @@ import '../../app/theme/app_typography.dart';
 import '../design_system/tokens/colors.dart';
 import '../design_system/tokens/radii.dart';
 import 'app_card.dart';
+import 'app_money_text.dart';
+
+// Status pills live in the design system (they pair every colour with an
+// icon, so status is never conveyed by colour alone); re-exported here so
+// screens get the whole kit from one import.
+export '../design_system/components/financial/app_status_badge.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────
 /// KIFINO 2 KIT — the building blocks every screen is composed from.
@@ -92,14 +98,20 @@ class AppHeroStat extends StatelessWidget {
                   color: AppColors.onInkSecondary,
                 ),
               ),
-              DefaultTextStyle.merge(
+              MoneyTextStyle(
                 style: AppTypography.moneySub.copyWith(
                   color: AppColors.onInk,
                   fontWeight: FontWeight.w700,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                child: value,
+                child: DefaultTextStyle.merge(
+                  style: AppTypography.moneySub.copyWith(
+                    color: AppColors.onInk,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  child: value,
+                ),
               ),
             ],
           ),
@@ -155,11 +167,16 @@ class AppStatTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          DefaultTextStyle.merge(
+          MoneyTextStyle(
             style: AppTypography.moneyTile.copyWith(color: colors.textPrimary),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            child: value,
+            child: DefaultTextStyle.merge(
+              style: AppTypography.moneyTile.copyWith(
+                color: colors.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              child: value,
+            ),
           ),
         ],
       ),
@@ -325,48 +342,6 @@ class AppListRow extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Small rounded status label («پاس شده», «سررسید گذشته»…).
-class AppStatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-  final IconData? icon;
-
-  const AppStatusBadge({
-    super.key,
-    required this.label,
-    required this.color,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.2 : 0.12),
-        borderRadius: AppSpacing.borderRadiusPill,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: AppTypography.labelSmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -662,4 +637,111 @@ Color? parseHexColor(String? hex) {
     radix: 16,
   );
   return v == null ? null : Color(v);
+}
+
+/// A figure shown under the headline of an [AppSummaryHero].
+class AppHeroFigure {
+  final String label;
+  final Widget value;
+  final IconData? icon;
+  final Color? color;
+
+  const AppHeroFigure({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.color,
+  });
+}
+
+/// The standard module summary: a caption, one headline value and up to
+/// three supporting figures, on the ink surface.
+class AppSummaryHero extends StatelessWidget {
+  final String caption;
+  final Widget headline;
+  final String? footnote;
+  final List<AppHeroFigure> figures;
+  final VoidCallback? onTap;
+
+  /// Optional 0..1 progress shown under the headline (goals, budgets…).
+  final double? progress;
+  final Color? progressColor;
+
+  const AppSummaryHero({
+    super.key,
+    required this.caption,
+    required this.headline,
+    this.footnote,
+    this.figures = const [],
+    this.onTap,
+    this.progress,
+    this.progressColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppHeroCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            caption,
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.onInkSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          MoneyTextStyle(
+            style: AppTypography.moneyHeadline.copyWith(color: AppColors.onInk),
+            child: DefaultTextStyle.merge(
+              style: AppTypography.moneyHeadline.copyWith(
+                color: AppColors.onInk,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              child: headline,
+            ),
+          ),
+          if (progress != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            ClipRRect(
+              borderRadius: AppSpacing.borderRadiusPill,
+              child: LinearProgressIndicator(
+                value: progress!.clamp(0.0, 1.0),
+                minHeight: 6,
+                backgroundColor: Colors.white.withValues(alpha: 0.12),
+                color: progressColor ?? AppColors.primaryBlueDark,
+              ),
+            ),
+          ],
+          if (footnote != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              footnote!,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.onInkSecondary,
+              ),
+            ),
+          ],
+          if (figures.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                for (final f in figures)
+                  Expanded(
+                    child: AppHeroStat(
+                      label: f.label,
+                      icon: f.icon,
+                      iconColor: f.color,
+                      value: f.value,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

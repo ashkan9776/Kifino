@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/utils/text_normalizer.dart';
+import '../../../../core/widgets/app_kit.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
@@ -362,176 +366,76 @@ class _AccountsPageState extends State<AccountsPage> {
                     );
                   }
 
-                  return ListView.separated(
+                  // Group by account type, in the enum's natural order.
+                  final groups = <AccountType, List<AccountEntity>>{};
+                  for (final type in AccountType.values) {
+                    final ofType = visible.where((a) => a.type == type);
+                    if (ofType.isNotEmpty) groups[type] = ofType.toList();
+                  }
+
+                  return ListView(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md,
-                      AppSpacing.sm,
+                      AppSpacing.xs,
                       AppSpacing.md,
                       96,
                     ),
-                    itemCount: visible.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      final account = visible[index];
-                      final subtitleParts = <String>[
-                        isFa ? account.type.titleFa : account.type.titleEn,
-                        if (account.bankName != null &&
-                            account.bankName!.isNotEmpty)
-                          account.bankName!,
-                        if (account.cardNumberLastFour != null &&
-                            account.cardNumberLastFour!.isNotEmpty)
-                          '•••• ${account.cardNumberLastFour}',
-                      ];
-
-                      return AppCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.md,
-                        ),
-                        child: Row(
+                    children: [
+                      AppHeroCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius: AppSpacing.borderRadiusMd,
-                              ),
-                              child: Icon(
-                                _iconFor(account.type),
-                                size: 22,
-                                color: Theme.of(context).colorScheme.primary,
+                            Text(
+                              isFa ? 'موجودی کل حساب‌ها' : 'Total balance',
+                              style: AppTypography.labelLarge.copyWith(
+                                color: AppColors.onInkSecondary,
                               ),
                             ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          account.name,
-                                          style: AppTypography.titleMedium,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (account.isArchived) ...[
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppSpacing.sm,
-                                            vertical: AppSpacing.xxs,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.warning.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                            borderRadius:
-                                                AppSpacing.borderRadiusSm,
-                                          ),
-                                          child: Text(
-                                            isFa ? 'بایگانی' : 'Archived',
-                                            style: AppTypography.labelMedium
-                                                .copyWith(
-                                                  color: colors.warning,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    subtitleParts.join(' • '),
-                                    style: AppTypography.labelMedium.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.xs),
                             AppMoneyText(
-                              money: account.currentBalance,
-                              style: AppTypography.moneyTile,
+                              money: state.totalBalance,
+                              style: AppTypography.moneyHeadline.copyWith(
+                                color: AppColors.onInk,
+                              ),
                               usePersianDigits: true,
                             ),
-                            PopupMenuButton<String>(
-                              tooltip: isFa ? 'بیشتر' : 'More',
-                              onSelected: (value) {
-                                if (value == 'archive') {
-                                  context.read<AccountsBloc>().add(
-                                    AccountArchiveToggled(
-                                      account.id,
-                                      !account.isArchived,
-                                    ),
-                                  );
-                                } else if (value == 'delete') {
-                                  _confirmDelete(account);
-                                }
-                              },
-                              itemBuilder: (_) => [
-                                PopupMenuItem(
-                                  value: 'archive',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        account.isArchived
-                                            ? Icons.unarchive_rounded
-                                            : Icons.inventory_2_outlined,
-                                        size: 20,
-                                        color: isDark
-                                            ? AppColors.darkTextSecondary
-                                            : AppColors.lightTextSecondary,
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Text(
-                                        isFa
-                                            ? (account.isArchived
-                                                  ? 'خروج از بایگانی'
-                                                  : 'بایگانی')
-                                            : (account.isArchived
-                                                  ? 'Unarchive'
-                                                  : 'Archive'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 20,
-                                        color: AppColors.expenseLight,
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Text(
-                                        l10n.delete,
-                                        style: const TextStyle(
-                                          color: AppColors.expenseLight,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              TextNormalizer.auto(
+                                isFa
+                                    ? '${active.length} حساب فعال${archived.isEmpty ? '' : ' · ${archived.length} بایگانی'}'
+                                    : '${active.length} active',
+                              ),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.onInkSecondary,
+                              ),
                             ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                      for (final entry in groups.entries) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        AppListGroup(
+                          title: isFa ? entry.key.titleFa : entry.key.titleEn,
+                          children: [
+                            for (final account in entry.value)
+                              _AccountRow(
+                                account: account,
+                                isFa: isFa,
+                                icon: _iconFor(account.type),
+                                onArchive: () =>
+                                    context.read<AccountsBloc>().add(
+                                      AccountArchiveToggled(
+                                        account.id,
+                                        !account.isArchived,
+                                      ),
+                                    ),
+                                onDelete: () => _confirmDelete(account),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
                   );
                 }
 
@@ -540,6 +444,80 @@ class _AccountsPageState extends State<AccountsPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AccountRow extends StatelessWidget {
+  final AccountEntity account;
+  final bool isFa;
+  final IconData icon;
+  final VoidCallback onArchive;
+  final VoidCallback onDelete;
+
+  const _AccountRow({
+    required this.account,
+    required this.isFa,
+    required this.icon,
+    required this.onArchive,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.customColors;
+    final details = [
+      if (account.bankName != null && account.bankName!.isNotEmpty)
+        account.bankName!,
+      if (account.cardNumberLastFour != null &&
+          account.cardNumberLastFour!.isNotEmpty)
+        TextNormalizer.auto('•••• ${account.cardNumberLastFour}'),
+      if (account.isArchived) isFa ? 'بایگانی‌شده' : 'Archived',
+    ];
+    return AppListRow(
+      icon: icon,
+      iconColor: account.isArchived
+          ? colors.textTertiary
+          : Theme.of(context).colorScheme.primary,
+      title: account.name,
+      subtitle: details.isEmpty ? null : details.join('  ·  '),
+      showChevron: false,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppMoneyText(
+            money: account.currentBalance,
+            style: AppTypography.moneyTile.copyWith(
+              color: account.currentBalance.isNegative
+                  ? colors.expense
+                  : colors.textPrimary,
+            ),
+            usePersianDigits: true,
+          ),
+          PopupMenuButton<String>(
+            tooltip: isFa ? 'گزینه‌ها' : 'Options',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (v) => v == 'archive' ? onArchive() : onDelete(),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'archive',
+                child: Text(
+                  account.isArchived
+                      ? (isFa ? 'خروج از بایگانی' : 'Unarchive')
+                      : (isFa ? 'بایگانی' : 'Archive'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(
+                  isFa ? 'حذف' : 'Delete',
+                  style: TextStyle(color: colors.expense),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

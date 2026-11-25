@@ -149,9 +149,10 @@ class MorePage extends StatelessWidget {
                   subtitle: isPersian
                       ? 'اسناد، دفاتر قانونی، تراز آزمایشی و ترازنامه'
                       : 'Vouchers, ledgers, trial balance, statements',
-                  trailing: AppStatusBadge(
+                  trailing: const AppStatusBadge(
                     label: 'PRO',
-                    color: colors.business,
+                    icon: Icons.workspace_premium_outlined,
+                    tone: AppStatusTone.premium,
                   ),
                   onTap: () => context.push('/accounting'),
                 ),
@@ -187,7 +188,7 @@ class MorePage extends StatelessWidget {
                   title: isPersian ? 'همگام‌سازی ابری' : 'Cloud sync',
                   trailing: AppStatusBadge(
                     label: isPersian ? 'به‌زودی' : 'Soon',
-                    color: colors.textTertiary,
+                    icon: Icons.schedule_rounded,
                   ),
                   onTap: () => context.push('/sync'),
                 ),

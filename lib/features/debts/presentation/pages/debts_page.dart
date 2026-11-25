@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/constants/app_currency.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -413,6 +416,21 @@ class _DebtsPageState extends State<DebtsPage> {
                 }
 
                 final allDebts = state.debts;
+                // Nothing recorded yet: one clear call to action instead of a hero
+                // full of zeros above an empty list.
+                if (allDebts.isEmpty) {
+                  return AppEmptyState(
+                    icon: Icons.handshake_outlined,
+                    title: l10n.isPersian
+                        ? 'هنوز بدهی یا طلبی ثبت نکرده‌اید'
+                        : 'Nothing here yet',
+                    description: l10n.isPersian
+                        ? 'پولی که به کسی بدهکارید یا از کسی طلب دارید را ثبت کنید تا موعدش یادتان بماند.'
+                        : 'Add your first one to start tracking it.',
+                    actionLabel: l10n.isPersian ? 'ثبت بدهی یا طلب' : 'Add',
+                    onAction: () => _showAddDebtDialog(context),
+                  );
+                }
                 final filteredDebts = allDebts.where((d) {
                   if (_selectedFilter == 1) {
                     return d.type == DebtType.debt;
@@ -426,82 +444,68 @@ class _DebtsPageState extends State<DebtsPage> {
                 return ListView(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
-                    // Summary Scorecard
-                    AppCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
+                    // Net position: what others owe me minus what I owe.
+                    AppHeroCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.payables,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppColors.darkSubtext
-                                        : AppColors.lightSubtext,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                AppMoneyText(
-                                  money: state.totalDebtRemaining,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.expense,
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            l10n.isPersian ? 'خالص طلب و بدهی' : 'Net position',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: AppColors.onInkSecondary,
                             ),
                           ),
-                          Container(
-                            height: 36,
-                            width: 1,
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder,
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.receivables,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppColors.darkSubtext
-                                        : AppColors.lightSubtext,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                AppMoneyText(
-                                  money: state.totalReceivableRemaining,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.income,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(height: AppSpacing.xs),
+                          AppMoneyText(
+                            money:
+                                state.totalReceivableRemaining -
+                                state.totalDebtRemaining,
+                            sign: MoneyDisplaySign.positiveNegative,
+                            colorCode: false,
+                            style: AppTypography.moneyHeadline.copyWith(
+                              color: AppColors.onInk,
                             ),
+                            usePersianDigits: true,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppHeroStat(
+                                  label: l10n.receivables,
+                                  icon: Icons.south_west_rounded,
+                                  iconColor: AppColors.incomeDark,
+                                  value: AppMoneyText(
+                                    money: state.totalReceivableRemaining,
+                                    usePersianDigits: true,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: AppHeroStat(
+                                  label: l10n.payables,
+                                  icon: Icons.north_east_rounded,
+                                  iconColor: AppColors.expenseDark,
+                                  value: AppMoneyText(
+                                    money: state.totalDebtRemaining,
+                                    usePersianDigits: true,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-
-                    // Filter Segments
-                    SegmentedButton<int>(
-                      segments: [
-                        ButtonSegment(value: 0, label: Text(l10n.all)),
-                        ButtonSegment(value: 1, label: Text(l10n.payables)),
-                        ButtonSegment(value: 2, label: Text(l10n.receivables)),
+                    AppFilterBar<int>(
+                      options: [
+                        (0, l10n.all),
+                        (1, l10n.payables),
+                        (2, l10n.receivables),
                       ],
-                      selected: {_selectedFilter},
-                      onSelectionChanged: (val) {
-                        setState(() => _selectedFilter = val.first);
-                      },
-                      showSelectedIcon: false,
+                      selected: _selectedFilter,
+                      onSelected: (v) => setState(() => _selectedFilter = v),
                     ),
                     const SizedBox(height: AppSpacing.md),
 
@@ -540,18 +544,13 @@ class _DebtsPageState extends State<DebtsPage> {
                                   children: [
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor: typeColor.withValues(
-                                            alpha: 0.12,
-                                          ),
-                                          child: Icon(
-                                            isReceivable
-                                                ? Icons.arrow_downward_rounded
-                                                : Icons.arrow_upward_rounded,
-                                            size: 18,
-                                            color: typeColor,
-                                          ),
+                                        AppIconBadge(
+                                          icon: isReceivable
+                                              ? Icons.south_west_rounded
+                                              : Icons.north_east_rounded,
+                                          color: typeColor,
+                                          size: 38,
+                                          iconSize: 19,
                                         ),
                                         const SizedBox(width: AppSpacing.sm),
                                         Column(

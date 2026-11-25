@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/constants/app_currency.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/design_system/components/financial/app_status_badge.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
@@ -1138,6 +1139,19 @@ class _ChecksPageState extends State<ChecksPage> {
                   );
                 }
 
+                if (state.checks.where((c) => !c.isDeleted).isEmpty) {
+                  return AppEmptyState(
+                    icon: Icons.fact_check_outlined,
+                    title: l10n.isPersian
+                        ? 'هنوز چکی ثبت نشده'
+                        : 'No cheques yet',
+                    description: l10n.isPersian
+                        ? 'چک‌های صادره و دریافتی را ثبت کنید تا سررسیدشان را از دست ندهید.'
+                        : 'Record issued and received cheques to never miss a due date.',
+                    actionLabel: l10n.isPersian ? 'ثبت چک' : 'Add cheque',
+                    onAction: () => _showAddCheckDialog(context),
+                  );
+                }
                 final filteredChecks = state.checks.where((c) {
                   if (_selectedFilter == 1) return c.type == CheckType.issued;
                   if (_selectedFilter == 2) return c.type == CheckType.received;
@@ -1152,23 +1166,14 @@ class _ChecksPageState extends State<ChecksPage> {
                     const SizedBox(height: AppSpacing.md),
 
                     // Filter Segments
-                    SegmentedButton<int>(
-                      segments: [
-                        ButtonSegment(value: 0, label: Text(l10n.all)),
-                        ButtonSegment(
-                          value: 1,
-                          label: Text(l10n.isPersian ? 'صادره' : 'Issued'),
-                        ),
-                        ButtonSegment(
-                          value: 2,
-                          label: Text(l10n.isPersian ? 'دریافتی' : 'Received'),
-                        ),
+                    AppFilterBar<int>(
+                      options: [
+                        (0, l10n.all),
+                        (1, l10n.isPersian ? 'صادره' : 'Issued'),
+                        (2, l10n.isPersian ? 'دریافتی' : 'Received'),
                       ],
-                      selected: {_selectedFilter},
-                      onSelectionChanged: (val) {
-                        setState(() => _selectedFilter = val.first);
-                      },
-                      showSelectedIcon: false,
+                      selected: _selectedFilter,
+                      onSelected: (v) => setState(() => _selectedFilter = v),
                     ),
                     const SizedBox(height: AppSpacing.md),
 
@@ -1212,56 +1217,16 @@ class _ToneIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final (color, bg) = switch ((tone, isDark)) {
-      (AppStatusTone.success, false) => (
-        const Color(0xFF25C997),
-        const Color(0xFFE7FAF3),
-      ),
-      (AppStatusTone.success, true) => (
-        const Color(0xFF39E6A5),
-        const Color(0xFF0B2E24),
-      ),
-      (AppStatusTone.warning, false) => (
-        const Color(0xFFFFB547),
-        const Color(0xFFFFF4E0),
-      ),
-      (AppStatusTone.warning, true) => (
-        const Color(0xFFFFCA58),
-        const Color(0xFF33230A),
-      ),
-      (AppStatusTone.danger, false) => (
-        const Color(0xFFFF5C6C),
-        const Color(0xFFFFECEE),
-      ),
-      (AppStatusTone.danger, true) => (
-        const Color(0xFFFF7A87),
-        const Color(0xFF3A1218),
-      ),
-      (AppStatusTone.info, false) => (
-        const Color(0xFF4C9AFF),
-        const Color(0xFFEAF3FF),
-      ),
-      (AppStatusTone.info, true) => (
-        const Color(0xFF4C9AFF),
-        const Color(0xFF0E2036),
-      ),
-      (AppStatusTone.neutral, false) => (
-        const Color(0xFF687386),
-        const Color(0xFFF1F5F9),
-      ),
-      (AppStatusTone.neutral, true) => (
-        const Color(0xFF94A3B8),
-        const Color(0xFF12243A),
-      ),
+    final c = context.customColors;
+    final color = switch (tone) {
+      AppStatusTone.success => c.income,
+      AppStatusTone.warning => c.warning,
+      AppStatusTone.danger => c.expense,
+      AppStatusTone.info => c.receivable,
+      AppStatusTone.neutral => c.textSecondary,
+      AppStatusTone.premium => c.business,
     };
-
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-      child: Icon(icon, size: 18, color: color),
-    );
+    return AppIconBadge(icon: icon, color: color, size: 40, iconSize: 20);
   }
 }
 

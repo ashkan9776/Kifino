@@ -1104,5 +1104,5 @@ class _ModuleItem {
 }
 
 extension ColorExt on Colors {
-  static const Color emeraldGreen = Color(0xFF10B981);
+  static const Color emeraldGreen = AppColors.income;
 }

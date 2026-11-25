@@ -6,6 +6,21 @@ import '../utils/money.dart';
 
 enum MoneyDisplaySign { none, positiveNegative, negativeOnly }
 
+/// Sets the style [AppMoneyText] uses when it is given none — so a hero can
+/// say "amounts here are headline-sized" without every call site repeating
+/// the style.
+class MoneyTextStyle extends InheritedWidget {
+  final TextStyle style;
+
+  const MoneyTextStyle({super.key, required this.style, required super.child});
+
+  static TextStyle? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<MoneyTextStyle>()?.style;
+
+  @override
+  bool updateShouldNotify(MoneyTextStyle old) => old.style != style;
+}
+
 class AppMoneyText extends StatelessWidget {
   final Money money;
   final TextStyle? style;
@@ -32,7 +47,8 @@ class AppMoneyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.customColors;
-    final defaultStyle = style ?? AppTypography.moneyTile;
+    final defaultStyle =
+        style ?? MoneyTextStyle.maybeOf(context) ?? AppTypography.moneyTile;
 
     Color? textColor = defaultStyle.color;
     String prefix = '';
