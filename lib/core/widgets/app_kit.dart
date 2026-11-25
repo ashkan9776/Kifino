@@ -296,7 +296,10 @@ class AppListRow extends StatelessWidget {
                 ),
                 if (value != null) ...[
                   const SizedBox(width: 8),
-                  Flexible(
+                  // Hugs its text next to the chevron (a Flexible here split
+                  // the row 50/50 and floated the value mid-row).
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 170),
                     child: Text(
                       value!,
                       maxLines: 1,
@@ -555,7 +558,8 @@ class AppChoiceGrid<T> extends StatelessWidget {
                 width: width,
                 child: _ChoiceTile(
                   choice: c,
-                  selected: c.value == selected,
+                  // Action-only tiles (null value) are never "selected".
+                  selected: c.value != null && c.value == selected,
                   onTap: () =>
                       c.onTap != null ? c.onTap!() : onSelected(c.value as T),
                   colors: colors,

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_money_text.dart';
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/constants/app_currency.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -217,6 +222,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             const SizedBox(height: AppSpacing.md),
 
                             // Financial Health Scorecard
+                            _PeriodHero(
+                              income: cashFlow.totalIncome,
+                              expense: cashFlow.totalExpense,
+                              label: switch (_selectedPeriod) {
+                                AnalyticsPeriod.thisMonth =>
+                                  l10n.periodThisMonth,
+                                AnalyticsPeriod.last3Months =>
+                                  l10n.periodLast3Months,
+                                _ => l10n.isPersian ? 'کل دوره' : 'All time',
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
                             FinancialHealthCard(
                               runwayMonths: runwayMonths,
                               savingsRatePercent: savingsRate,
@@ -241,27 +258,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             const SizedBox(height: AppSpacing.md),
 
                             // Budgets Breakdown
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l10n.activeBudgets,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                AppButton(
-                                  label: l10n.isPersian
-                                      ? 'بودجه جدید'
-                                      : 'New budget',
-                                  variant: AppButtonVariant.outline,
-                                  icon: const Icon(Icons.add_rounded, size: 18),
-                                  onPressed: () =>
-                                      _showCreateBudgetSheet(context),
-                                ),
-                              ],
+                            AppSectionHeader(
+                              title: l10n.activeBudgets,
+                              actionLabel: l10n.isPersian
+                                  ? '+ بودجه جدید'
+                                  : '+ New budget',
+                              onAction: () => _showCreateBudgetSheet(context),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
                             if (activeBudgets.isEmpty)
                               AppCard(
                                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -439,6 +442,68 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           },
         );
       },
+    );
+  }
+}
+
+/// Net flow of the selected period on the ink surface.
+class _PeriodHero extends StatelessWidget {
+  final Money income;
+  final Money expense;
+  final String label;
+
+  const _PeriodHero({
+    required this.income,
+    required this.expense,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final net = income - expense;
+    return AppHeroCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.isPersian
+                ? 'خالص جریان نقدی · $label'
+                : 'Net flow · $label',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.onInkSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          AppMoneyText(
+            money: net,
+            sign: MoneyDisplaySign.positiveNegative,
+            colorCode: false,
+            style: AppTypography.moneyHeadline.copyWith(color: AppColors.onInk),
+            usePersianDigits: true,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: AppHeroStat(
+                  label: context.l10n.income,
+                  icon: Icons.south_west_rounded,
+                  iconColor: AppColors.incomeDark,
+                  value: AppMoneyText(money: income, usePersianDigits: true),
+                ),
+              ),
+              Expanded(
+                child: AppHeroStat(
+                  label: context.l10n.expense,
+                  icon: Icons.north_east_rounded,
+                  iconColor: AppColors.expenseDark,
+                  value: AppMoneyText(money: expense, usePersianDigits: true),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

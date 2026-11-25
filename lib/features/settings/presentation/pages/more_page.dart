@@ -1,22 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/utils/money.dart';
-import '../../../../core/widgets/app_bottom_sheet.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/database/company_registry.dart';
 import '../../../../core/di/company_controller.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/money.dart';
+import '../../../../core/utils/text_normalizer.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_kit.dart';
 import '../../../../core/widgets/app_responsive_container.dart';
+import '../cubit/settings_cubit.dart';
+import '../cubit/settings_state.dart';
 import '../widgets/company_switcher_sheet.dart';
-import '../../../../core/database/company_registry.dart';
-import '../../../settings/presentation/cubit/settings_cubit.dart';
-import '../../../settings/presentation/cubit/settings_state.dart';
 
+/// «بیشتر»: the hub — the active ledger, every money tool in one grid,
+/// accounting, then grouped preferences and system settings.
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
 
@@ -24,60 +29,82 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isPersian = l10n.isPersian;
+    final colors = context.customColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    final managementItems = [
+    final tools = <(IconData, String, String, Color)>[
       (
         Icons.account_balance_wallet_outlined,
-        isPersian ? 'حساب‌ها و کارت‌ها' : 'Accounts & Cards',
+        isPersian ? 'حساب‌ها' : 'Accounts',
         '/accounts',
-      ),
-      (
-        Icons.category_outlined,
-        isPersian ? 'دسته‌بندی‌های سفارشی' : 'Custom categories',
-        '/categories',
-      ),
-      (
-        Icons.flag_outlined,
-        isPersian ? 'اهداف مالی و پس‌انداز' : 'Financial goals',
-        '/goals',
+        primary,
       ),
       (
         Icons.event_repeat_rounded,
-        isPersian ? 'تراکنش‌های تکراری' : 'Recurring & bills',
+        isPersian ? 'تکراری‌ها' : 'Recurring',
         '/recurring',
+        primary,
       ),
-      (Icons.handshake_outlined, l10n.debts, '/debts'),
-      (Icons.calendar_month_outlined, l10n.installments, '/installments'),
-      (Icons.fact_check_outlined, l10n.checks, '/checks'),
-      (Icons.savings_outlined, l10n.assets, '/assets'),
+      (
+        Icons.flag_outlined,
+        isPersian ? 'اهداف' : 'Goals',
+        '/goals',
+        colors.income,
+      ),
+      (
+        Icons.category_outlined,
+        isPersian ? 'دسته‌ها' : 'Categories',
+        '/categories',
+        colors.asset,
+      ),
+      (
+        Icons.handshake_outlined,
+        isPersian ? 'بدهی و طلب' : 'Debts',
+        '/debts',
+        isDark ? AppColors.debtOrangeDark : AppColors.debtOrangeLight,
+      ),
+      (
+        Icons.calendar_month_outlined,
+        isPersian ? 'اقساط' : 'Loans',
+        '/installments',
+        colors.transfer,
+      ),
+      (
+        Icons.fact_check_outlined,
+        isPersian ? 'چک‌ها' : 'Checks',
+        '/checks',
+        colors.warning,
+      ),
+      (
+        Icons.diamond_outlined,
+        isPersian ? 'دارایی‌ها' : 'Assets',
+        '/assets',
+        colors.asset,
+      ),
       (
         Icons.storefront_outlined,
-        isPersian ? 'مدیریت کسب‌وکار و فاکتورها' : 'Business & Invoices',
+        isPersian ? 'کسب‌وکار' : 'Business',
         '/business',
+        colors.business,
       ),
-      (Icons.auto_awesome_rounded, l10n.aiAssistant, '/ai'),
-    ];
-
-    final systemItems = [
       (
-        Icons.notifications_outlined,
-        isPersian ? 'اعلان‌ها و یادآورها' : 'Notifications',
+        Icons.auto_awesome_outlined,
+        isPersian ? 'دستیار' : 'Assistant',
+        '/ai',
+        colors.business,
+      ),
+      (
+        Icons.manage_search_rounded,
+        isPersian ? 'جستجو' : 'Search',
+        '/search',
+        colors.textSecondary,
+      ),
+      (
+        Icons.notifications_none_rounded,
+        isPersian ? 'اعلان‌ها' : 'Alerts',
         '/notifications',
-      ),
-      (
-        Icons.cloud_sync_outlined,
-        isPersian ? 'همگام‌سازی ابری (به‌زودی)' : 'Cloud sync (Coming soon)',
-        '/sync',
-      ),
-      (
-        Icons.security_outlined,
-        isPersian ? 'امنیت و رمز عبور' : 'Security & PIN',
-        '/security',
-      ),
-      (
-        Icons.backup_outlined,
-        isPersian ? 'پشتیبان‌گیری و بازیابی' : 'Backup & restore',
-        '/backup',
+        colors.textSecondary,
       ),
     ];
 
@@ -85,132 +112,106 @@ class MorePage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.navMore)),
       body: AppResponsiveContainer.settings(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.xl,
+          ),
           children: [
             _CompanyCard(isPersian: isPersian),
             const SizedBox(height: AppSpacing.lg),
-            _SettingsSection(isPersian: isPersian),
-            const SizedBox(height: AppSpacing.lg),
-
-            // Enterprise Accounting OS Hero Card
-            Builder(
-              builder: (context) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                final accent = Theme.of(context).colorScheme.primary;
-                return AppCard(
-                  onTap: () => context.push('/accounting'),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      borderRadius: AppSpacing.borderRadiusMd,
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.transferLight.withValues(alpha: 0.12),
-                          AppColors.transferLight.withValues(alpha: 0.04),
-                        ],
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.account_balance,
-                            color: accent,
-                            size: 26,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      isPersian
-                                          ? 'حسابداری دوبل'
-                                          : 'Financial Accounting OS',
-                                      style: AppTypography.titleMedium.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: accent,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'PRO',
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? AppColors.darkBackground
-                                            : Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                isPersian
-                                    ? 'اسناد دوبل، کدینگ، دفاتر قانونی، تراز آزمایشی و ترازنامه'
-                                    : 'General ledger, journal vouchers, trial balance & statements',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.75),
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.chevron_right_rounded, color: accent),
-                      ],
-                    ),
+            AppSectionHeader(
+              title: isPersian ? 'ابزارهای مالی' : 'Money tools',
+            ),
+            AppChoiceGrid<String>(
+              choices: [
+                for (final (icon, label, route, color) in tools)
+                  AppChoice<String>(
+                    label: label,
+                    icon: icon,
+                    color: color,
+                    onTap: () => context.push(route),
                   ),
-                );
-              },
+              ],
+              selected: null,
+              onSelected: (_) {},
             ),
             const SizedBox(height: AppSpacing.lg),
-
-            _SectionHeader(
-              label: isPersian ? 'مدیریت مالی' : 'Financial management',
+            AppListGroup(
+              children: [
+                AppListRow(
+                  icon: Icons.account_balance_outlined,
+                  iconColor: colors.business,
+                  title: isPersian
+                      ? 'حسابداری دوبل'
+                      : 'Double-entry accounting',
+                  subtitle: isPersian
+                      ? 'اسناد، دفاتر قانونی، تراز آزمایشی و ترازنامه'
+                      : 'Vouchers, ledgers, trial balance, statements',
+                  trailing: AppStatusBadge(
+                    label: 'PRO',
+                    color: colors.business,
+                  ),
+                  onTap: () => context.push('/accounting'),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            ...managementItems.map((item) => _MoreRow(item: item)),
             const SizedBox(height: AppSpacing.lg),
-            _SectionHeader(label: isPersian ? 'سیستم' : 'System'),
-            const SizedBox(height: AppSpacing.sm),
-            ...systemItems.map((item) => _MoreRow(item: item)),
+            _PreferencesGroup(isPersian: isPersian),
             const SizedBox(height: AppSpacing.lg),
-            _MoreRow(
-              item: (
-                Icons.palette_outlined,
-                isPersian
-                    ? 'نمایش سیستم طراحی (توسعه‌دهنده)'
-                    : 'Design system showcase (dev)',
-                '/design-system',
+            AppListGroup(
+              title: isPersian ? 'سیستم' : 'System',
+              children: [
+                AppListRow(
+                  icon: Icons.lock_outline_rounded,
+                  title: isPersian ? 'امنیت و رمز عبور' : 'Security & PIN',
+                  subtitle: isPersian
+                      ? 'قفل برنامه، اثر انگشت، اسکرین‌شات'
+                      : 'App lock, biometrics, screenshots',
+                  onTap: () => context.push('/security'),
+                ),
+                AppListRow(
+                  icon: Icons.cloud_download_outlined,
+                  title: isPersian
+                      ? 'پشتیبان‌گیری و بازیابی'
+                      : 'Backup & restore',
+                  subtitle: isPersian
+                      ? 'فایل رمزنگاری‌شده، خروجی اکسل، بازسازی مانده‌ها'
+                      : 'Encrypted file, CSV export, balance repair',
+                  onTap: () => context.push('/backup'),
+                ),
+                AppListRow(
+                  icon: Icons.cloud_sync_outlined,
+                  iconColor: colors.textTertiary,
+                  title: isPersian ? 'همگام‌سازی ابری' : 'Cloud sync',
+                  trailing: AppStatusBadge(
+                    label: isPersian ? 'به‌زودی' : 'Soon',
+                    color: colors.textTertiary,
+                  ),
+                  onTap: () => context.push('/sync'),
+                ),
+                if (kDebugMode)
+                  AppListRow(
+                    icon: Icons.palette_outlined,
+                    iconColor: colors.asset,
+                    title: isPersian ? 'سیستم طراحی' : 'Design system',
+                    subtitle: isPersian
+                        ? 'فقط در نسخه توسعه'
+                        : 'Debug builds only',
+                    onTap: () => context.push('/design-system'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Center(
+              child: Text(
+                TextNormalizer.auto(
+                  '${isPersian ? 'کیفینو' : 'Kifino'} ${AppConstants.appVersion}',
+                ),
+                style: AppTypography.labelMedium.copyWith(
+                  color: colors.textTertiary,
+                ),
               ),
             ),
           ],
@@ -220,8 +221,6 @@ class MorePage extends StatelessWidget {
   }
 }
 
-/// Company switcher entry (Phase 5): shows the active دفتر and opens the
-/// switcher sheet. Switching rebuilds the whole app under the new company.
 class _CompanyCard extends StatelessWidget {
   final bool isPersian;
 
@@ -235,446 +234,167 @@ class _CompanyCard extends StatelessWidget {
       builder: (context, snapshot) {
         final activeId = controller.activeCompanyId;
         CompanyInfo? active;
-        if (snapshot.hasData) {
-          for (final c in snapshot.data!) {
-            if (c.id == activeId) active = c;
-          }
+        for (final c in snapshot.data ?? const <CompanyInfo>[]) {
+          if (c.id == activeId) active = c;
         }
-        return AppCard(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          onTap: () => showCompanySwitcherSheet(context),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.domain_outlined,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isPersian ? 'شرکت / دفتر فعال' : 'Active company',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface
-                            .withValues(alpha: 0.55),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      active?.name ?? (isPersian ? '…' : '…'),
-                      style: AppTypography.titleMedium,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.4),
-              ),
-            ],
-          ),
+        final count = snapshot.data?.length ?? 1;
+        return AppListGroup(
+          children: [
+            AppListRow(
+              icon: Icons.domain_outlined,
+              title: active?.name ?? '…',
+              subtitle: isPersian
+                  ? (count > 1
+                        ? TextNormalizer.auto('دفتر فعال · $count دفتر')
+                        : 'دفتر فعال · برای افزودن دفتر جدید بزنید')
+                  : 'Active ledger',
+              onTap: () => showCompanySwitcherSheet(context),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-/// Inline settings (theme, language, base currency) — every choice persists
-/// immediately through [SettingsCubit] and applies app-wide.
-class _SettingsSection extends StatelessWidget {
+/// Appearance, language and base currency — applied app-wide at once.
+class _PreferencesGroup extends StatelessWidget {
   final bool isPersian;
 
-  const _SettingsSection({required this.isPersian});
+  const _PreferencesGroup({required this.isPersian});
 
-  static const String _themeSystemFa = 'سیستم';
-  static const String _themeLightFa = 'روشن';
-  static const String _themeDarkFa = 'تاریک';
-
-  static String themeLabel(ThemeMode mode, bool isPersian) {
-    final fa = switch (mode) {
-      ThemeMode.system => _themeSystemFa,
-      ThemeMode.light => _themeLightFa,
-      ThemeMode.dark => _themeDarkFa,
-    };
-    return isPersian
-        ? fa
-        : switch (mode) {
-            ThemeMode.system => 'System',
-            ThemeMode.light => 'Light',
-            ThemeMode.dark => 'Dark',
-          };
-  }
-
-  static String langLabel(Locale locale, bool isPersian) =>
-      locale.languageCode == 'fa' ? 'فارسی' : 'English';
-
-  static String _currencyLabelFa(Currency currency) => switch (currency) {
-    Currency.toman => 'تومان',
-    Currency.irr => 'ریال',
-    Currency.usd => 'دلار آمریکا',
-    Currency.eur => 'یورو',
-    Currency.aed => 'درهم امارات',
-    Currency.tryCurrency => 'لیر ترکیه',
-    Currency.gbp => 'پوند انگلیس',
+  static String themeLabel(ThemeMode mode, bool isPersian) => switch (mode) {
+    ThemeMode.system => isPersian ? 'مطابق دستگاه' : 'System',
+    ThemeMode.light => isPersian ? 'روشن' : 'Light',
+    ThemeMode.dark => isPersian ? 'تاریک' : 'Dark',
   };
 
-  Future<void> _pickTheme(BuildContext context, SettingsState state) async {
-    await showModalBottomSheet<void>(
+  static String currencyLabel(Currency c, bool isPersian) {
+    if (!isPersian) return c.code;
+    return switch (c) {
+      Currency.toman => 'تومان',
+      Currency.irr => 'ریال',
+      Currency.usd => 'دلار آمریکا',
+      Currency.eur => 'یورو',
+      Currency.aed => 'درهم امارات',
+      Currency.tryCurrency => 'لیر ترکیه',
+      Currency.gbp => 'پوند انگلیس',
+    };
+  }
+
+  Future<void> _pick<T>(
+    BuildContext context, {
+    required String title,
+    String? note,
+    required List<(T, String, IconData?)> options,
+    required T current,
+    required ValueChanged<T> onPicked,
+  }) async {
+    final colors = context.customColors;
+    final picked = await showAppSheet<T>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => AppBottomSheet(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppSheetHeader(title: isPersian ? 'حالت نمایش' : 'Appearance'),
-              const SizedBox(height: AppSpacing.sm),
-              SegmentedButton<ThemeMode>(
-                segments: [
-                  ButtonSegment(
-                    value: ThemeMode.system,
-                    label: Text(_themeSystemFa),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.light,
-                    label: Text(_themeLightFa),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.dark,
-                    label: Text(_themeDarkFa),
-                  ),
-                ],
-                selected: {state.themeMode},
-                onSelectionChanged: (selection) {
-                  context.read<SettingsCubit>().setThemeMode(selection.first);
-                  Navigator.pop(sheetContext);
-                },
-                showSelectedIcon: false,
+      title: title,
+      builder: (ctx) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (note != null) ...[
+            Text(
+              note,
+              style: AppTypography.bodySmall.copyWith(
+                color: colors.textSecondary,
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickLanguage(BuildContext context) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => AppBottomSheet(
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppSheetHeader(
-                  title: isPersian ? 'زبان برنامه' : 'App language',
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                RadioGroup<String>(
-                  groupValue: context
-                      .read<SettingsCubit>()
-                      .state
-                      .locale
-                      .languageCode,
-                  onChanged: (code) {
-                    context.read<SettingsCubit>().setLocale(Locale(code!));
-                    Navigator.pop(sheetContext);
-                  },
-                  child: Column(
-                    children: [
-                      for (final (code, label) in [
-                        ('fa', 'فارسی — RTL'),
-                        ('en', 'English — LTR'),
-                      ])
-                        ListTile(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppSpacing.borderRadiusMd,
-                          ),
-                          title: Text(label),
-                          trailing: Radio<String>(value: code),
-                          onTap: () {
-                            context.read<SettingsCubit>().setLocale(
-                              Locale(code),
-                            );
-                            Navigator.pop(sheetContext);
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-              ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickCurrency(BuildContext context) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => AppBottomSheet(
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppSheetHeader(title: isPersian ? 'ارز پایه' : 'Base currency'),
-                Text(
-                  isPersian
-                      ? 'مبالغ تومان و ریال به این واحد نرمال می‌شوند؛ ارزهای خارجی دست‌نخورده می‌مانند.'
-                      : 'Toman/Rial amounts are normalized to this unit; foreign currencies stay untouched.',
-                  style: Theme.of(sheetContext).textTheme.bodySmall,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      RadioGroup<String>(
-                        groupValue: context
-                            .read<SettingsCubit>()
-                            .state
-                            .currency
-                            .code,
-                        onChanged: (code) {
-                          final match = Currency.values
-                              .where((c) => c.code == code)
-                              .firstOrNull;
-                          if (match != null) {
-                            context.read<SettingsCubit>().setCurrency(match);
-                          }
-                          Navigator.pop(sheetContext);
-                        },
-                        child: Column(
-                          children: [
-                            for (final currency in Currency.values)
-                              ListTile(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: AppSpacing.borderRadiusMd,
-                                ),
-                                leading: Text(
-                                  currency.symbol,
-                                  style: AppTypography.titleMedium,
-                                ),
-                                title: Text(currency.code),
-                                subtitle: Text(currency.displayName),
-                                trailing: Radio<String>(value: currency.code),
-                                onTap: () {
-                                  context.read<SettingsCubit>().setCurrency(
-                                    currency,
-                                  );
-                                  Navigator.pop(sheetContext);
-                                },
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          for (final (value, label, icon) in options)
+            AppListRow(
+              icon: icon,
+              iconColor: colors.textSecondary,
+              title: label,
+              showChevron: false,
+              trailing: value == current
+                  ? Icon(
+                      Icons.check_circle_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    )
+                  : null,
+              onTap: () => Navigator.pop(ctx, value),
             ),
-          ),
-        ),
+        ],
       ),
     );
+    if (picked != null) onPicked(picked);
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
-        return AppCard(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          child: Column(
-            children: [
-              _SettingRow(
-                icon: Icons.dark_mode_outlined,
-                title: isPersian ? 'حالت نمایش' : 'Appearance',
-                value: themeLabel(state.themeMode, isPersian),
-                onTap: () => _pickTheme(context, state),
-              ),
-              Divider(
-                height: 1,
-                indent: AppSpacing.xl,
-                color: Theme.of(context).dividerColor,
-              ),
-              _SettingRow(
-                icon: Icons.language_rounded,
-                title: isPersian ? 'زبان' : 'Language',
-                value: langLabel(state.locale, isPersian),
-                onTap: () => _pickLanguage(context),
-              ),
-              Divider(
-                height: 1,
-                indent: AppSpacing.xl,
-                color: Theme.of(context).dividerColor,
-              ),
-              _SettingRow(
-                icon: Icons.currency_exchange_rounded,
-                title: isPersian ? 'ارز پایه' : 'Base currency',
-                value: isPersian
-                    ? _currencyLabelFa(state.currency)
-                    : state.currency.code,
-                onTap: () => _pickCurrency(context),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SettingRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final VoidCallback onTap;
-
-  const _SettingRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusMd),
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: AppTypography.bodyLarge),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: AppTypography.labelLarge.copyWith(
-              color: Theme.of(context).colorScheme.onSurface
-                  .withValues(alpha: 0.6),
-            ),
-          ),
-          const SizedBox(width: 4),
-          const _ForwardChevron(),
-        ],
-      ),
-    );
-  }
-}
-
-/// Forward chevron. `chevron_right` is auto-mirrored by Flutter, so it points
-/// left in RTL and right in LTR — 'go forward' along the reading direction.
-class _ForwardChevron extends StatelessWidget {
-  const _ForwardChevron();
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      Icons.chevron_right_rounded,
-      size: 20,
-      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String label;
-
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: Text(
-        label,
-        style: AppTypography.labelLarge.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
-      ),
-    );
-  }
-}
-
-class _MoreRow extends StatelessWidget {
-  final (IconData, String, String) item;
-
-  const _MoreRow({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: AppCard(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        onTap: () => context.push(item.$3),
-        child: Row(
+        final cubit = context.read<SettingsCubit>();
+        return AppListGroup(
+          title: isPersian ? 'تنظیمات' : 'Preferences',
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                item.$1,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
+            AppListRow(
+              icon: Icons.contrast_rounded,
+              title: isPersian ? 'حالت نمایش' : 'Appearance',
+              value: themeLabel(state.themeMode, isPersian),
+              onTap: () => _pick<ThemeMode>(
+                context,
+                title: isPersian ? 'حالت نمایش' : 'Appearance',
+                current: state.themeMode,
+                options: [
+                  (
+                    ThemeMode.system,
+                    themeLabel(ThemeMode.system, isPersian),
+                    Icons.brightness_auto_outlined,
+                  ),
+                  (
+                    ThemeMode.light,
+                    themeLabel(ThemeMode.light, isPersian),
+                    Icons.light_mode_outlined,
+                  ),
+                  (
+                    ThemeMode.dark,
+                    themeLabel(ThemeMode.dark, isPersian),
+                    Icons.dark_mode_outlined,
+                  ),
+                ],
+                onPicked: cubit.setThemeMode,
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: Text(item.$2, style: AppTypography.titleMedium)),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurface
-                  .withValues(alpha: 0.4),
+            AppListRow(
+              icon: Icons.translate_rounded,
+              title: isPersian ? 'زبان' : 'Language',
+              value: state.locale.languageCode == 'fa' ? 'فارسی' : 'English',
+              onTap: () => _pick<String>(
+                context,
+                title: isPersian ? 'زبان برنامه' : 'App language',
+                current: state.locale.languageCode,
+                options: const [('fa', 'فارسی', null), ('en', 'English', null)],
+                onPicked: (code) => cubit.setLocale(Locale(code)),
+              ),
+            ),
+            AppListRow(
+              icon: Icons.currency_exchange_rounded,
+              title: isPersian ? 'ارز پایه' : 'Base currency',
+              value: currencyLabel(state.currency, isPersian),
+              onTap: () => _pick<Currency>(
+                context,
+                title: isPersian ? 'ارز پایه' : 'Base currency',
+                note: isPersian
+                    ? 'جمع‌ها و گزارش‌ها به این واحد نمایش داده می‌شوند؛ تومان و ریال خودکار تبدیل می‌شوند.'
+                    : 'Totals and reports use this unit; Toman and Rial convert automatically.',
+                current: state.currency,
+                options: [
+                  for (final c in Currency.values)
+                    (c, '${currencyLabel(c, isPersian)} (${c.symbol})', null),
+                ],
+                onPicked: cubit.setCurrency,
+              ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

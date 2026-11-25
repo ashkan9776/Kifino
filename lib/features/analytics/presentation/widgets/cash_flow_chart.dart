@@ -154,52 +154,7 @@ class CashFlowChart extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.income,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkSubtext
-                          : AppColors.lightSubtext,
-                    ),
-                  ),
-                  AppMoneyText(
-                    money: Money.fromMinor(totalIncomeMinor, currency),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.income,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    l10n.expense,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkSubtext
-                          : AppColors.lightSubtext,
-                    ),
-                  ),
-                  AppMoneyText(
-                    money: Money.fromMinor(totalExpenseMinor, currency),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.expense,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // Period totals live in the analytics hero; the card is the trend.
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
             height: 160,

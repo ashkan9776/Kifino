@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/design_system/tokens/colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/text_normalizer.dart';
@@ -89,6 +91,7 @@ class _LockPageState extends State<LockPage> {
     final success = await cubit.verifyPin(_enteredPin);
     if (!mounted) return;
     if (!success) {
+      HapticFeedback.heavyImpact();
       setState(() {
         _enteredPin = '';
       });
@@ -97,121 +100,103 @@ class _LockPageState extends State<LockPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return BlocBuilder<SecurityCubit, SecurityState>(
       builder: (context, state) {
-        return ColoredBox(
-          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          child: SafeArea(
-            top: false,
-            child: Scaffold(
-              backgroundColor: isDark
-                  ? AppColors.darkBackground
-                  : AppColors.lightBackground,
-              body: SafeArea(
+        final lockout = _lockoutText(state);
+        final message = lockout ?? state.errorMessage;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle.light,
+          child: Material(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(gradient: KifinoPalette.heroDark),
+              child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xl,
                   ),
                   child: Column(
                     children: [
-                      const Spacer(),
-
-                      // 1. App Icon / Shield Branding
+                      const Spacer(flex: 2),
                       Container(
-                        width: 72,
-                        height: 72,
+                        width: 68,
+                        height: 68,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
+                          color: AppColors.primaryBlueDark.withValues(
+                            alpha: 0.16,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: AppColors.primaryBlueDark.withValues(
+                              alpha: 0.35,
+                            ),
+                          ),
                         ),
                         child: const Icon(
                           Icons.lock_outline_rounded,
-                          color: AppColors.primary,
-                          size: 36,
+                          color: AppColors.primaryBlueDark,
+                          size: 32,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
-                        'کیفینو قفل است',
+                        'کیفینو',
                         style: AppTypography.titleLarge.copyWith(
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.onInk,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        'برای ورود، رمز ۴ رقمی خود را وارد نمایید',
+                        TextNormalizer.auto(
+                          'رمز $_pinLength رقمی را وارد کنید',
+                        ),
                         style: AppTypography.bodyMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkSubtext
-                              : AppColors.lightSubtext,
+                          color: AppColors.onInkSecondary,
                         ),
                       ),
-
                       const SizedBox(height: AppSpacing.xl),
-
-                      // 2. PIN Dot Indicators
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(_pinLength, (index) {
-                          final isFilled = index < _enteredPin.length;
+                          final filled = index < _enteredPin.length;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeOutCubic,
                             margin: const EdgeInsets.symmetric(horizontal: 10),
-                            width: isFilled ? 18 : 14,
-                            height: isFilled ? 18 : 14,
+                            width: 14,
+                            height: 14,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isFilled
-                                  ? AppColors.primary
-                                  : (isDark
-                                        ? AppColors.darkSurfaceVariant
-                                        : AppColors.lightBorder),
-                              border: isFilled
-                                  ? null
-                                  : Border.all(
-                                      color: isDark
-                                          ? AppColors.darkBorder
-                                          : AppColors.lightBorder,
-                                      width: 2,
-                                    ),
+                              color: filled
+                                  ? AppColors.primaryBlueDark
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: filled
+                                    ? AppColors.primaryBlueDark
+                                    : AppColors.onInkSecondary,
+                                width: 1.5,
+                              ),
                             ),
                           );
                         }),
                       ),
-
-                      // Error Text if any
                       SizedBox(
-                        height: 36,
+                        height: 56,
                         child: Center(
-                          child: _lockoutText(state) != null
-                              ? Text(
-                                  _lockoutText(state)!,
+                          child: message == null
+                              ? null
+                              : Text(
+                                  message,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.expense,
+                                    color: AppColors.expenseDark,
                                     fontWeight: FontWeight.w600,
                                   ),
-                                )
-                              : state.errorMessage != null
-                              ? Text(
-                                  state.errorMessage!,
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.expense,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                                ),
                         ),
                       ),
-
-                      const Spacer(),
-
-                      // 3. Numeric Keypad
-                      _buildKeypad(context, state, isDark),
-
-                      const SizedBox(height: AppSpacing.xl),
+                      const Spacer(flex: 3),
+                      _buildKeypad(context, state),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -223,35 +208,37 @@ class _LockPageState extends State<LockPage> {
     );
   }
 
-  Widget _buildKeypad(BuildContext context, SecurityState state, bool isDark) {
+  Widget _buildKeypad(BuildContext context, SecurityState state) {
+    final locked = _isLockedOut;
+    Widget row(List<String> digits) => Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [for (final d in digits) _digitKey(d, locked)],
+    );
     return Column(
       children: [
-        _buildKeyRow(['1', '2', '3'], isDark),
+        row(['1', '2', '3']),
         const SizedBox(height: AppSpacing.md),
-        _buildKeyRow(['4', '5', '6'], isDark),
+        row(['4', '5', '6']),
         const SizedBox(height: AppSpacing.md),
-        _buildKeyRow(['7', '8', '9'], isDark),
+        row(['7', '8', '9']),
         const SizedBox(height: AppSpacing.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Biometric button (if available and enabled)
             if (state.canBiometric && state.isBiometricEnabled)
-              _buildSpecialKey(
+              _iconKey(
                 icon: Icons.fingerprint_rounded,
+                label: 'ورود با اثر انگشت',
                 onTap: () =>
                     context.read<SecurityCubit>().authenticateBiometric(),
-                isDark: isDark,
               )
             else
               const SizedBox(width: 72, height: 72),
-
-            _buildDigitKey('0', isDark),
-
-            _buildSpecialKey(
+            _digitKey('0', locked),
+            _iconKey(
               icon: Icons.backspace_outlined,
+              label: 'پاک کردن',
               onTap: _onDeletePressed,
-              isDark: isDark,
             ),
           ],
         ),
@@ -259,36 +246,35 @@ class _LockPageState extends State<LockPage> {
     );
   }
 
-  Widget _buildKeyRow(List<String> digits, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: digits.map((d) => _buildDigitKey(d, isDark)).toList(),
-    );
-  }
-
-  Widget _buildDigitKey(String digit, bool isDark) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _onDigitPressed(digit),
-        borderRadius: BorderRadius.circular(36),
-        child: Container(
-          width: 72,
-          height: 72,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
-          ),
-          child: Text(
-            // Persian digits on the pad while the app is in Persian; the
-            // value appended to the PIN stays Latin so hashing matches.
-            TextNormalizer.auto(digit),
-            style: AppTypography.displayMedium.copyWith(
-              fontWeight: FontWeight.bold,
+  Widget _digitKey(String digit, bool locked) {
+    return Semantics(
+      button: true,
+      label: digit,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.white.withValues(alpha: locked ? 0.03 : 0.08),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: locked
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  _onDigitPressed(digit);
+                },
+          child: SizedBox(
+            width: 72,
+            height: 72,
+            child: Center(
+              // Persian glyphs on the pad; the appended value stays Latin
+              // so the hash matches.
+              child: Text(
+                TextNormalizer.auto(digit),
+                style: AppTypography.displayMedium.copyWith(
+                  color: AppColors.onInk.withValues(alpha: locked ? 0.35 : 1),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ),
@@ -296,25 +282,23 @@ class _LockPageState extends State<LockPage> {
     );
   }
 
-  Widget _buildSpecialKey({
+  Widget _iconKey({
     required IconData icon,
+    required String label,
     required VoidCallback onTap,
-    required bool isDark,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(36),
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: Icon(
-            icon,
-            size: 28,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 72,
+            height: 72,
+            child: Icon(icon, size: 28, color: AppColors.onInk),
           ),
         ),
       ),
