@@ -192,7 +192,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               Text(
-                                'امنیت سطح سازمانی (Enterprise)',
+                                'داده‌های شما چطور محافظت می‌شود',
                                 style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
@@ -200,10 +200,13 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            '• رمزنگاری کلیدها با Android Keystore / iOS Keychain\n'
-                            '• هش نمک‌دار SHA-256 برای پین‌کد\n'
-                            '• جداسازی پایگاه‌داده محلی با پایگاه‌داده SQLite امن\n'
-                            '• هیچ داده‌ای بدون اجازه شما به خارج دستگاه ارسال نمی‌شود.',
+                            // Keep every line literally true: this card is
+                            // a security claim, not marketing.
+                            '• هیچ داده‌ای از گوشی شما خارج نمی‌شود؛ کیفینو به سرور وصل نیست.\n'
+                            '• رمز عبور با PBKDF2 (۱۲۰ هزار دور) هش و در حافظه امن دستگاه (Android Keystore) نگهداری می‌شود.\n'
+                            '• بعد از چند تلاش نادرست، ورود به‌طور موقت قفل می‌شود.\n'
+                            '• فایل پشتیبان با AES-256 و رمز خودتان رمزنگاری می‌شود.\n'
+                            '• خودِ پایگاه‌داده روی گوشی رمزنگاری نشده است؛ برای محافظت، قفل برنامه را روشن کنید.',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: isDark

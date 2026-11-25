@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/design_system/tokens/radii.dart';
 import '../../../../core/design_system/tokens/colors.dart';
 
@@ -213,66 +215,20 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   /// `childAspectRatio` made cell height depend on screen width — wider
   /// phones produced shorter cells and overflowing titles; [mainAxisExtent]
   /// pins the height in logical pixels instead.
+  /// Modules as one grouped list: titles of any length wrap instead of
+  /// overflowing a fixed grid cell, and the list scans top to bottom.
   Widget _buildModuleGrid(List<_ModuleItem> items) {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 128,
-      ),
-      itemBuilder: (context, index) =>
-          _buildModuleCard(items[index], context.customColors),
-    );
-  }
-
-  /// One overflow-proof module card shared by both grids. [AppCard] applies
-  /// its own 16px padding, so no nested Padding on top of it — the old
-  /// 16+12 stacking left ~104px of a ~160px cell for text, which made long
-  /// titles («حساب‌های سند خودکار») spill out of the card.
-  Widget _buildModuleCard(_ModuleItem item, KifinoColorsExtension colors) {
-    return AppCard(
-      onTap: () => context.push(item.route),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(item.icon, color: item.color, size: 20),
+    return AppListGroup(
+      children: [
+        for (final item in items)
+          AppListRow(
+            icon: item.icon,
+            iconColor: item.color,
+            title: item.title,
+            subtitle: item.subtitle,
+            onTap: () => context.push(item.route),
           ),
-          const Spacer(),
-          Text(
-            item.title,
-            style: AppTypography.titleSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              height: 1.25,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 3),
-          Text(
-            item.subtitle,
-            style: AppTypography.bodySmall.copyWith(
-              color: colors.textSecondary,
-              fontSize: 10,
-              height: 1.35,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -1104,5 +1060,5 @@ class _ModuleItem {
 }
 
 extension ColorExt on Colors {
-  static const Color emeraldGreen = Color(0xFF10B981);
+  static const Color emeraldGreen = AppColors.income;
 }

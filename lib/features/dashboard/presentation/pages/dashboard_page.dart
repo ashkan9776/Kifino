@@ -673,7 +673,9 @@ class _ToolsCard extends StatelessWidget {
               for (final (icon, label, route, color) in tools)
                 Expanded(
                   child: InkWell(
-                    onTap: () => context.push(route),
+                    onTap: () => route == '/business'
+                        ? context.go(route)
+                        : context.push(route),
                     borderRadius: AppSpacing.borderRadiusMd,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),

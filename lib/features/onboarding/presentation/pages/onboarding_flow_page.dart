@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/widgets/app_kit.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -235,45 +238,126 @@ class _OnboardingFlowViewState extends State<_OnboardingFlowView> {
 
   Widget _buildWelcomeStep(BuildContext context) {
     final isFa = _isPersian;
+    final colors = context.customColors;
+    final points = <(IconData, String, String)>[
+      (
+        Icons.lock_outline_rounded,
+        isFa ? 'خصوصی و آفلاین' : 'Private & offline',
+        isFa
+            ? 'همه‌چیز فقط روی گوشی شما می‌ماند؛ بدون حساب کاربری و سرور.'
+            : 'Everything stays on your phone — no account, no server.',
+      ),
+      (
+        Icons.chat_bubble_outline_rounded,
+        isFa ? 'ثبت با یک جمله' : 'Log in one sentence',
+        isFa
+            ? '«۳۵۰ تومن اسنپ» بنویسید یا پیامک بانک را بچسبانید.'
+            : 'Type “350 toman taxi” or paste a bank SMS.',
+      ),
+      (
+        Icons.account_balance_outlined,
+        isFa ? 'از جیب تا دفتر قانونی' : 'From wallet to ledger',
+        isFa
+            ? 'حساب‌ها، اقساط، چک، فاکتور و حسابداری دوبل در یک جا.'
+            : 'Accounts, loans, cheques, invoices and double-entry books.',
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.lg,
+        ),
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          constraints: BoxConstraints(minHeight: constraints.maxHeight - 40),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary
-                      .withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.account_balance_wallet_rounded,
-                  size: 56,
-                  color: Theme.of(context).colorScheme.primary,
+              AppHeroCard(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlueDark.withValues(
+                          alpha: 0.16,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: AppColors.primaryBlueDark.withValues(
+                            alpha: 0.35,
+                          ),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        size: 38,
+                        color: AppColors.primaryBlueDark,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      isFa ? 'کیفینو' : 'Kifino',
+                      style: AppTypography.displayLarge.copyWith(
+                        color: AppColors.onInk,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      isFa
+                          ? 'همه‌ی پولت، یک‌جا و آرام'
+                          : 'All your money, in one calm place',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: AppColors.onInkSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                isFa ? 'کیفینو' : 'Kifino',
-                style: AppTypography.displayLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                isFa
-                    ? 'سیستم‌عامل مالی شما'
-                    : 'Your Financial Operating System',
-                style: AppTypography.bodyLarge.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface
-                      .withValues(alpha: 0.65),
+              const SizedBox(height: AppSpacing.lg),
+              for (final (icon, title, body) in points)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppIconBadge(
+                        icon: icon,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 40,
+                        iconSize: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: AppTypography.titleSmall.copyWith(
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              body,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
             ],
           ),
         ),

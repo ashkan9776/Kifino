@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/constants/app_currency.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -391,118 +393,61 @@ class _AssetsPageState extends State<AssetsPage> {
               }
 
               final assets = state.assets;
+              // Nothing recorded yet: one clear call to action instead of a hero
+              // full of zeros above an empty list.
+              if (assets.isEmpty) {
+                return AppEmptyState(
+                  icon: Icons.diamond_outlined,
+                  title: l10n.isPersian
+                      ? 'هنوز دارایی ثبت نشده'
+                      : 'Nothing here yet',
+                  description: l10n.isPersian
+                      ? 'طلا، ارز، سهام یا خودرو را ثبت کنید تا ارزش روز و سود و زیانش را ببینید.'
+                      : 'Add your first one to start tracking it.',
+                  actionLabel: l10n.isPersian ? 'ثبت دارایی' : 'Add',
+                  onAction: () => _showAddAssetDialog(context),
+                );
+              }
               final isPnlPositive = state.totalProfitLoss.minorUnits >= 0;
 
               return ListView(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
-                  // Portfolio Valuation Card
-                  AppCard(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.isPersian
-                                  ? 'ارزش روز دارایی‌ها'
-                                  : 'Portfolio Valuation',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark
-                                    ? AppColors.darkSubtext
-                                    : AppColors.lightSubtext,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    (isPnlPositive
-                                            ? AppColors.income
-                                            : AppColors.expense)
-                                        .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                TextNormalizer.auto(
-                                  '${isPnlPositive ? '+' : ''}${state.profitLossPercent.toStringAsFixed(1)}%',
-                                ),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isPnlPositive
-                                      ? AppColors.income
-                                      : AppColors.expense,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        AppMoneyText(
-                          money: state.totalCurrentValuation,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.sm),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.purchasePrice,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
-                                  ),
-                                  AppMoneyText(
-                                    money: state.totalCostBasis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    l10n.profitLoss,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
-                                  ),
-                                  AppMoneyText(
-                                    money: state.totalProfitLoss.abs(),
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isPnlPositive
-                                          ? AppColors.income
-                                          : AppColors.expense,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  // Portfolio: today's value, cost and profit/loss.
+                  AppSummaryHero(
+                    caption: l10n.isPersian
+                        ? 'ارزش روز دارایی‌ها'
+                        : 'Portfolio value',
+                    headline: AppMoneyText(
+                      money: state.totalCurrentValuation,
+                      usePersianDigits: true,
                     ),
+                    figures: [
+                      AppHeroFigure(
+                        label: l10n.isPersian ? 'قیمت خرید' : 'Cost basis',
+                        icon: Icons.shopping_bag_outlined,
+                        color: AppColors.onInk,
+                        value: AppMoneyText(
+                          money: state.totalCostBasis,
+                          usePersianDigits: true,
+                        ),
+                      ),
+                      AppHeroFigure(
+                        label: l10n.profitLoss,
+                        icon: isPnlPositive
+                            ? Icons.trending_up_rounded
+                            : Icons.trending_down_rounded,
+                        color: isPnlPositive
+                            ? AppColors.incomeDark
+                            : AppColors.expenseDark,
+                        value: AppMoneyText(
+                          money: state.totalProfitLoss,
+                          sign: MoneyDisplaySign.positiveNegative,
+                          colorCode: false,
+                          usePersianDigits: true,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.md),
 

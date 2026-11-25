@@ -36,7 +36,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
   final ScrollController _scrollController = ScrollController();
   bool _hasText = false;
 
-  late final List<(IconData, String)> _quickPrompts;
+  List<(IconData, String)> _quickPrompts = const [];
 
   @override
   void initState() {
@@ -46,7 +46,14 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       final hasText = _textController.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+  }
 
+  // Localizations are an inherited widget: reading them in initState crashed
+  // the page («dependOnInheritedWidgetOfExactType… before initState()
+  // completed»). didChangeDependencies runs after mount and on locale change.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final isFa = context.l10n.isPersian;
     _quickPrompts = [
       (
@@ -152,8 +159,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                     ),
                     Text(
                       l10n.isPersian
-                          ? 'همیشه آنلاین • آفلاین هم کار می‌کند'
-                          : 'Always here • works offline',
+                          ? 'روی گوشی شما کار می‌کند — بدون اینترنت'
+                          : 'Runs on your phone — no internet needed',
                       style: AppTypography.labelMedium.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.55,

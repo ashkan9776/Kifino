@@ -12,6 +12,8 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../domain/entities/sync_operation_entity.dart';
 import '../../domain/repositories/sync_repository.dart';
+import '../../domain/services/remote_sync_client.dart';
+import '../../../../core/widgets/app_kit.dart';
 import '../bloc/sync_bloc.dart';
 import '../bloc/sync_event.dart';
 import '../bloc/sync_state.dart';
@@ -81,7 +83,7 @@ class _SyncPageState extends State<SyncPage> {
         top: false,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('همگام‌سازی ابری (به‌زودی)'),
+            title: const Text('همگام‌سازی ابری'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),
@@ -103,9 +105,22 @@ class _SyncPageState extends State<SyncPage> {
             builder: (context, state) {
               final online = state.isOnline;
 
+              // No backend exists yet: say so plainly instead of showing
+              // "connected" and a sync button that can never succeed.
+              if (!sl<RemoteSyncClient>().isConfigured) {
+                return _NoServerView(pendingCount: state.pendingCount);
+              }
+
               return ListView(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
+                  if (sl<RemoteSyncClient>() is FakeRemoteSyncClient) ...[
+                    const AppNotice(
+                      icon: Icons.science_outlined,
+                      message: 'نسخه توسعه: سرور شبیه‌سازی‌شده است و داده‌ای واقعاً ارسال نمی‌شود.',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   // 1. Connection status hero
                   AppCard(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -534,6 +549,65 @@ class _StatTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Honest state for builds without a sync server (all release builds today).
+class _NoServerView extends StatelessWidget {
+  final int pendingCount;
+
+  const _NoServerView({required this.pendingCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.customColors;
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              AppIconBadge(
+                icon: Icons.cloud_off_outlined,
+                color: colors.textSecondary,
+                size: 56,
+                iconSize: 28,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'همگام‌سازی ابری هنوز راه‌اندازی نشده',
+                textAlign: TextAlign.center,
+                style: AppTypography.titleMedium.copyWith(
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'کیفینو فعلاً کاملاً آفلاین است و داده‌ها فقط روی همین گوشی نگهداری می‌شوند. '
+                'تغییرات در صف محلی می‌مانند تا وقتی سرور همگام‌سازی آماده شود.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: colors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                TextNormalizer.auto('$pendingCount تغییر در صف محلی'),
+                style: AppTypography.labelLarge.copyWith(
+                  color: colors.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const AppNotice(
+          icon: Icons.backup_outlined,
+          message: 'برای انتقال داده‌ها به گوشی دیگر، از «پشتیبان‌گیری و بازیابی» یک فایل رمزنگاری‌شده بسازید.',
+        ),
+      ],
     );
   }
 }

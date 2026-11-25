@@ -6,7 +6,6 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_money_text.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 
 class CashFlowChart extends StatelessWidget {
@@ -32,8 +31,6 @@ class CashFlowChart extends StatelessWidget {
 
     final incomeValues = List.filled(intervalsCount, 0.0);
     final expenseValues = List.filled(intervalsCount, 0.0);
-    int totalIncomeMinor = 0;
-    int totalExpenseMinor = 0;
 
     for (final tx in transactions) {
       if (tx.isDeleted) continue;
@@ -45,10 +42,8 @@ class CashFlowChart extends StatelessWidget {
               tx.amount.minorUnits / 1000.0; // scale for chart display
           if (tx.type == TransactionType.income) {
             incomeValues[bucket] += amountMajor;
-            totalIncomeMinor += tx.amount.minorUnits;
           } else if (tx.type == TransactionType.expense) {
             expenseValues[bucket] += amountMajor;
-            totalExpenseMinor += tx.amount.minorUnits;
           }
         }
       }
@@ -154,52 +149,7 @@ class CashFlowChart extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.income,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkSubtext
-                          : AppColors.lightSubtext,
-                    ),
-                  ),
-                  AppMoneyText(
-                    money: Money.fromMinor(totalIncomeMinor, currency),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.income,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    l10n.expense,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkSubtext
-                          : AppColors.lightSubtext,
-                    ),
-                  ),
-                  AppMoneyText(
-                    money: Money.fromMinor(totalExpenseMinor, currency),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.expense,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // Period totals live in the analytics hero; the card is the trend.
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
             height: 160,

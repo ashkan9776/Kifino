@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/constants/app_currency.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/design_system/components/financial/app_status_badge.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/persian_input.dart';
@@ -673,8 +674,6 @@ class InstallmentsPage extends StatelessWidget {
   // ----------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = context.l10n;
 
     return BlocListener<InstallmentBloc, InstallmentState>(
@@ -752,77 +751,57 @@ class InstallmentsPage extends StatelessWidget {
                   }
 
                   final installments = state.installments;
+                  // Nothing recorded yet: one clear call to action instead of a hero
+                  // full of zeros above an empty list.
+                  if (installments.isEmpty) {
+                    return AppEmptyState(
+                      icon: Icons.calendar_month_outlined,
+                      title: l10n.isPersian
+                          ? 'هنوز وامی ثبت نشده'
+                          : 'Nothing here yet',
+                      description: l10n.isPersian
+                          ? 'اقساط وام را ثبت کنید تا هر ماه یادآوری بگیرید و پرداخت با یک لمس ثبت شود.'
+                          : 'Add your first one to start tracking it.',
+                      actionLabel: l10n.isPersian ? 'ثبت وام و اقساط' : 'Add',
+                      onAction: () => _showAddInstallmentDialog(context),
+                    );
+                  }
 
                   return ListView(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     children: [
-                      // Summary card
-                      AppCard(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.isPersian
-                                        ? 'باقیمانده کل وام‌ها'
-                                        : 'Remaining Loans',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  AppMoneyText(
-                                    money: state.totalDebtRemaining,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.expense,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              height: 36,
-                              width: 1,
-                              color: isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.lightBorder,
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.isPersian
-                                        ? 'تعهد ماهانه اقساط'
-                                        : 'Monthly Dues',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? AppColors.darkSubtext
-                                          : AppColors.lightSubtext,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  AppMoneyText(
-                                    money: state.monthlyInstallmentDues,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                      // Summary: what is left to pay and the monthly load.
+                      AppSummaryHero(
+                        caption: l10n.isPersian
+                            ? 'باقیمانده کل وام‌ها'
+                            : 'Remaining on loans',
+                        headline: AppMoneyText(
+                          money: state.totalDebtRemaining,
+                          usePersianDigits: true,
                         ),
+                        figures: [
+                          AppHeroFigure(
+                            label: l10n.isPersian
+                                ? 'تعهد ماهانه'
+                                : 'Monthly dues',
+                            icon: Icons.calendar_month_outlined,
+                            color: AppColors.primaryBlueDark,
+                            value: AppMoneyText(
+                              money: state.monthlyInstallmentDues,
+                              usePersianDigits: true,
+                            ),
+                          ),
+                          AppHeroFigure(
+                            label: l10n.isPersian ? 'وام فعال' : 'Active',
+                            icon: Icons.receipt_long_outlined,
+                            color: AppColors.onInk,
+                            value: Text(
+                              TextNormalizer.auto(
+                                '${installments.where((i) => !i.isCompleted).length}',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.md),
 

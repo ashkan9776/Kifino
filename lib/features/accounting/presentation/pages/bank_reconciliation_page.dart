@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_colors.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/theme/app_typography.dart';
@@ -266,7 +269,7 @@ class BankReconciliationPage extends StatelessWidget {
                   const Icon(
                     Icons.arrow_downward_rounded,
                     size: 14,
-                    color: Color(0xFF25C997),
+                    color: AppColors.income,
                   ),
                   const SizedBox(width: 4),
                   Text('دریافتی در جریان:', style: AppTypography.bodySmall),
@@ -283,7 +286,7 @@ class BankReconciliationPage extends StatelessWidget {
                   const Icon(
                     Icons.arrow_upward_rounded,
                     size: 14,
-                    color: Color(0xFFFF5C6C),
+                    color: AppColors.expense,
                   ),
                   const SizedBox(width: 4),
                   Text('صادره در جریان:', style: AppTypography.bodySmall),
@@ -440,7 +443,7 @@ class BankReconciliationPage extends StatelessWidget {
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFFFF5C6C),
+                    foregroundColor: AppColors.expense,
                   ),
                   onPressed: () => context.read<CheckBloc>().add(
                     CheckStatusUpdated(

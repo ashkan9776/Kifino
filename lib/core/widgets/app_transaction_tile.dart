@@ -14,12 +14,30 @@ class AppTransactionTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
+  /// Inside a day-grouped list the day is already the header, so the row
+  /// shows the time instead of a relative date.
+  final bool showTimeOnly;
+
   const AppTransactionTile({
     super.key,
     required this.transaction,
     this.onTap,
     this.onDelete,
+    this.showTimeOnly = false,
   });
+
+  /// Generic words the add screen used to save when the note was empty.
+  static const _genericTitles = {'هزینه', 'درآمد', 'انتقال', 'تراکنش'};
+
+  /// The most informative title: the user's text, else the category.
+  String get _title {
+    final d = transaction.description.trim();
+    final category = transaction.categoryName;
+    if ((d.isEmpty || _genericTitles.contains(d)) && category != null) {
+      return category;
+    }
+    return d.isNotEmpty ? d : (category ?? 'تراکنش');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +72,9 @@ class AppTransactionTile extends StatelessWidget {
     final secondary = colors.textSecondary;
     final meta = [
       if (transaction.accountName != null) transaction.accountName!,
-      AppDateFormatter.formatRelative(transaction.date, locale: 'fa'),
+      showTimeOnly
+          ? AppDateFormatter.formatTime(transaction.date)
+          : AppDateFormatter.formatRelative(transaction.date, locale: 'fa'),
     ].join('  ·  ');
 
     final tile = Material(
@@ -79,9 +99,7 @@ class AppTransactionTile extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            transaction.description.isNotEmpty
-                                ? transaction.description
-                                : (transaction.categoryName ?? 'تراکنش'),
+                            _title,
                             style: AppTypography.titleSmall.copyWith(
                               color: colors.textPrimary,
                             ),

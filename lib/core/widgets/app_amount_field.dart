@@ -33,6 +33,13 @@ class AppAmountField extends StatefulWidget {
   /// updates instantly.
   final ValueNotifier<int>? amountNotifier;
 
+  /// false: the open "hero" style used at the top of entry screens — no box,
+  /// centred, larger digits. true (default): a framed field for forms.
+  final bool framed;
+
+  /// Read-only when false (e.g. editing an auto-generated transaction).
+  final bool enabled;
+
   const AppAmountField({
     super.key,
     required this.currency,
@@ -43,6 +50,8 @@ class AppAmountField extends StatefulWidget {
     this.prefixSign,
     this.usePersianDigits,
     this.amountNotifier,
+    this.framed = true,
+    this.enabled = true,
   });
 
   @override
@@ -166,25 +175,33 @@ class _AppAmountFieldState extends State<AppAmountField> {
             style: AppTypography.displayLarge.copyWith(color: accentColor),
           );
 
+    final digitStyle = widget.framed
+        ? AppTypography.displayLarge
+        : AppTypography.displayLarge.copyWith(fontSize: 40, height: 1.2);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceVariant
-            : AppColors.lightSurfaceVariant,
-        borderRadius: AppSpacing.borderRadiusLg,
-        border: Border.all(
-          color: _focused
-              ? accentColor.withValues(alpha: 0.7)
-              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          width: _focused ? 1.5 : 1,
-        ),
-      ),
+      padding: widget.framed
+          ? const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            )
+          : const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      decoration: !widget.framed
+          ? const BoxDecoration()
+          : BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSurfaceVariant,
+              borderRadius: AppSpacing.borderRadiusLg,
+              border: Border.all(
+                color: _focused
+                    ? accentColor.withValues(alpha: 0.7)
+                    : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                width: _focused ? 1.5 : 1,
+              ),
+            ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -196,7 +213,9 @@ class _AppAmountFieldState extends State<AppAmountField> {
             child: TextField(
               controller: _controller,
               focusNode: _focusNode,
-              autofocus: widget.autoFocus,
+              autofocus: widget.autoFocus && widget.enabled,
+              enabled: widget.enabled,
+              textAlign: widget.framed ? TextAlign.start : TextAlign.center,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: false,
                 signed: false,
@@ -205,14 +224,14 @@ class _AppAmountFieldState extends State<AppAmountField> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9۰-۹٠-٩,]')),
               ],
               onChanged: _formatInput,
-              style: AppTypography.displayLarge.copyWith(
+              style: digitStyle.copyWith(
                 color:
                     widget.signColor ?? Theme.of(context).colorScheme.onSurface,
                 fontFeatures: AppTypography.tabularFigures,
               ),
               decoration: InputDecoration(
                 hintText: _persianDigits ? '۰' : '0',
-                hintStyle: AppTypography.displayLarge.copyWith(
+                hintStyle: digitStyle.copyWith(
                   color:
                       (isDark
                               ? AppColors.darkTextTertiary
