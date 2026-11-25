@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_kit.dart';
+
 import '../../../../core/design_system/tokens/radii.dart';
 import '../../../../core/design_system/tokens/colors.dart';
 
@@ -213,20 +215,20 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
   /// `childAspectRatio` made cell height depend on screen width — wider
   /// phones produced shorter cells and overflowing titles; [mainAxisExtent]
   /// pins the height in logical pixels instead.
+  /// Modules as one grouped list: titles of any length wrap instead of
+  /// overflowing a fixed grid cell, and the list scans top to bottom.
   Widget _buildModuleGrid(List<_ModuleItem> items) {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 128,
-      ),
-      itemBuilder: (context, index) =>
-          _buildModuleCard(items[index], context.customColors),
+    return AppListGroup(
+      children: [
+        for (final item in items)
+          AppListRow(
+            icon: item.icon,
+            iconColor: item.color,
+            title: item.title,
+            subtitle: item.subtitle,
+            onTap: () => context.push(item.route),
+          ),
+      ],
     );
   }
 

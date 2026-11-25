@@ -303,12 +303,19 @@ class AppTheme {
           borderRadius: BorderRadius.circular(KifinoRadii.md),
         ),
       ),
+      // Off must read as "off", not "disabled": a solid secondary-ink thumb
+      // on a visible track.
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? t.onPrimary : null,
+          (s) => s.contains(WidgetState.disabled)
+              ? t.border
+              : s.contains(WidgetState.selected)
+              ? t.onPrimary
+              : t.textSecondary,
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? t.primary : null,
+          (s) =>
+              s.contains(WidgetState.selected) ? t.primary : t.surfaceVariant,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected) ? t.primary : t.border,
