@@ -428,6 +428,11 @@ needs larger sizes and taller lines than Latin, and **letter-spacing must stay
 
 Prefer these over hand-built containers, so the app keeps one rhythm.
 
+Screens are assembled from the **kit** in `lib/core/widgets/app_kit.dart`:
+`AppSummaryHero` (module summaries), `AppStatTile`, `AppListGroup`/`AppListRow`,
+`AppFilterBar`, `showAppSheet`, `AppChoiceGrid`, `AppNotice` and the design-system
+`AppStatusBadge`. See *Screen patterns* in [`docs/DESIGN.md`](docs/DESIGN.md).
+
 ### Key screens
 
 - **Dashboard:** greeting + Jalali date → ink net-worth card (this month's

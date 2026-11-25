@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/widgets/app_kit.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
@@ -185,159 +188,57 @@ class _BusinessHubPageState extends State<BusinessHubPage>
                             padding: const EdgeInsets.all(AppSpacing.md),
                             child: Column(
                               children: [
-                                // KPI Cards
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: AppCard(
-                                        padding: const EdgeInsets.all(
-                                          AppSpacing.md,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.trending_up,
-                                                  color: AppColors.income,
-                                                  size: 18,
-                                                ),
-                                                const SizedBox(
-                                                  width: AppSpacing.xs,
-                                                ),
-                                                Text(
-                                                  l10n.isPersian
-                                                      ? 'مجموع فروش'
-                                                      : 'Total Sales',
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isDark
-                                                            ? AppColors
-                                                                  .darkSubtext
-                                                            : AppColors
-                                                                  .lightSubtext,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: AppSpacing.xs,
-                                            ),
-                                            AppMoneyText(
-                                              money: metrics.totalSales,
-                                              style: theme.textTheme.titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.income,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
+                                // Business at a glance (gold = business).
+                                AppSummaryHero(
+                                  caption: l10n.isPersian
+                                      ? 'مجموع فروش'
+                                      : 'Total sales',
+                                  headline: AppMoneyText(
+                                    money: metrics.totalSales,
+                                    usePersianDigits: true,
+                                  ),
+                                  figures: [
+                                    AppHeroFigure(
+                                      label: l10n.isPersian
+                                          ? 'مطالبات فاکتور'
+                                          : 'Unpaid invoices',
+                                      icon: Icons.pending_actions_outlined,
+                                      color: AppColors.goldDark,
+                                      value: AppMoneyText(
+                                        money: metrics.unpaidReceivables,
+                                        usePersianDigits: true,
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Expanded(
-                                      child: AppCard(
-                                        padding: const EdgeInsets.all(
-                                          AppSpacing.md,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons
-                                                      .pending_actions_outlined,
-                                                  color: AppColors.warning,
-                                                  size: 18,
-                                                ),
-                                                const SizedBox(
-                                                  width: AppSpacing.xs,
-                                                ),
-                                                Text(
-                                                  l10n.isPersian
-                                                      ? 'مطالبات فاکتور'
-                                                      : 'Unpaid Invoices',
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: isDark
-                                                            ? AppColors
-                                                                  .darkSubtext
-                                                            : AppColors
-                                                                  .lightSubtext,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: AppSpacing.xs,
-                                            ),
-                                            AppMoneyText(
-                                              money: metrics.unpaidReceivables,
-                                              style: theme.textTheme.titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.warning,
-                                                  ),
-                                            ),
-                                          ],
+                                    AppHeroFigure(
+                                      label: l10n.isPersian
+                                          ? 'کالای رو به اتمام'
+                                          : 'Low stock',
+                                      icon: Icons.inventory_2_outlined,
+                                      color: metrics.lowStockCount > 0
+                                          ? AppColors.expenseDark
+                                          : AppColors.onInk,
+                                      value: Text(
+                                        TextNormalizer.auto(
+                                          '${metrics.lowStockCount}',
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-
-                                // Low stock alert banner
                                 if (metrics.lowStockCount > 0) ...[
                                   const SizedBox(height: AppSpacing.sm),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.md,
-                                      vertical: AppSpacing.sm,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.danger.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: AppSpacing.borderRadiusMd,
-                                      border: Border.all(
-                                        color: AppColors.danger.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.warning_amber_rounded,
-                                          color: AppColors.danger,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Expanded(
-                                          child: Text(
-                                            l10n.isPersian
-                                                ? TextNormalizer.auto(
-                                                    '${metrics.lowStockCount} کالا به حداقل موجودی انبار رسیده‌اند!',
-                                                  )
-                                                : '${metrics.lowStockCount} items have reached low stock limit!',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  color: AppColors.danger,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  AppNotice(
+                                    icon: Icons.warning_amber_rounded,
+                                    color: context.customColors.expense,
+                                    message: l10n.isPersian
+                                        ? TextNormalizer.auto(
+                                            '${metrics.lowStockCount} کالا به حداقل موجودی رسیده؛ برای خرید دوباره برنامه بریزید.',
+                                          )
+                                        : '${metrics.lowStockCount} items reached their low-stock limit.',
+                                    actionLabel: l10n.isPersian
+                                        ? 'دیدن کالاها'
+                                        : 'View',
+                                    onAction: () => _tabController.animateTo(1),
                                   ),
                                 ],
                               ],

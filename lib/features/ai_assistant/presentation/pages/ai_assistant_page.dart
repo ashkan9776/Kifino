@@ -159,8 +159,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                     ),
                     Text(
                       l10n.isPersian
-                          ? 'همیشه آنلاین • آفلاین هم کار می‌کند'
-                          : 'Always here • works offline',
+                          ? 'روی گوشی شما کار می‌کند — بدون اینترنت'
+                          : 'Runs on your phone — no internet needed',
                       style: AppTypography.labelMedium.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.55,

@@ -49,3 +49,35 @@ No drop shadows on cards; depth comes from the sand-vs-white contrast.
 `AppCard`, `AppSectionHeader`, `AppIconBadge`, `AppMoneyText`,
 `AppTransactionTile`, `AppAccountCard` — prefer them over hand-built
 containers so the app keeps one rhythm.
+
+## Screen patterns (the kit — `lib/core/widgets/app_kit.dart`)
+
+Every screen is assembled from the same few pieces. If a screen needs
+something bespoke, extend the kit instead.
+
+| Pattern | Component | Used for |
+|---|---|---|
+| Module summary | `AppSummaryHero` (+ `AppHeroFigure`, optional `progress`) | accounts, debts (net position), loans, assets, goals, business, analytics period |
+| Metric | `AppStatTile` | analytics health grid |
+| Grouped rows | `AppListGroup` + `AppListRow` | settings, accounts by type, accounting modules, pickers |
+| Filters | `AppFilterBar` (chips) | activity, debts, cheques — never segmented controls for filtering |
+| Picker / form sheet | `showAppSheet` | account picker, theme/language/currency, categories |
+| Selection grid | `AppChoiceGrid` (`AppChoice.onTap` for action tiles) | categories, More tools |
+| Inline message | `AppNotice` | locked fields, low stock, sync simulator |
+| Status | `AppStatusBadge` (tone + icon, never colour alone) | PRO, «به‌زودی», paid/overdue |
+| Money in a hero | `MoneyTextStyle` scope | lets `AppMoneyText` inherit the hero size |
+
+### Rules of thumb
+
+- **Summary first, then the list.** A module opens with its hero; the hero
+  disappears when there is nothing to summarise and an empty state with one
+  create action takes its place.
+- **Group by meaning:** transactions by day (with the day's net), accounts by
+  type, settings by purpose.
+- **Say only true things.** Copy about security, sync or "AI" must describe
+  what the build actually does (no "connected" without a server, no
+  "always online" for an offline engine).
+- **Tabs switch, everything else stacks:** links to a bottom-bar destination
+  use `context.go`, other screens `context.push`.
+- **Coloured buttons in dark mode** use dark text — the dark-mode type
+  colours are light.

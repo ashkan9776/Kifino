@@ -651,9 +651,13 @@ class _FastAddTransactionPageState extends State<FastAddTransactionPage> {
                 AppSpacing.md,
               ),
               child: FilledButton(
+                // Dark-mode type colours are light: dark text keeps ≥ 4.5:1.
                 style: FilledButton.styleFrom(
                   backgroundColor: typeColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkBackground
+                      : Colors.white,
                 ),
                 onPressed: _onSave,
                 child: Text(

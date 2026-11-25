@@ -131,7 +131,11 @@ class MorePage extends StatelessWidget {
                     label: label,
                     icon: icon,
                     color: color,
-                    onTap: () => context.push(route),
+                    // Tab destinations switch tabs; the rest stack on top.
+                    onTap: () =>
+                        const {'/business', '/analytics'}.contains(route)
+                        ? context.go(route)
+                        : context.push(route),
                   ),
               ],
               selected: null,
