@@ -232,52 +232,6 @@ class _AccountingDashboardPageState extends State<AccountingDashboardPage> {
     );
   }
 
-  /// One overflow-proof module card shared by both grids. [AppCard] applies
-  /// its own 16px padding, so no nested Padding on top of it — the old
-  /// 16+12 stacking left ~104px of a ~160px cell for text, which made long
-  /// titles («حساب‌های سند خودکار») spill out of the card.
-  Widget _buildModuleCard(_ModuleItem item, KifinoColorsExtension colors) {
-    return AppCard(
-      onTap: () => context.push(item.route),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(item.icon, color: item.color, size: 20),
-          ),
-          const Spacer(),
-          Text(
-            item.title,
-            style: AppTypography.titleSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              height: 1.25,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 3),
-          Text(
-            item.subtitle,
-            style: AppTypography.bodySmall.copyWith(
-              color: colors.textSecondary,
-              fontSize: 10,
-              height: 1.35,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildModulesGrid(BuildContext context, KifinoColorsExtension colors) {
     final modules = [
       _ModuleItem(

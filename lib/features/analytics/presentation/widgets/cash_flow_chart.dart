@@ -6,7 +6,6 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_money_text.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
 
 class CashFlowChart extends StatelessWidget {
@@ -32,8 +31,6 @@ class CashFlowChart extends StatelessWidget {
 
     final incomeValues = List.filled(intervalsCount, 0.0);
     final expenseValues = List.filled(intervalsCount, 0.0);
-    int totalIncomeMinor = 0;
-    int totalExpenseMinor = 0;
 
     for (final tx in transactions) {
       if (tx.isDeleted) continue;
@@ -45,10 +42,8 @@ class CashFlowChart extends StatelessWidget {
               tx.amount.minorUnits / 1000.0; // scale for chart display
           if (tx.type == TransactionType.income) {
             incomeValues[bucket] += amountMajor;
-            totalIncomeMinor += tx.amount.minorUnits;
           } else if (tx.type == TransactionType.expense) {
             expenseValues[bucket] += amountMajor;
-            totalExpenseMinor += tx.amount.minorUnits;
           }
         }
       }

@@ -674,8 +674,6 @@ class InstallmentsPage extends StatelessWidget {
   // ----------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = context.l10n;
 
     return BlocListener<InstallmentBloc, InstallmentState>(

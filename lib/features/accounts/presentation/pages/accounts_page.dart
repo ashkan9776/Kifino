@@ -15,7 +15,6 @@ import '../../../../core/utils/persian_input.dart';
 import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../../../core/widgets/app_responsive_container.dart';
@@ -276,8 +275,6 @@ class _AccountsPageState extends State<AccountsPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isFa = l10n.isPersian;
-    final colors = context.customColors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
