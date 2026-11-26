@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Android 13 themed-icon layer: only alpha is used. -->
+  <defs>
+    <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <!-- gap between the cards and the wallet, and the clasp cut-out -->
+      <rect x="96" y="186" width="320" height="220" rx="52" fill="#000"/>
+      <rect x="104" y="196" width="304" height="200" rx="44" fill="#fff"/>
+      <path d="M296 250 H408 V342 H296 a46 46 0 0 1 0 -92 Z" fill="#000"/>
+      <circle cx="302" cy="296" r="19" fill="#fff"/>
+    </mask>
+  </defs>
+  <g transform="translate(16 17.5) scale(0.1484375)" mask="url(#m)" fill="#fff">
+    <rect x="178" y="128" width="196" height="128" rx="22" transform="rotate(7 276 192)"/>
+    <rect x="146" y="116" width="196" height="128" rx="22" transform="rotate(-9 244 180)"/>
+    <rect x="104" y="196" width="304" height="200" rx="44"/>
+  </g>
+</svg>
