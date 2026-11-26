@@ -102,23 +102,20 @@ class ServiceLocator {
     }
     sl.pushNewScope(scopeName: companyScopeName);
 
-    // 1. SharedPreferences: registered once in root scope (initRoot) and
-    // looked up here so company-scoped services share the same instance.
+    final activeCompanyId = companyId ?? CompanyRegistry.defaultCompanyId;
 
-    // 2. Secure Storage
-    const secureStorage = FlutterSecureStorage(
-      aOptions: AndroidOptions(resetOnError: true),
-    );
-    sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
+    // 1. SharedPreferences & FlutterSecureStorage: registered once in root scope
+    // (initRoot) and looked up here so company-scoped services share them.
 
-    // 3. Local Database — company-specific file
+    // 2. Local Database — company-specific file
     final database = AppDatabase(
       null,
-      CompanyRegistry.dbFileNameFor(
-        companyId ?? CompanyRegistry.defaultCompanyId,
-      ),
+      CompanyRegistry.dbFileNameFor(activeCompanyId),
     );
-    sl.registerLazySingleton<AppDatabase>(() => database);
+    sl.registerLazySingleton<AppDatabase>(
+      () => database,
+      dispose: (db) => db.close(),
+    );
 
     // 4. Repositories
     sl.registerLazySingleton<AccountRepository>(
@@ -252,19 +249,22 @@ class ServiceLocator {
       () => AccountingRepositoryImpl(sl<AppDatabase>()),
     );
 
+    sl.registerLazySingleton<VoucherSettingsService>(
+      () => VoucherSettingsService(
+        sl<SharedPreferences>(),
+        companyId: activeCompanyId,
+      ),
+    );
     sl.registerLazySingleton<AutoVoucherService>(
       () => AutoVoucherService(
         sl<AccountingRepository>(),
-        settingsService: VoucherSettingsService(sl<SharedPreferences>()),
+        settingsService: sl<VoucherSettingsService>(),
         // Sale vouchers need product avg-cost data for the COGS legs.
         businessRepository: sl<BusinessRepository>(),
       ),
     );
     sl.registerLazySingleton<AccountingExportService>(
       () => AccountingExportService(sl<AccountingRepository>()),
-    );
-    sl.registerLazySingleton<VoucherSettingsService>(
-      () => VoucherSettingsService(sl<SharedPreferences>()),
     );
 
     sl.registerFactory<AccountingDocumentBloc>(

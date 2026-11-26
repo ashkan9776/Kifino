@@ -22489,6 +22489,98 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $RecurringRulesTableTable recurringRulesTable =
       $RecurringRulesTableTable(this);
+  late final Index idxTransactionsDeletedDate = Index(
+    'idx_transactions_deleted_date',
+    'CREATE INDEX idx_transactions_deleted_date ON transactions (deleted_at, transaction_date)',
+  );
+  late final Index idxTransactionsAccountDeleted = Index(
+    'idx_transactions_account_deleted',
+    'CREATE INDEX idx_transactions_account_deleted ON transactions (account_id, deleted_at)',
+  );
+  late final Index idxTransactionsDestAccountDeleted = Index(
+    'idx_transactions_dest_account_deleted',
+    'CREATE INDEX idx_transactions_dest_account_deleted ON transactions (destination_account_id, deleted_at)',
+  );
+  late final Index idxTransactionsCategoryDeleted = Index(
+    'idx_transactions_category_deleted',
+    'CREATE INDEX idx_transactions_category_deleted ON transactions (category_id, deleted_at)',
+  );
+  late final Index idxTransactionsSource = Index(
+    'idx_transactions_source',
+    'CREATE INDEX idx_transactions_source ON transactions (source_type, source_id)',
+  );
+  late final Index idxChecksStatusDueDeleted = Index(
+    'idx_checks_status_due_deleted',
+    'CREATE INDEX idx_checks_status_due_deleted ON checks (status, due_date, deleted_at)',
+  );
+  late final Index idxInventoryLogsProductCreated = Index(
+    'idx_inventory_logs_product_created',
+    'CREATE INDEX idx_inventory_logs_product_created ON inventory_logs (product_id, created_at)',
+  );
+  late final Index idxInvoicesContactDeleted = Index(
+    'idx_invoices_contact_deleted',
+    'CREATE INDEX idx_invoices_contact_deleted ON invoices (contact_id, deleted_at)',
+  );
+  late final Index idxInvoicesTypeStatusDeleted = Index(
+    'idx_invoices_type_status_deleted',
+    'CREATE INDEX idx_invoices_type_status_deleted ON invoices (type, status, deleted_at)',
+  );
+  late final Index idxInvoicesDueDate = Index(
+    'idx_invoices_due_date',
+    'CREATE INDEX idx_invoices_due_date ON invoices (due_date)',
+  );
+  late final Index idxInvoiceItemsInvoiceDeleted = Index(
+    'idx_invoice_items_invoice_deleted',
+    'CREATE INDEX idx_invoice_items_invoice_deleted ON invoice_items (invoice_id, deleted_at)',
+  );
+  late final Index idxInvoiceItemsProduct = Index(
+    'idx_invoice_items_product',
+    'CREATE INDEX idx_invoice_items_product ON invoice_items (product_id)',
+  );
+  late final Index idxSyncQueueQueuedAt = Index(
+    'idx_sync_queue_queued_at',
+    'CREATE INDEX idx_sync_queue_queued_at ON sync_queue (queued_at)',
+  );
+  late final Index idxNotificationsReadScheduled = Index(
+    'idx_notifications_read_scheduled',
+    'CREATE INDEX idx_notifications_read_scheduled ON audit_notifications (is_read, scheduled_for)',
+  );
+  late final Index idxAccountingSubjectsCode = Index(
+    'idx_accounting_subjects_code',
+    'CREATE INDEX idx_accounting_subjects_code ON accounting_subjects (code)',
+  );
+  late final Index idxAccountingSubjectsParent = Index(
+    'idx_accounting_subjects_parent',
+    'CREATE INDEX idx_accounting_subjects_parent ON accounting_subjects (parent_id)',
+  );
+  late final Index idxAccountingDocsFyDeletedDate = Index(
+    'idx_accounting_docs_fy_deleted_date',
+    'CREATE INDEX idx_accounting_docs_fy_deleted_date ON accounting_documents (fiscal_year_id, deleted_at, date)',
+  );
+  late final Index idxAccountingDocsRef = Index(
+    'idx_accounting_docs_ref',
+    'CREATE INDEX idx_accounting_docs_ref ON accounting_documents (reference_type, reference_id)',
+  );
+  late final Index idxAccountingTxDocDeleted = Index(
+    'idx_accounting_tx_doc_deleted',
+    'CREATE INDEX idx_accounting_tx_doc_deleted ON accounting_transactions (document_id, deleted_at)',
+  );
+  late final Index idxAccountingTxSubjectDeleted = Index(
+    'idx_accounting_tx_subject_deleted',
+    'CREATE INDEX idx_accounting_tx_subject_deleted ON accounting_transactions (subject_id, deleted_at)',
+  );
+  late final Index idxInstallmentPaymentsInstDeleted = Index(
+    'idx_installment_payments_inst_deleted',
+    'CREATE INDEX idx_installment_payments_inst_deleted ON installment_payments (installment_id, deleted_at)',
+  );
+  late final Index idxAccountingDocDetailDoc = Index(
+    'idx_accounting_doc_detail_doc',
+    'CREATE INDEX idx_accounting_doc_detail_doc ON accounting_document_detail_links (document_id)',
+  );
+  late final Index idxAccountingDocDetailLedgerVal = Index(
+    'idx_accounting_doc_detail_ledger_val',
+    'CREATE INDEX idx_accounting_doc_detail_ledger_val ON accounting_document_detail_links (ledger_id, value_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -22523,6 +22615,29 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     accountingDetailValuesTable,
     accountingDocumentDetailLinksTable,
     recurringRulesTable,
+    idxTransactionsDeletedDate,
+    idxTransactionsAccountDeleted,
+    idxTransactionsDestAccountDeleted,
+    idxTransactionsCategoryDeleted,
+    idxTransactionsSource,
+    idxChecksStatusDueDeleted,
+    idxInventoryLogsProductCreated,
+    idxInvoicesContactDeleted,
+    idxInvoicesTypeStatusDeleted,
+    idxInvoicesDueDate,
+    idxInvoiceItemsInvoiceDeleted,
+    idxInvoiceItemsProduct,
+    idxSyncQueueQueuedAt,
+    idxNotificationsReadScheduled,
+    idxAccountingSubjectsCode,
+    idxAccountingSubjectsParent,
+    idxAccountingDocsFyDeletedDate,
+    idxAccountingDocsRef,
+    idxAccountingTxDocDeleted,
+    idxAccountingTxSubjectDeleted,
+    idxInstallmentPaymentsInstDeleted,
+    idxAccountingDocDetailDoc,
+    idxAccountingDocDetailLedgerVal,
   ];
 }
 

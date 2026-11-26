@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+@TableIndex(name: 'idx_accounting_subjects_code', columns: {#code})
+@TableIndex(name: 'idx_accounting_subjects_parent', columns: {#parentId})
 @DataClassName('AccountingSubjectData')
 class AccountingSubjectsTable extends Table {
   @override
@@ -24,6 +26,14 @@ class AccountingSubjectsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_accounting_docs_fy_deleted_date',
+  columns: {#fiscalYearId, #deletedAt, #date},
+)
+@TableIndex(
+  name: 'idx_accounting_docs_ref',
+  columns: {#referenceType, #referenceId},
+)
 @DataClassName('AccountingDocumentData')
 class AccountingDocumentsTable extends Table {
   @override
@@ -50,6 +60,14 @@ class AccountingDocumentsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_accounting_tx_doc_deleted',
+  columns: {#documentId, #deletedAt},
+)
+@TableIndex(
+  name: 'idx_accounting_tx_subject_deleted',
+  columns: {#subjectId, #deletedAt},
+)
 @DataClassName('AccountingTransactionData')
 class AccountingTransactionsTable extends Table {
   @override
@@ -155,6 +173,11 @@ class AccountingDetailValuesTable extends Table {
 }
 
 /// Links a document to one detail value per ledger (max one per ledger).
+@TableIndex(name: 'idx_accounting_doc_detail_doc', columns: {#documentId})
+@TableIndex(
+  name: 'idx_accounting_doc_detail_ledger_val',
+  columns: {#ledgerId, #valueId},
+)
 @DataClassName('AccountingDocumentDetailLinkData')
 class AccountingDocumentDetailLinksTable extends Table {
   @override

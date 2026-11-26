@@ -94,6 +94,10 @@ class InstallmentsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_checks_status_due_deleted',
+  columns: {#status, #dueDate, #deletedAt},
+)
 @DataClassName('CheckData')
 class ChecksTable extends Table {
   @override
@@ -154,6 +158,10 @@ class AssetsTable extends Table {
 
 /// Payment history for one installment plan (Phase 3 rework): every «پرداخت
 /// قسط» records a row here so users can review and correct payments.
+@TableIndex(
+  name: 'idx_installment_payments_inst_deleted',
+  columns: {#installmentId, #deletedAt},
+)
 @DataClassName('InstallmentPaymentData')
 class InstallmentPaymentsTable extends Table {
   @override

@@ -70,7 +70,7 @@ jobs:
           echo "- **Flutter Version:** 3.47.9 (Stable) ✅" >> $GITHUB_STEP_SUMMARY
           echo "- **Dart Format:** Passed ✅" >> $GITHUB_STEP_SUMMARY
           echo "- **Flutter Analyze:** 0 warnings / 0 infos ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- **Automated Tests:** 239+ tests passed with coverage ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Automated Tests:** 308+ tests passed with coverage ✅" >> $GITHUB_STEP_SUMMARY
 
   build_android_check:
     name: Android Build Verification

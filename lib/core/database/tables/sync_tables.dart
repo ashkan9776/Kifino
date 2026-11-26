@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@TableIndex(name: 'idx_sync_queue_queued_at', columns: {#queuedAt})
 @DataClassName('SyncQueueData')
 class SyncQueueTable extends Table {
   @override
@@ -19,6 +20,10 @@ class SyncQueueTable extends Table {
   IntColumn get lastAttemptAt => integer().nullable()();
 }
 
+@TableIndex(
+  name: 'idx_notifications_read_scheduled',
+  columns: {#isRead, #scheduledFor},
+)
 @DataClassName('NotificationData')
 class NotificationsTable extends Table {
   @override

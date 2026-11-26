@@ -61,6 +61,10 @@ class ProductsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_inventory_logs_product_created',
+  columns: {#productId, #createdAt},
+)
 @DataClassName('InventoryLogData')
 class InventoryLogsTable extends Table {
   @override
@@ -84,6 +88,15 @@ class InventoryLogsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_invoices_contact_deleted',
+  columns: {#contactId, #deletedAt},
+)
+@TableIndex(
+  name: 'idx_invoices_type_status_deleted',
+  columns: {#type, #status, #deletedAt},
+)
+@TableIndex(name: 'idx_invoices_due_date', columns: {#dueDate})
 @DataClassName('InvoiceData')
 class InvoicesTable extends Table {
   @override
@@ -115,6 +128,11 @@ class InvoicesTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'idx_invoice_items_invoice_deleted',
+  columns: {#invoiceId, #deletedAt},
+)
+@TableIndex(name: 'idx_invoice_items_product', columns: {#productId})
 @DataClassName('InvoiceItemData')
 class InvoiceItemsTable extends Table {
   @override

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
@@ -8,9 +9,11 @@ import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kifino/core/constants/app_constants.dart';
 import 'package:kifino/core/database/app_database.dart';
+import 'package:kifino/core/errors/failures.dart';
 import 'package:kifino/features/backup/domain/services/backup_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:pointycastle/export.dart' as pc;
 
 class _MockPathProvider extends PathProviderPlatform {
   final Directory tempDir;
@@ -84,11 +87,22 @@ void main() {
       final content2 =
           jsonDecode(await File(path2).readAsString()) as Map<String, dynamic>;
 
-      // Header version 2
-      expect(content1['formatVersion'], equals(2));
-      expect(content2['formatVersion'], equals(2));
+      // Header version 3 (metadata authenticated via GCM AAD)
+      expect(
+        content1['formatVersion'],
+        equals(BackupService.currentFormatVersion),
+      );
+      expect(
+        content2['formatVersion'],
+        equals(BackupService.currentFormatVersion),
+      );
+      expect(content1['formatVersion'], equals(3));
       expect(content1['magic'], equals('KIFINO'));
       expect(content2['magic'], equals('KIFINO'));
+      expect(
+        content1['metadata']['appVersion'],
+        equals(AppConstants.appVersion),
+      );
 
       // Different salt
       final salt1 = content1['kdf']['salt'] as String;
@@ -204,7 +218,11 @@ void main() {
           password: 'LegacyPass123',
         );
 
-        expect(restoreRes.isSuccess, isTrue);
+        expect(
+          restoreRes.isSuccess,
+          isTrue,
+          reason: restoreRes.failureOrNull?.message ?? '',
+        );
         expect(restoreRes.dataOrNull?.isLegacyFormat, isTrue);
 
         final restoredAccounts = await db.select(db.accountsTable).get();
@@ -226,6 +244,254 @@ void main() {
         BackupService.evaluatePasswordStrength('StrongPass123!@#'),
         equals(4),
       );
+    });
+  });
+
+  group('BackupService v3 AAD, KDF bounds & CSV injection hardening', () {
+    test('v3 backup round-trips and fails with SecurityFailure if outer metadata is tampered', () async {
+      final createRes = await service.createEncryptedBackup(
+        password: 'StrongPassword123!',
+        iterations: 1000,
+      );
+      expect(createRes.isSuccess, isTrue);
+      final filePath = createRes.dataOrNull!;
+
+      final originalRaw = await File(filePath).readAsString();
+      final decoded = jsonDecode(originalRaw) as Map<String, dynamic>;
+      expect(decoded['formatVersion'], equals(3));
+
+      // 1. Tamper exportedAt
+      final tamperedDate = jsonDecode(originalRaw) as Map<String, dynamic>;
+      (tamperedDate['metadata'] as Map<String, dynamic>)['exportedAt'] =
+          DateTime(2020, 1, 1).toIso8601String();
+      await File(filePath).writeAsString(jsonEncode(tamperedDate));
+      final resDate = await service.restoreEncryptedBackup(
+        filePath: filePath,
+        password: 'StrongPassword123!',
+      );
+      expect(resDate.isFailure, isTrue);
+      expect(resDate.failureOrNull, isA<SecurityFailure>());
+
+      // 2. Tamper entityCounts
+      final tamperedCounts = jsonDecode(originalRaw) as Map<String, dynamic>;
+      ((tamperedCounts['metadata'] as Map<String, dynamic>)['entityCounts']
+              as Map<String, dynamic>)['accounts'] =
+          999;
+      await File(filePath).writeAsString(jsonEncode(tamperedCounts));
+      final resCounts = await service.restoreEncryptedBackup(
+        filePath: filePath,
+        password: 'StrongPassword123!',
+      );
+      expect(resCounts.isFailure, isTrue);
+      expect(resCounts.failureOrNull, isA<SecurityFailure>());
+
+      // 3. Downgrade formatVersion from 3 to 2 (attempts to bypass AAD check)
+      final downgraded = jsonDecode(originalRaw) as Map<String, dynamic>;
+      downgraded['formatVersion'] = 2;
+      await File(filePath).writeAsString(jsonEncode(downgraded));
+      final resDowngrade = await service.restoreEncryptedBackup(
+        filePath: filePath,
+        password: 'StrongPassword123!',
+      );
+      expect(resDowngrade.isFailure, isTrue);
+      expect(resDowngrade.failureOrNull, isA<SecurityFailure>());
+
+      // 4. Restore valid original file succeeds
+      await File(filePath).writeAsString(originalRaw);
+      await db.delete(db.accountsTable).go();
+      final resValid = await service.restoreEncryptedBackup(
+        filePath: filePath,
+        password: 'StrongPassword123!',
+      );
+      expect(
+        resValid.isSuccess,
+        isTrue,
+        reason: resValid.failureOrNull?.message ?? '',
+      );
+      expect(resValid.dataOrNull?.isLegacyFormat, isFalse);
+      final restoredAccounts = await db.select(db.accountsTable).get();
+      expect(restoredAccounts, hasLength(1));
+      expect(restoredAccounts.single.name, equals('حساب جاری'));
+    });
+
+    test('maintains backward-compatible restore for existing formatVersion 2 backups', () async {
+      final accounts = await db.select(db.accountsTable).get();
+      final payload = jsonEncode({
+        'accounts': accounts.map((a) => a.toJson()).toList(),
+      });
+      final checksum = sha256.convert(utf8.encode(payload)).toString();
+      final metadata = BackupMetadata(
+        schemaVersion: AppConstants.databaseVersion,
+        appVersion: '1.0.0',
+        exportedAt: DateTime.now(),
+        checksum: checksum,
+        entityCounts: {'accounts': accounts.length},
+      );
+
+      final rng = Random.secure();
+      final salt = Uint8List.fromList(
+        List.generate(16, (_) => rng.nextInt(256)),
+      );
+      final nonce = Uint8List.fromList(
+        List.generate(12, (_) => rng.nextInt(256)),
+      );
+      final derivator = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64))
+        ..init(pc.Pbkdf2Parameters(salt, 1000, 32));
+      final key = derivator.process(
+        Uint8List.fromList(utf8.encode('V2CompatPass!')),
+      );
+      final cipher = pc.GCMBlockCipher(pc.AESEngine())
+        ..init(
+          true,
+          pc.AEADParameters(pc.KeyParameter(key), 128, nonce, Uint8List(0)),
+        );
+      final cipherBytes = cipher.process(
+        Uint8List.fromList(utf8.encode(payload)),
+      );
+
+      final v2Path = p.join(tempDir.path, 'legacy_v2.kfn');
+      await File(v2Path).writeAsString(
+        jsonEncode({
+          'magic': 'KIFINO',
+          'formatVersion': 2,
+          'kdf': {
+            'algorithm': 'PBKDF2-HMAC-SHA256',
+            'iterations': 1000,
+            'salt': base64Encode(salt),
+          },
+          'nonce': base64Encode(nonce),
+          'metadata': metadata.toJson(),
+          'cipher': base64Encode(cipherBytes),
+        }),
+      );
+
+      await db.delete(db.accountsTable).go();
+      final restoreRes = await service.restoreEncryptedBackup(
+        filePath: v2Path,
+        password: 'V2CompatPass!',
+      );
+      expect(
+        restoreRes.isSuccess,
+        isTrue,
+        reason: restoreRes.failureOrNull?.message ?? '',
+      );
+      expect(restoreRes.dataOrNull?.isLegacyFormat, isFalse);
+      expect(await db.select(db.accountsTable).get(), hasLength(1));
+    });
+
+    test('rejects malicious or out-of-range KDF iteration counts immediately with SecurityFailure', () async {
+      final createRes = await service.createEncryptedBackup(
+        password: 'StrongPassword123!',
+        iterations: 1000,
+      );
+      final filePath = createRes.dataOrNull!;
+      final baseRaw = await File(filePath).readAsString();
+
+      for (final badIterations in <Object?>[
+        0,
+        -1,
+        999,
+        2000001,
+        999999999,
+        1000.5,
+        '1000',
+        null,
+      ]) {
+        final modified = jsonDecode(baseRaw) as Map<String, dynamic>;
+        (modified['kdf'] as Map<String, dynamic>)['iterations'] = badIterations;
+        await File(filePath).writeAsString(jsonEncode(modified));
+
+        final res = await service.restoreEncryptedBackup(
+          filePath: filePath,
+          password: 'StrongPassword123!',
+        );
+        expect(
+          res.isFailure,
+          isTrue,
+          reason: 'Expected failure for iterations=$badIterations',
+        );
+        expect(
+          res.failureOrNull,
+          isA<SecurityFailure>(),
+          reason: 'Expected SecurityFailure for iterations=$badIterations',
+        );
+      }
+    });
+
+    test('CSV export neutralizes formula injection in text cells while preserving negative numeric amounts', () async {
+      final now = DateTime(2026, 6, 15).millisecondsSinceEpoch;
+      await db
+          .into(db.accountsTable)
+          .insert(
+            AccountsTableCompanion.insert(
+              id: 'acc-inj',
+              name: '+1+1 Account',
+              type: 'bankCard',
+              currency: 'USD',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.categoriesTable)
+          .insert(
+            CategoriesTableCompanion.insert(
+              id: 'cat-inj',
+              name: '@SUM(A1:A2)',
+              type: 'expense',
+              iconCodePoint: 1,
+              colorHex: '#000000',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      final payloads = [
+        ('tx-eq', '=HYPERLINK("http://evil.example","click")', -1250),
+        ('tx-minus', '-2+3', 500),
+        ('tx-ws', '   =CMD|"/C calc"!A0', 250),
+        ('tx-tab', '\t=1+1', 100),
+        ('tx-cr', '\r=1+1', 100),
+      ];
+      for (var i = 0; i < payloads.length; i++) {
+        final (id, desc, minor) = payloads[i];
+        await db
+            .into(db.transactionsTable)
+            .insert(
+              TransactionsTableCompanion.insert(
+                id: id,
+                accountId: 'acc-inj',
+                categoryId: const Value('cat-inj'),
+                type: 'expense',
+                amountMinor: minor,
+                currency: 'USD',
+                transactionDate: now + i,
+                description: desc,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      final exportRes = await service.exportTransactionsCsv();
+      expect(exportRes.isSuccess, isTrue);
+      final csv = await File(exportRes.dataOrNull!).readAsString();
+
+      // Text cells with dangerous prefixes must start with single quote inside quotes
+      expect(
+        csv,
+        contains('"\'=HYPERLINK(""http://evil.example"",""click"")"'),
+      );
+      expect(csv, contains('"\'+1+1 Account"'));
+      expect(csv, contains('"\'@SUM(A1:A2)"'));
+      expect(csv, contains('"\'-2+3"'));
+      expect(csv, contains('"\'   =CMD|""/C calc""!A0"'));
+      expect(csv, contains('"\'\t=1+1"'));
+      expect(csv, contains('"\'\r=1+1"'));
+
+      // Negative numeric amount cell remains unquoted numeric (not `' -12.50`)
+      expect(csv, contains(',-12.50,"USD"'));
+      expect(csv, isNot(contains("'-12.50")));
     });
   });
 }

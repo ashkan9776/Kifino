@@ -7,8 +7,9 @@
 </div>
 
 **Kifino** is a Persian-first, offline-first finance app for individuals and small
-businesses, built with Flutter for **Android** and **Windows**. Everything is
-stored locally in SQLite; there is no account and no server.
+businesses, built with Flutter for **Android** and **Windows Desktop**.
+Everything is stored locally via `dart:io` and native SQLite (there is no
+account, no server, and **Web is not currently supported**).
 
 This README is the handbook for **developers** (how the code works and how to
 change it safely) and **designers** (the Kifino 2 design system and how to work
@@ -116,7 +117,7 @@ lib/
 
 test/                         # mirrors lib/ — unit, bloc, repository, widget, golden tests
 docs/                         # CI_CD.md, DESIGN.md
-android/ windows/ web/        # platform runners (web is not a supported target)
+android/ windows/ web/        # platform runners (Android & Windows Desktop supported; Web is not currently supported due to offline dart:io + native SQLite)
 third_party/vazirmatn/        # vendored font package
 .github/workflows/            # ci.yml, release.yml, scheduled_health.yml
 ```
@@ -217,7 +218,7 @@ Auto-generated transactions remember their owner in
 
 ### Schema & migrations
 
-Drift, schema version in `AppConstants.databaseVersion` (currently **11**).
+Drift, schema version in `AppConstants.databaseVersion` (currently **12**).
 
 | Version | Change |
 |---|---|
@@ -232,6 +233,7 @@ Drift, schema version in `AppConstants.databaseVersion` (currently **11**).
 | 9 | product weighted-average cost |
 | 10 | transaction `source_type`/`source_id` (+ backfill), `sync_queue.last_attempt_at`, `installments.first_due_date` |
 | 11 | `recurring_rules` table |
+| 12 | secondary SQLite indexes across transactions, accounting, business, checks, installments, sync and notifications |
 
 **Adding a column or table:**
 
@@ -291,10 +293,13 @@ transaction.
 
 ### Backup
 
-Format v2: PBKDF2 (300k) → AES-256-GCM, with a SHA-256 checksum of the payload
-and the schema version in plain metadata. Restore is a single DB transaction
-(wipe + insert); it refuses backups from a newer schema. Legacy v1
-(AES-CBC) files still restore.
+Format v3: PBKDF2-HMAC-SHA256 (300k iterations in a background isolate) →
+AES-256-GCM binding canonical outer metadata via AAD, plus a SHA-256 payload
+checksum. Restore validates KDF iteration bounds (`1,000..2,000,000`), runs in a
+single DB transaction (wipe + insert), and refuses backups from a newer schema.
+Existing v2 (empty AAD) and legacy v1 (AES-CBC) files remain restorable, and CSV
+exports neutralize formula injection (`=`, `+`, `-`, `@`, tab, CR) on text
+cells while keeping numeric amounts untouched.
 
 ### Sync
 
@@ -459,7 +464,7 @@ Screens are assembled from the **kit** in `lib/core/widgets/app_kit.dart`:
 ## 9. Testing
 
 ```bash
-flutter test                                   # everything (~300 tests)
+flutter test                                   # everything (308 tests)
 flutter test test/features/recurring           # one area
 flutter test --update-goldens test/goldens     # after intentional visual changes
 ```
@@ -492,8 +497,10 @@ flutter build windows --release               # → build/windows/x64/runner/Rel
 
 ### Signing
 
-Create `android/key.properties` (git-ignored; template in
-`android/key.properties.example`) next to your keystore:
+Place your keystore at `android/app/upload-keystore.jks` (recommended, matches
+CI `release.yml`) or directly at `android/upload-keystore.jks`, and create
+`android/key.properties` (git-ignored; template in
+`android/key.properties.example`):
 
 ```properties
 storePassword=…
@@ -502,9 +509,10 @@ keyAlias=upload
 storeFile=upload-keystore.jks
 ```
 
-Without it, release builds are **silently signed with the debug key**. That's
-fine for testing, but never ship such a build: users can't update it later. Check
-a build with
+If `android/key.properties` does not exist (local dev builds), release builds
+fall back to the debug key. If `android/key.properties` **does** exist with
+blank fields or a missing keystore file, Gradle **fails fast** instead of
+silently shipping a debug-signed release. Check a build with
 `apksigner verify --print-certs <apk>`; the signer should be `CN=Kifino`.
 
 ### CI/CD (`.github/workflows`, details in [`docs/CI_CD.md`](docs/CI_CD.md))

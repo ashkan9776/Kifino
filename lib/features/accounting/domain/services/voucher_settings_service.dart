@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/database/company_registry.dart';
+
 /// Configurable counterpart accounts for automatic accounting vouchers
 /// (Phase 2). Stored as JSON in SharedPreferences — company-level config,
 /// not user data; defaults match the standard Iranian chart of accounts so
@@ -138,20 +140,34 @@ class VoucherAccountSettings {
   }
 }
 
-/// Persists [VoucherAccountSettings] in SharedPreferences.
+/// Persists [VoucherAccountSettings] per company in SharedPreferences.
 class VoucherSettingsService {
-  static const String _key = 'accounting_voucher_account_settings';
+  static const String legacyStorageKey = 'accounting_voucher_account_settings';
 
   final SharedPreferences prefs;
+  final String companyId;
 
-  const VoucherSettingsService(this.prefs);
+  const VoucherSettingsService(
+    this.prefs, {
+    this.companyId = CompanyRegistry.defaultCompanyId,
+  });
+
+  String get storageKey => '${legacyStorageKey}_$companyId';
 
   VoucherAccountSettings load() {
-    final raw = prefs.getString(_key);
-    if (raw == null) return VoucherAccountSettings.defaults;
-    return VoucherAccountSettings.decode(raw);
+    final scopedRaw = prefs.getString(storageKey);
+    if (scopedRaw != null) {
+      return VoucherAccountSettings.decode(scopedRaw);
+    }
+    if (companyId == CompanyRegistry.defaultCompanyId) {
+      final legacyRaw = prefs.getString(legacyStorageKey);
+      if (legacyRaw != null) {
+        return VoucherAccountSettings.decode(legacyRaw);
+      }
+    }
+    return VoucherAccountSettings.defaults;
   }
 
   Future<void> save(VoucherAccountSettings settings) =>
-      prefs.setString(_key, settings.encode());
+      prefs.setString(storageKey, settings.encode());
 }

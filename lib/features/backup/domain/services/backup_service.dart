@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -59,6 +60,23 @@ class BackupMetadata {
 }
 
 class BackupService {
+  static const int currentFormatVersion = 3;
+  static const int defaultKdfIterations = 300000;
+  static const int minRestoreIterations = 1000;
+  static const int maxRestoreIterations = 2000000;
+  static const int _saltLength = 16;
+  static const int _nonceLength = 12;
+  static const int _gcmTagBits = 128;
+  static const Set<String> _allowedMetadataKeys = {
+    'schemaVersion',
+    'appVersion',
+    'exportedAt',
+    'checksum',
+    'entityCounts',
+    'isLegacyFormat',
+  };
+  static final RegExp _csvFormulaLeadPattern = RegExp(r'^\s*[=+\-@\t\r]');
+
   final AppDatabase _db;
 
   const BackupService(this._db);
@@ -111,7 +129,10 @@ class BackupService {
           c.id: c.name,
       };
 
-      String esc(String value) => '"${value.replaceAll('"', '""')}"';
+      String esc(String value) {
+        final safe = sanitizeCsvCell(value);
+        return '"${safe.replaceAll('"', '""')}"';
+      }
 
       final buffer = StringBuffer('\uFEFF'); // UTF-8 BOM for Excel
       buffer.writeln('تاریخ شمسی,تاریخ میلادی,نوع,شرح,حساب,دسته,مبلغ,ارز');
@@ -162,6 +183,20 @@ class BackupService {
     return '$sign${abs ~/ factor}.$fraction';
   }
 
+  /// Neutralizes CSV/spreadsheet formula injection on text cells.
+  ///
+  /// Any cell whose value (ignoring leading whitespace) starts with `=`, `+`,
+  /// `-`, `@`, `\t`, or `\r` is prefixed with a leading single quote `'` before
+  /// CSV quoting. Numeric cells must NOT be passed through this helper so valid
+  /// negative numbers remain unquoted numbers.
+  static String sanitizeCsvCell(String value) {
+    if (value.isEmpty) return value;
+    if (_csvFormulaLeadPattern.hasMatch(value)) {
+      return "'$value";
+    }
+    return value;
+  }
+
   /// Evaluates password strength:
   /// Returns a score between 0 and 4:
   /// 0: Too short (< 8)
@@ -182,11 +217,11 @@ class BackupService {
     return score;
   }
 
-  /// PBKDF2-HMAC-SHA256 key derivation with salt and configurable iterations
-  Uint8List _derivePbkdf2Key({
+  /// PBKDF2-HMAC-SHA256 key derivation with salt and configurable iterations.
+  static Uint8List _derivePbkdf2Key({
     required String password,
     required Uint8List salt,
-    int iterations = 300000,
+    int iterations = defaultKdfIterations,
     int keyLength = 32,
   }) {
     final derivator = pc.PBKDF2KeyDerivator(pc.HMac(pc.SHA256Digest(), 64))
@@ -195,44 +230,84 @@ class BackupService {
     return derivator.process(passwordBytes);
   }
 
-  /// Encrypts plaintext using AES-256-GCM with 128-bit authentication tag
-  (Uint8List cipherWithTag, Uint8List nonce) _encryptGcm({
+  /// Encrypts plaintext using AES-256-GCM with 128-bit authentication tag.
+  static (Uint8List cipherWithTag, Uint8List nonce) _encryptGcm({
     required Uint8List key,
     required Uint8List plaintext,
+    required Uint8List aad,
     Uint8List? nonce,
   }) {
     final actualNonce =
         nonce ??
         () {
           final rng = Random.secure();
-          return Uint8List.fromList(List.generate(12, (_) => rng.nextInt(256)));
+          return Uint8List.fromList(
+            List.generate(_nonceLength, (_) => rng.nextInt(256)),
+          );
         }();
 
     final cipher = pc.GCMBlockCipher(pc.AESEngine())
       ..init(
         true,
-        pc.AEADParameters(pc.KeyParameter(key), 128, actualNonce, Uint8List(0)),
+        pc.AEADParameters(pc.KeyParameter(key), _gcmTagBits, actualNonce, aad),
       );
     final output = cipher.process(plaintext);
     return (output, actualNonce);
   }
 
-  /// Decrypts ciphertext and verifies GCM authentication tag
-  Uint8List _decryptGcm({
+  /// Decrypts ciphertext and verifies GCM authentication tag + AAD.
+  static Uint8List _decryptGcm({
     required Uint8List key,
     required Uint8List nonce,
     required Uint8List cipherWithTag,
+    required Uint8List aad,
   }) {
     final cipher = pc.GCMBlockCipher(pc.AESEngine())
       ..init(
         false,
-        pc.AEADParameters(pc.KeyParameter(key), 128, nonce, Uint8List(0)),
+        pc.AEADParameters(pc.KeyParameter(key), _gcmTagBits, nonce, aad),
       );
     return cipher.process(cipherWithTag);
   }
 
-  /// Derives a 32-byte Key and 16-byte IV from password (legacy V1 format)
-  (enc.Key, enc.IV) _deriveKeyAndIv(String password) {
+  static (Uint8List cipherWithTag, Uint8List nonce) _deriveAndEncryptGcm({
+    required String password,
+    required Uint8List salt,
+    required int iterations,
+    required Uint8List plaintext,
+    required Uint8List aad,
+  }) {
+    final key = _derivePbkdf2Key(
+      password: password,
+      salt: salt,
+      iterations: iterations,
+    );
+    return _encryptGcm(key: key, plaintext: plaintext, aad: aad);
+  }
+
+  static Uint8List _deriveAndDecryptGcm({
+    required String password,
+    required Uint8List salt,
+    required int iterations,
+    required Uint8List nonce,
+    required Uint8List cipherWithTag,
+    required Uint8List aad,
+  }) {
+    final key = _derivePbkdf2Key(
+      password: password,
+      salt: salt,
+      iterations: iterations,
+    );
+    return _decryptGcm(
+      key: key,
+      nonce: nonce,
+      cipherWithTag: cipherWithTag,
+      aad: aad,
+    );
+  }
+
+  /// Derives a 32-byte Key and 16-byte IV from password (legacy V1 format).
+  static (enc.Key, enc.IV) _deriveKeyAndIv(String password) {
     final keyBytes = sha256.convert(utf8.encode('kifino:key:$password')).bytes;
     final ivBytes = md5.convert(utf8.encode('kifino:iv:$password')).bytes;
     return (
@@ -241,14 +316,73 @@ class BackupService {
     );
   }
 
+  static String _decryptLegacyV1({
+    required String password,
+    required String cipherBase64,
+  }) {
+    final (key, iv) = _deriveKeyAndIv(password);
+    final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
+    return encrypter.decrypt64(cipherBase64, iv: iv);
+  }
+
+  static Future<(Uint8List cipherWithTag, Uint8List nonce)> _encryptInIsolate({
+    required String password,
+    required Uint8List salt,
+    required int iterations,
+    required Uint8List plaintext,
+    required Uint8List aad,
+  }) => Isolate.run(
+    () => _deriveAndEncryptGcm(
+      password: password,
+      salt: salt,
+      iterations: iterations,
+      plaintext: plaintext,
+      aad: aad,
+    ),
+  );
+
+  static Future<Uint8List> _decryptGcmInIsolate({
+    required String password,
+    required Uint8List salt,
+    required int iterations,
+    required Uint8List nonce,
+    required Uint8List cipherWithTag,
+    required Uint8List aad,
+  }) => Isolate.run(
+    () => _deriveAndDecryptGcm(
+      password: password,
+      salt: salt,
+      iterations: iterations,
+      nonce: nonce,
+      cipherWithTag: cipherWithTag,
+      aad: aad,
+    ),
+  );
+
+  static Future<String> _decryptLegacyV1InIsolate({
+    required String password,
+    required String cipherBase64,
+  }) => Isolate.run(
+    () => _decryptLegacyV1(password: password, cipherBase64: cipherBase64),
+  );
+
+  static Uint8List _canonicalMetadataAad(BackupMetadata metadata) =>
+      Uint8List.fromList(utf8.encode(jsonEncode(metadata.toJson())));
+
   /// Exports all financial entities to an encrypted JSON file
   Future<Result<String>> createEncryptedBackup({
     required String password,
-    int iterations = 300000,
+    int iterations = defaultKdfIterations,
   }) async {
     if (password.length < 8) {
       return const FailureResult(
         ValidationFailure('رمز عبور باید حداقل ۸ کاراکتر باشد.'),
+      );
+    }
+    if (iterations < minRestoreIterations ||
+        iterations > maxRestoreIterations) {
+      return const FailureResult(
+        SecurityFailure('تعداد تکرار کلید (KDF) خارج از محدوده مجاز است.'),
       );
     }
     try {
@@ -353,7 +487,7 @@ class BackupService {
 
       final metadata = BackupMetadata(
         schemaVersion: AppConstants.databaseVersion,
-        appVersion: '1.0.0',
+        appVersion: AppConstants.appVersion,
         exportedAt: DateTime.now(),
         checksum: checksum,
         entityCounts: {
@@ -389,32 +523,34 @@ class BackupService {
         },
       );
 
-      // PBKDF2-HMAC-SHA256 (300k iterations by default) + AES-256-GCM
+      // PBKDF2-HMAC-SHA256 + AES-256-GCM (v3 binds canonical metadata via AAD),
+      // executed in a background isolate so the UI thread stays responsive.
       final rng = Random.secure();
       final salt = Uint8List.fromList(
-        List.generate(16, (_) => rng.nextInt(256)),
+        List.generate(_saltLength, (_) => rng.nextInt(256)),
       );
-      final key = _derivePbkdf2Key(
+      final metadataMap = metadata.toJson();
+      final plaintext = Uint8List.fromList(utf8.encode(jsonPayload));
+      final aad = _canonicalMetadataAad(metadata);
+
+      final (cipherWithTag, nonce) = await _encryptInIsolate(
         password: password,
         salt: salt,
         iterations: iterations,
-      );
-
-      final (cipherWithTag, nonce) = _encryptGcm(
-        key: key,
-        plaintext: Uint8List.fromList(utf8.encode(jsonPayload)),
+        plaintext: plaintext,
+        aad: aad,
       );
 
       final backupPackage = jsonEncode({
         'magic': 'KIFINO',
-        'formatVersion': 2,
+        'formatVersion': currentFormatVersion,
         'kdf': {
           'algorithm': 'PBKDF2-HMAC-SHA256',
           'iterations': iterations,
           'salt': base64Encode(salt),
         },
         'nonce': base64Encode(nonce),
-        'metadata': metadata.toJson(),
+        'metadata': metadataMap,
         'cipher': base64Encode(cipherWithTag),
       });
 
@@ -444,17 +580,62 @@ class BackupService {
       }
 
       final content = await file.readAsString();
-      final Map<String, dynamic> package =
-          jsonDecode(content) as Map<String, dynamic>;
+      final decodedPackage = jsonDecode(content);
+      if (decodedPackage is! Map) {
+        return const FailureResult(
+          SecurityFailure('ساختار فایل پشتیبان نامعتبر است.'),
+        );
+      }
+      final package = Map<String, dynamic>.from(decodedPackage);
 
-      final isV2 =
-          package['formatVersion'] == 2 && package['magic'] == 'KIFINO';
+      final magic = package['magic'];
+      final rawFormatVersion = package['formatVersion'];
+      final int backupFormatVersion;
+      if (magic == 'KIFINO') {
+        if (rawFormatVersion is! int ||
+            (rawFormatVersion != 2 && rawFormatVersion != 3)) {
+          return const FailureResult(
+            SecurityFailure('نسخه فرمت فایل پشتیبان پشتیبانی نمی‌شود.'),
+          );
+        }
+        backupFormatVersion = rawFormatVersion;
+      } else if (rawFormatVersion == null && magic == null) {
+        backupFormatVersion = 1;
+      } else {
+        return const FailureResult(
+          SecurityFailure('ساختار فایل پشتیبان معتبر نیست.'),
+        );
+      }
 
-      final metadataJson = package['metadata'] as Map<String, dynamic>;
-      final metadata = BackupMetadata.fromJson(
-        metadataJson,
-        isLegacyFormat: !isV2,
-      );
+      final rawMetadata = package['metadata'];
+      if (rawMetadata is! Map) {
+        return const FailureResult(
+          SecurityFailure('متادیتای فایل پشتیبان نامعتبر است.'),
+        );
+      }
+      final metadataJson = Map<String, dynamic>.from(rawMetadata);
+      if (backupFormatVersion >= 2 &&
+          !metadataJson.keys.every(_allowedMetadataKeys.contains)) {
+        return const FailureResult(
+          SecurityFailure(
+            'متادیتای فایل پشتیبان معتبر نیست یا دستکاری شده است.',
+          ),
+        );
+      }
+
+      final BackupMetadata metadata;
+      try {
+        metadata = BackupMetadata.fromJson(
+          metadataJson,
+          isLegacyFormat: backupFormatVersion == 1,
+        );
+      } catch (_) {
+        return const FailureResult(
+          SecurityFailure(
+            'متادیتای فایل پشتیبان معتبر نیست یا دستکاری شده است.',
+          ),
+        );
+      }
 
       if (metadata.schemaVersion > AppConstants.databaseVersion) {
         return FailureResult(
@@ -464,27 +645,82 @@ class BackupService {
         );
       }
 
-      final cipherBase64 = package['cipher'] as String;
+      final cipherBase64 = package['cipher'];
+      if (cipherBase64 is! String || cipherBase64.isEmpty) {
+        return const FailureResult(
+          SecurityFailure('محتوای رمزنگاری‌شده فایل پشتیبان نامعتبر است.'),
+        );
+      }
+
       String decryptedPayload;
 
-      if (isV2) {
-        // Modern V2: PBKDF2-HMAC-SHA256 + AES-256-GCM
-        final kdfInfo = package['kdf'] as Map<String, dynamic>;
-        final iterations = (kdfInfo['iterations'] as num).toInt();
-        final salt = base64Decode(kdfInfo['salt'] as String);
-        final nonce = base64Decode(package['nonce'] as String);
-        final cipherBytes = base64Decode(cipherBase64);
+      if (backupFormatVersion == 2 || backupFormatVersion == 3) {
+        // V2 / V3: PBKDF2-HMAC-SHA256 + AES-256-GCM (v3 authenticates metadata)
+        final rawKdf = package['kdf'];
+        if (rawKdf is! Map) {
+          return const FailureResult(
+            SecurityFailure(
+              'اطلاعات الگوریتم کلید در فایل پشتیبان نامعتبر است.',
+            ),
+          );
+        }
+        final kdfInfo = Map<String, dynamic>.from(rawKdf);
+        if (kdfInfo['algorithm'] != 'PBKDF2-HMAC-SHA256') {
+          return const FailureResult(
+            SecurityFailure('الگوریتم کلید فایل پشتیبان پشتیبانی نمی‌شود.'),
+          );
+        }
+
+        final rawIterations = kdfInfo['iterations'];
+        if (rawIterations is! int ||
+            rawIterations < minRestoreIterations ||
+            rawIterations > maxRestoreIterations) {
+          return const FailureResult(
+            SecurityFailure(
+              'تعداد تکرار کلید (KDF) در فایل پشتیبان نامعتبر یا خارج از محدوده مجاز است.',
+            ),
+          );
+        }
+
+        final Uint8List salt;
+        final Uint8List nonce;
+        final Uint8List cipherBytes;
+        try {
+          final saltB64 = kdfInfo['salt'];
+          final nonceB64 = package['nonce'];
+          if (saltB64 is! String || nonceB64 is! String) {
+            return const FailureResult(
+              SecurityFailure('پارامترهای رمزگشایی فایل پشتیبان نامعتبر است.'),
+            );
+          }
+          salt = base64Decode(saltB64);
+          nonce = base64Decode(nonceB64);
+          cipherBytes = base64Decode(cipherBase64);
+          if (salt.isEmpty ||
+              nonce.length != _nonceLength ||
+              cipherBytes.length < 16) {
+            return const FailureResult(
+              SecurityFailure('پارامترهای رمزگشایی فایل پشتیبان نامعتبر است.'),
+            );
+          }
+        } catch (_) {
+          return const FailureResult(
+            SecurityFailure('پارامترهای رمزگشایی فایل پشتیبان نامعتبر است.'),
+          );
+        }
+
+        final aad = backupFormatVersion == 3
+            ? _canonicalMetadataAad(metadata)
+            : Uint8List(0);
 
         try {
-          final key = _derivePbkdf2Key(
+          final decryptedBytes = await _decryptGcmInIsolate(
             password: password,
             salt: salt,
-            iterations: iterations,
-          );
-          final decryptedBytes = _decryptGcm(
-            key: key,
+            iterations: rawIterations,
             nonce: nonce,
             cipherWithTag: cipherBytes,
+            aad: aad,
           );
           decryptedPayload = utf8.decode(decryptedBytes);
         } catch (e) {
@@ -496,10 +732,11 @@ class BackupService {
         }
       } else {
         // Legacy V1: sha256/md5 + AES-256-CBC
-        final (key, iv) = _deriveKeyAndIv(password);
-        final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
         try {
-          decryptedPayload = encrypter.decrypt64(cipherBase64, iv: iv);
+          decryptedPayload = await _decryptLegacyV1InIsolate(
+            password: password,
+            cipherBase64: cipherBase64,
+          );
         } catch (e) {
           return const FailureResult(
             SecurityFailure(

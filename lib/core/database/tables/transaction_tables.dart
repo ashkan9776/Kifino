@@ -1,5 +1,22 @@
 import 'package:drift/drift.dart';
 
+@TableIndex(
+  name: 'idx_transactions_deleted_date',
+  columns: {#deletedAt, #transactionDate},
+)
+@TableIndex(
+  name: 'idx_transactions_account_deleted',
+  columns: {#accountId, #deletedAt},
+)
+@TableIndex(
+  name: 'idx_transactions_dest_account_deleted',
+  columns: {#destinationAccountId, #deletedAt},
+)
+@TableIndex(
+  name: 'idx_transactions_category_deleted',
+  columns: {#categoryId, #deletedAt},
+)
+@TableIndex(name: 'idx_transactions_source', columns: {#sourceType, #sourceId})
 @DataClassName('TransactionData')
 class TransactionsTable extends Table {
   @override

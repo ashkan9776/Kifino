@@ -1,3 +1,4 @@
+# Copy to android/key.properties (git-ignored) and place upload-keystore.jks in android/app/ (or android/).
 storePassword=YOUR_STORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
 keyAlias=upload

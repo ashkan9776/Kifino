@@ -164,6 +164,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 11) {
         await m.createTable(recurringRulesTable);
       }
+      if (from < 12) {
+        await _createIndexesIfTablesExist();
+      }
     },
   );
 
@@ -202,6 +205,39 @@ class AppDatabase extends _$AppDatabase {
       variables: [Variable.withString(name)],
     ).get();
     return rows.isNotEmpty;
+  }
+
+  Future<void> _createIndexesIfTablesExist() async {
+    final tablePattern = RegExp(
+      r'\bON\s+(?:"([^"]+)"|`([^`]+)`|([a-zA-Z0-9_]+))\s*\(',
+      caseSensitive: false,
+    );
+    for (final entity in allSchemaEntities) {
+      if (entity is! Index) continue;
+      final sql = entity.createStatementsByDialect[SqlDialect.sqlite];
+      if (sql == null) continue;
+      final match = tablePattern.firstMatch(sql);
+      final tableName = match?.group(1) ?? match?.group(2) ?? match?.group(3);
+      if (tableName != null && !await _tableExists(tableName)) {
+        continue;
+      }
+      final idempotentSql = sql
+          .replaceFirst(
+            RegExp(
+              r'^CREATE\s+UNIQUE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS)',
+              caseSensitive: false,
+            ),
+            'CREATE UNIQUE INDEX IF NOT EXISTS ',
+          )
+          .replaceFirst(
+            RegExp(
+              r'^CREATE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS)',
+              caseSensitive: false,
+            ),
+            'CREATE INDEX IF NOT EXISTS ',
+          );
+      await customStatement(idempotentSql);
+    }
   }
 
   Future<void> _addColumnIfMissing(

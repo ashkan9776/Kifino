@@ -18,6 +18,26 @@ void main() {
       expect(content, contains('namespace = "ir.kifino.app"'));
       expect(content, contains('signingConfigs.getByName("release")'));
       expect(content, contains('key.properties'));
+
+      // Store file path must resolve from android/app/ (matching release.yml &
+      // key.properties.example), with optional root fallback, and fail fast
+      // via GradleException when key.properties is present but incomplete/missing.
+      expect(content, contains('file(trimmedStoreFile)'));
+      expect(content, contains('rootProject.file(trimmedStoreFile)'));
+      expect(content, contains('throw GradleException'));
+
+      final releaseWorkflow = File('.github/workflows/release.yml');
+      expect(releaseWorkflow.existsSync(), isTrue);
+      final releaseContent = releaseWorkflow.readAsStringSync();
+      expect(releaseContent, contains('android/app/upload-keystore.jks'));
+      expect(releaseContent, contains('storeFile=upload-keystore.jks'));
+
+      final keyExample = File('android/key.properties.example');
+      expect(keyExample.existsSync(), isTrue);
+      expect(
+        keyExample.readAsStringSync(),
+        contains('storeFile=upload-keystore.jks'),
+      );
     });
 
     test('AndroidManifest.xml disables allowBackup and specifies extraction and backup rules', () {
