@@ -67,7 +67,10 @@ class AppBudgetProgress extends StatelessWidget {
                 ),
                 child: Text(
                   TextNormalizer.auto(
-                    '${percent.toStringAsFixed(0)}% · $statusLabel',
+                    // An en dash, not «·»: a middle dot next to Persian
+                    // digits reads as «۰» (۹% · → «۰۹٪»).
+                    '${percent.toStringAsFixed(0)}${l10n.isPersian ? '٪' : '%'}'
+                    ' – $statusLabel',
                   ),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: statusColor,
