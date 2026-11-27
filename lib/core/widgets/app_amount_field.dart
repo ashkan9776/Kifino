@@ -79,12 +79,24 @@ class _AppAmountFieldState extends State<AppAmountField> {
         setState(() => _focused = _focusNode.hasFocus);
       }
     });
+  }
 
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    // Formatting the initial amount reads the locale (Persian digits), which
+    // is an inherited widget — not allowed in initState. It crashed the
+    // editor whenever it opened with an existing amount (edit mode).
     final initial = widget.amountNotifier?.value ?? widget.initialAmountMinor;
     if (initial > 0) {
       _controller.text = _display(initial);
     }
-
+    // Listeners go on after the initial fill so it doesn't echo back to the
+    // parent mid-build.
     _controller.addListener(_handleTextChanged);
     widget.amountNotifier?.addListener(_onExternalAmountChanged);
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kifino/core/utils/money.dart';
 import 'package:kifino/core/widgets/app_amount_field.dart';
@@ -73,6 +74,36 @@ void main() {
     expect(
       tester.widget<TextField>(find.byType(TextField)).controller!.text,
       equals('0'), // zero renders like typing 0
+    );
+  });
+
+  // Regression: opening the editor with an existing amount (edit mode) and
+  // locale-driven digits read Localizations in initState and threw
+  // "dependOnInheritedWidgetOfExactType … was called before initState()".
+  testWidgets('prefills from the locale without throwing (edit mode)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fa'),
+        supportedLocales: const [Locale('fa'), Locale('en')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: Scaffold(
+          body: AppAmountField(
+            currency: Currency.toman,
+            initialAmountMinor: 385000,
+            onAmountMinorChanged: (_) {},
+            autoFocus: false,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      equals('۳۸۵,۰۰۰'),
     );
   });
 }
