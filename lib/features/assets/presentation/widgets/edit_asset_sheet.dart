@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_date_picker.dart';
 import '../../domain/entities/asset_entity.dart';
 import '../../domain/repositories/asset_repository.dart';
+import '../../../../core/utils/text_normalizer.dart';
 
 /// Full edit sheet for an existing asset.
 class EditAssetSheet extends StatefulWidget {
@@ -20,10 +21,8 @@ class EditAssetSheet extends StatefulWidget {
   const EditAssetSheet({super.key, required this.asset});
 
   static Future<void> show(BuildContext context, AssetEntity asset) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditAssetSheet(asset: asset),
     );
   }
@@ -52,10 +51,16 @@ class _EditAssetSheetState extends State<EditAssetSheet> {
     _quantityController = TextEditingController(text: _trimNum(asset.quantity));
     _unitController = TextEditingController(text: asset.unit);
     _costController = TextEditingController(
-      text: asset.costBasis.minorUnits.toString(),
+      text: formatNumberWithSeparators(
+        asset.costBasis.minorUnits,
+        toPersian: TextNormalizer.persianDigitsEnabled,
+      ),
     );
     _valueController = TextEditingController(
-      text: asset.currentValue.minorUnits.toString(),
+      text: formatNumberWithSeparators(
+        asset.currentValue.minorUnits,
+        toPersian: TextNormalizer.persianDigitsEnabled,
+      ),
     );
     _customTypeController = TextEditingController(
       text: asset.customTypeName ?? '',

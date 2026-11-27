@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../../core/design_system/tokens/colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -62,22 +63,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
       ),
     ];
 
-    final isDesktopOrTablet =
-        MediaQuery.sizeOf(context).width >= AppSpacing.mobileBreakpoint;
-
-    showModalBottomSheet<void>(
+    showAppModalSheet<void>(
       context: context,
-      constraints: BoxConstraints(
-        maxWidth: isDesktopOrTablet ? 540 : double.infinity,
-      ),
-      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (sheetContext) {
-        return SafeArea(
+        return SingleChildScrollView(
           child: Padding(
-            // The theme's drag handle already gives the top breathing room.
+            // The frame's drag handle already gives the top breathing room.
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               0,

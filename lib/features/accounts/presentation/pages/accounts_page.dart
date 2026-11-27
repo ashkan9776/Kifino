@@ -93,10 +93,8 @@ class _AccountsPageState extends State<AccountsPage> {
     AccountType selectedType = AccountType.bankCard;
     int initialBalanceMinor = 0;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {

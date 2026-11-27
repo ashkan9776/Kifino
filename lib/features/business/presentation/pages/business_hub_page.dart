@@ -840,9 +840,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
     final sellingPriceController = TextEditingController();
     final stockController = TextEditingController(text: '10');
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
+      scrollable: true,
       builder: (ctx) {
         return AppBottomSheet(
           child: Padding(
@@ -981,9 +981,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
     final phoneController = TextEditingController();
     ContactType selectedType = ContactType.customer;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
+      scrollable: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
@@ -1094,9 +1094,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
     final qtyController = TextEditingController();
     InventoryMovementType selectedType = InventoryMovementType.purchase;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
+      scrollable: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
@@ -1210,9 +1210,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
     String selectedContactId = state.contacts.first.id;
     bool quoteMode = false;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
+      scrollable: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
@@ -1572,9 +1572,9 @@ class _BusinessHubPageState extends State<BusinessHubPage>
       ),
     );
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
+      scrollable: true,
       builder: (ctx) {
         return AppBottomSheet(
           child: Padding(

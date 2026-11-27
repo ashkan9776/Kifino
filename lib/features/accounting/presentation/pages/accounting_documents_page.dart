@@ -14,6 +14,7 @@ import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
 import '../bloc/accounting_document_bloc.dart';
 import '../services/accounting_voucher_pdf_generator.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 
 class AccountingDocumentsPage extends StatefulWidget {
   const AccountingDocumentsPage({super.key});
@@ -374,12 +375,8 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
     AccountingDocumentEntity doc,
     KifinoColorsExtension colors,
   ) {
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (ctx) {
         final jalali = JalaliDate.fromDateTime(doc.date);
         return DraggableScrollableSheet(
@@ -393,17 +390,6 @@ class _AccountingDocumentsPageState extends State<AccountingDocumentsPage> {
               child: ListView(
                 controller: scrollController,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.lightTextTertiary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

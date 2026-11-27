@@ -18,10 +18,8 @@ class EditContactSheet extends StatefulWidget {
   const EditContactSheet({super.key, required this.contact});
 
   static Future<void> show(BuildContext context, ContactEntity contact) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditContactSheet(contact: contact),
     );
   }

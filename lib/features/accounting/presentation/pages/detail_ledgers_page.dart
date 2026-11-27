@@ -207,12 +207,9 @@ class _DetailLedgersViewState extends State<_DetailLedgersView> {
     final controllers = fields
         .map((f) => TextEditingController(text: f.initial))
         .toList();
-    return showModalBottomSheet<void>(
+    return showAppModalSheet<void>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      scrollable: true,
       builder: (sheetContext) {
         String? submitError;
         return StatefulBuilder(

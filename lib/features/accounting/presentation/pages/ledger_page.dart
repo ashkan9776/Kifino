@@ -12,6 +12,7 @@ import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/ledger_entry.dart';
 import '../../domain/repositories/accounting_repository.dart';
 import '../services/accounting_export_actions.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 
 class LedgerPage extends StatefulWidget {
   final String? initialSubjectId;
@@ -451,12 +452,8 @@ class _LedgerPageState extends State<LedgerPage> with AccountingExportActions {
   }
 
   void _pickSubjectDialog(BuildContext context) {
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (ctx) {
         String query = '';
         return StatefulBuilder(

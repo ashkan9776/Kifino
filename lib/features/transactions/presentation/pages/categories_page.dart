@@ -59,10 +59,8 @@ class _CategoriesView extends StatelessWidget {
         ? existingHex!
         : (type == CategoryType.expense ? 'FF5C6C' : '25C997');
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;

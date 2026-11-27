@@ -51,10 +51,9 @@ class _DebtsPageState extends State<DebtsPage> {
         : DebtType.debt;
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      scrollable: true,
       builder: (bottomSheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -234,10 +233,9 @@ class _DebtsPageState extends State<DebtsPage> {
         : Future.value(const Success(<AccountEntity>[]));
     String? selectedAccountId;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      scrollable: true,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;

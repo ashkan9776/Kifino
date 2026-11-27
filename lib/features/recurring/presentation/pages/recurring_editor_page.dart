@@ -22,6 +22,7 @@ import '../../../transactions/domain/repositories/category_repository.dart';
 import '../../domain/entities/recurring_rule_entity.dart';
 import '../../domain/services/recurrence.dart';
 import '../cubit/recurring_cubit.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 
 /// Arguments for opening the editor: an existing rule to edit, or a
 /// template (title + type) to prefill a new one.
@@ -445,7 +446,7 @@ class _RecurringEditorPageState extends State<RecurringEditorPage> {
   }
 
   Future<void> _pickEnd() async {
-    final choice = await showModalBottomSheet<int>(
+    final choice = await showAppModalSheet<int>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(

@@ -370,10 +370,9 @@ class _JournalPageState extends State<JournalPage>
 void _showLegalBooksSheet(BuildContext context) {
   final theme = Theme.of(context);
   final isDark = theme.brightness == Brightness.dark;
-  showModalBottomSheet<void>(
+  showAppModalSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    scrollable: true,
     builder: (sheetContext) => AppBottomSheet(
       child: SafeArea(
         top: false,

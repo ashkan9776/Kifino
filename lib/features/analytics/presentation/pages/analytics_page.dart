@@ -317,12 +317,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         .where((c) => c.type == CategoryType.expense)
         .toList();
 
-    await showModalBottomSheet<void>(
+    await showAppModalSheet<void>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      scrollable: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {

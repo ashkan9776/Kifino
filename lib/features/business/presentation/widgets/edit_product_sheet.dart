@@ -22,10 +22,8 @@ class EditProductSheet extends StatefulWidget {
   const EditProductSheet({super.key, required this.product});
 
   static Future<void> show(BuildContext context, ProductEntity product) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditProductSheet(product: product),
     );
   }
@@ -51,9 +49,15 @@ class _EditProductSheetState extends State<EditProductSheet> {
     return TextNormalizer.auto(text);
   }
 
+  // Runs once. The locale (Persian digits) is an inherited widget, so this
+  // setup cannot live in initState: it threw as soon as the sheet opened.
+  bool _didInit = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInit) return;
+    _didInit = true;
     final isFa = isFaLocale(context);
     final p = widget.product;
     _nameController = TextEditingController(text: p.name);

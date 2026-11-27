@@ -20,12 +20,9 @@ Future<void> showCompanySwitcherSheet(BuildContext context) async {
     await controller.initialize();
   }
   if (!context.mounted) return;
-  await showModalBottomSheet<void>(
+  await showAppModalSheet<void>(
     context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    scrollable: true,
     builder: (sheetContext) => const _CompanySwitcherSheet(),
   );
 }

@@ -14,6 +14,7 @@ import '../../domain/entities/check_entity.dart';
 import '../../domain/repositories/check_repository.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/domain/repositories/account_repository.dart';
+import '../../../../core/utils/text_normalizer.dart';
 
 /// Edit sheet for an existing check. The STATUS is deliberately not editable
 /// here — status changes go through the consequence-aware flow (voucher
@@ -24,10 +25,8 @@ class EditCheckSheet extends StatefulWidget {
   const EditCheckSheet({super.key, required this.check});
 
   static Future<void> show(BuildContext context, CheckEntity check) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditCheckSheet(check: check),
     );
   }
@@ -56,7 +55,10 @@ class _EditCheckSheetState extends State<EditCheckSheet> {
     _sayadiController = TextEditingController(text: check.sayadiId ?? '');
     _bankController = TextEditingController(text: check.bankName);
     _amountController = TextEditingController(
-      text: check.amount.minorUnits.toString(),
+      text: formatNumberWithSeparators(
+        check.amount.minorUnits,
+        toPersian: TextNormalizer.persianDigitsEnabled,
+      ),
     );
     _partyController = TextEditingController(text: check.partyName);
     _notesController = TextEditingController(text: check.notes ?? '');

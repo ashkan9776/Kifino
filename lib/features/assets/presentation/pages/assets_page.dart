@@ -42,10 +42,8 @@ class _AssetsPageState extends State<AssetsPage> {
     final customTypeController = TextEditingController();
     AssetCategory category = _selectedCategory ?? AssetCategory.gold;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
@@ -252,10 +250,9 @@ class _AssetsPageState extends State<AssetsPage> {
       ),
     );
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      scrollable: true,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;

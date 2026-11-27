@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_date_picker.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../domain/entities/goal_entity.dart';
 import '../../domain/repositories/goal_repository.dart';
+import '../../../../core/utils/text_normalizer.dart';
 
 /// Edit sheet for an existing savings goal. Current amount (progress) is
 /// managed by the contribute flow and is never touched here.
@@ -22,10 +23,8 @@ class EditGoalSheet extends StatefulWidget {
   const EditGoalSheet({super.key, required this.goal});
 
   static Future<void> show(BuildContext context, GoalEntity goal) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditGoalSheet(goal: goal),
     );
   }
@@ -47,7 +46,10 @@ class _EditGoalSheetState extends State<EditGoalSheet> {
     final goal = widget.goal;
     _nameController = TextEditingController(text: goal.name);
     _targetController = TextEditingController(
-      text: goal.targetAmount.minorUnits.toString(),
+      text: formatNumberWithSeparators(
+        goal.targetAmount.minorUnits,
+        toPersian: TextNormalizer.persianDigitsEnabled,
+      ),
     );
     _notesController = TextEditingController(text: goal.notes ?? '');
     _targetDate = goal.targetDate;

@@ -25,10 +25,8 @@ class CheckStatusHistorySheet extends StatefulWidget {
 
   /// Convenience opener.
   static Future<void> show(BuildContext context, CheckEntity check) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => CheckStatusHistorySheet(check: check),
     );
   }

@@ -42,10 +42,8 @@ class GoalsPage extends StatelessWidget {
     int targetAmountMinor = 0;
     DateTime? targetDate;
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
@@ -186,10 +184,9 @@ class GoalsPage extends StatelessWidget {
         ? sl<AccountRepository>().getAccounts()
         : Future.value(const Success(<AccountEntity>[]));
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      scrollable: true,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;

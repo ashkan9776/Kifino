@@ -19,6 +19,7 @@ import '../../domain/entities/accounting_subject_entity.dart';
 import '../../domain/entities/accounting_transaction_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
 import '../bloc/accounting_document_bloc.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 
 class CreateAccountingDocumentPage extends StatefulWidget {
   const CreateAccountingDocumentPage({super.key});
@@ -567,12 +568,8 @@ class _CreateAccountingDocumentPageState
   }
 
   void _pickSubjectForRow(int rowIndex) {
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (ctx) {
         String query = '';
         return StatefulBuilder(

@@ -65,12 +65,8 @@ class _VoucherSettingsPageState extends State<VoucherSettingsPage> {
     final subjects = _subjects;
     if (subjects == null) return;
     final l10n = context.l10n;
-    await showModalBottomSheet<void>(
+    await showAppModalSheet<void>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (sheetContext) => AppBottomSheet(
         child: SafeArea(
           top: false,

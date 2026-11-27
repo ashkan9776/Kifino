@@ -29,10 +29,8 @@ class InstallmentHistorySheet extends StatefulWidget {
     InstallmentEntity installment,
   ) {
     final bloc = context.read<InstallmentBloc>();
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => InstallmentHistorySheet(installment: installment),
     ).whenComplete(() => bloc.add(const InstallmentHistoryClosed()));
   }

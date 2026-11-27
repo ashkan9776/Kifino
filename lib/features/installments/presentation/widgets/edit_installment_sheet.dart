@@ -31,10 +31,8 @@ class EditInstallmentSheet extends StatefulWidget {
     BuildContext context,
     InstallmentEntity installment,
   ) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditInstallmentSheet(installment: installment),
     );
   }
@@ -51,9 +49,15 @@ class _EditInstallmentSheetState extends State<EditInstallmentSheet> {
   late final TextEditingController _notesController;
   late DateTime _dueDate;
 
+  // Runs once. The locale (Persian digits) is an inherited widget, so this
+  // setup cannot live in initState: it threw as soon as the sheet opened.
+  bool _didInit = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInit) return;
+    _didInit = true;
     final inst = widget.installment;
     final fa = isFaLocale(context);
     _titleController = TextEditingController(text: inst.title);

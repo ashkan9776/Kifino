@@ -7,6 +7,7 @@ import '../design_system/tokens/colors.dart';
 import '../design_system/tokens/radii.dart';
 import 'app_card.dart';
 import 'app_money_text.dart';
+import 'app_bottom_sheet.dart';
 
 // Status pills live in the design system (they pair every colour with an
 // icon, so status is never conveyed by colour alone); re-exported here so
@@ -442,63 +443,48 @@ class AppNotice extends StatelessWidget {
   }
 }
 
-/// Opens the one standard bottom sheet: drag handle, title row with close,
-/// scrollable body that rises above the keyboard, optional pinned action.
+/// Opens the one standard titled sheet: title row with close, scrollable
+/// body, optional pinned action. Insets, handle and surface come from the
+/// shared frame ([showAppModalSheet]).
 Future<T?> showAppSheet<T>({
   required BuildContext context,
   required String title,
   required WidgetBuilder builder,
   Widget? primaryAction,
-  bool isScrollControlled = true,
 }) {
-  return showModalBottomSheet<T>(
+  return showAppModalSheet<T>(
     context: context,
-    isScrollControlled: isScrollControlled,
-    useSafeArea: true,
-    builder: (sheetContext) {
-      final insets = MediaQuery.viewInsetsOf(sheetContext).bottom;
-      return Padding(
-        padding: EdgeInsets.only(bottom: insets),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.9,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    builder: (sheetContext) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
+          child: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(title, style: AppTypography.titleLarge),
-                    ),
-                    IconButton(
-                      tooltip: 'بستن',
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                    ),
-                  ],
-                ),
+              Expanded(child: Text(title, style: AppTypography.titleLarge)),
+              IconButton(
+                tooltip: MaterialLocalizations.of(sheetContext)
+                    .closeButtonTooltip,
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.of(sheetContext).pop(),
               ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                  child: builder(sheetContext),
-                ),
-              ),
-              if (primaryAction != null)
-                SafeArea(
-                  top: false,
-                  minimum: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: primaryAction,
-                ),
             ],
           ),
         ),
-      );
-    },
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: builder(sheetContext),
+          ),
+        ),
+        if (primaryAction != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: primaryAction,
+          ),
+      ],
+    ),
   );
 }
 

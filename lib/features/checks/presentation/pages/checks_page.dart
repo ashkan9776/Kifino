@@ -147,10 +147,8 @@ class _ChecksPageState extends State<ChecksPage> {
         : CheckType.received;
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
@@ -448,10 +446,8 @@ class _ChecksPageState extends State<ChecksPage> {
         .where((s) => s != check.status)
         .toList();
 
-    showModalBottomSheet(
+    showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return AppBottomSheet(
           child: Container(

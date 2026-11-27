@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_date_picker.dart';
 import '../../../../core/widgets/app_money_text.dart';
 import '../../domain/entities/debt_entity.dart';
 import '../../domain/repositories/debt_repository.dart';
+import '../../../../core/utils/text_normalizer.dart';
 
 /// Edit sheet for an existing debt/receivable. Paid amount and status are
 /// managed by the payment flow and are never touched here.
@@ -22,10 +23,8 @@ class EditDebtSheet extends StatefulWidget {
   const EditDebtSheet({super.key, required this.debt});
 
   static Future<void> show(BuildContext context, DebtEntity debt) {
-    return showModalBottomSheet(
+    return showAppModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditDebtSheet(debt: debt),
     );
   }
@@ -49,7 +48,10 @@ class _EditDebtSheetState extends State<EditDebtSheet> {
     _nameController = TextEditingController(text: debt.contactName);
     _phoneController = TextEditingController(text: debt.contactPhone ?? '');
     _amountController = TextEditingController(
-      text: debt.totalAmount.minorUnits.toString(),
+      text: formatNumberWithSeparators(
+        debt.totalAmount.minorUnits,
+        toPersian: TextNormalizer.persianDigitsEnabled,
+      ),
     );
     _notesController = TextEditingController(text: debt.notes ?? '');
     _dueDate = debt.dueDate;

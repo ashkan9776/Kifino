@@ -61,11 +61,29 @@ something bespoke, extend the kit instead.
 | Metric | `AppStatTile` | analytics health grid |
 | Grouped rows | `AppListGroup` + `AppListRow` | settings, accounts by type, accounting modules, pickers |
 | Filters | `AppFilterBar` (chips) | activity, debts, cheques — never segmented controls for filtering |
-| Picker / form sheet | `showAppSheet` | account picker, theme/language/currency, categories |
+| Picker / form sheet | `showAppSheet` (titled) or `showAppModalSheet` (custom body) | account picker, theme/language/currency, categories, every edit form |
 | Selection grid | `AppChoiceGrid` (`AppChoice.onTap` for action tiles) | categories, More tools |
 | Inline message | `AppNotice` | locked fields, low stock, sync simulator |
 | Status | `AppStatusBadge` (tone + icon, never colour alone) | PRO, «به‌زودی», paid/overdue |
 | Money in a hero | `MoneyTextStyle` scope | lets `AppMoneyText` inherit the hero size |
+
+### Bottom sheets
+
+Open every sheet with `showAppModalSheet` (or `showAppSheet`, which is built
+on it); never call `showModalBottomSheet` directly. The shared frame
+(`AppBottomSheet`) owns the surface, the single drag handle and the insets:
+
+- The sheet never rises under the status bar or notch.
+- The painted surface reaches the bottom edge, while content stays above the
+  gesture/navigation bar.
+- With the keyboard up, content sits on top of it (keyboard *or* nav-bar
+  space, never both).
+- Inside the frame `MediaQuery` reports zero bottom insets, so a nested
+  `SafeArea` cannot double the space.
+
+Content gets a bounded height that shrinks with the keyboard, so it must
+scroll: use a `SingleChildScrollView`/list, or pass `scrollable: true` for a
+plain column of fields. Don't draw your own handle or sheet background.
 
 ### Rules of thumb
 
