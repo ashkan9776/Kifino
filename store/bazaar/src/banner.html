@@ -1,0 +1,35 @@
+<!doctype html><html lang="fa"><head><meta charset="utf-8"><link rel="stylesheet" href="kit.css">
+<style>
+body{width:1024px;height:500px;overflow:hidden;position:relative;
+  background:radial-gradient(120% 140% at 100% 0%,#145a5c 0%,#0F2A38 42%,#0B1220 100%)}
+.rings{position:absolute;inset:0;background:
+  radial-gradient(circle at 18% 120%,rgba(46,196,182,.28),transparent 45%),
+  radial-gradient(circle at 70% -30%,rgba(226,184,74,.14),transparent 40%)}
+.grid{position:absolute;inset:0;opacity:.07;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:32px 32px;
+  -webkit-mask-image:radial-gradient(ellipse at 75% 40%,#000 0%,transparent 70%)}
+.copy{position:absolute;right:64px;top:0;bottom:0;width:470px;display:flex;flex-direction:column;justify-content:center;color:#fff}
+.brand{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.brand img{width:84px;height:84px;border-radius:22px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.brand h1{font-size:64px;font-weight:700;line-height:1}
+.brand small{display:block;font-size:15px;font-weight:500;color:var(--teal4);letter-spacing:.5px;margin-top:6px;direction:ltr;text-align:right}
+.tag{font-size:27px;font-weight:600;line-height:1.55;color:#F4F1EA}
+.tag b{color:var(--gold);font-weight:700}
+.chips{margin-top:26px;display:grid;grid-template-columns:repeat(2,max-content);gap:10px}
+.chip{font-size:15px;padding:8px 16px;color:#E8F6F4;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.p1{width:230px;left:250px;top:62px;transform:rotate(-6deg)}
+.p2{width:230px;left:60px;top:118px;transform:rotate(-6deg)}
+</style></head><body>
+<div class="rings"></div><div class="grid"></div>
+<div class="phone p2"><img src="screens/analytics2_light.png"></div>
+<div class="phone p1"><img src="screens/home_dark.png"></div>
+<div class="copy">
+  <div class="brand"><img src="../icon-512.png"><div><h1>کیفینو</h1><small>KIFINO</small></div></div>
+  <p class="tag">مدیریت پول شخصی و کسب‌وکار،<br><b>ساده، فارسی و امن</b></p>
+  <div class="chips">
+    <span class="chip"><i></i>بودجه و اهداف</span>
+    <span class="chip"><i></i>اقساط، چک و بدهی</span>
+    <span class="chip"><i></i>تحلیل هزینه‌ها</span>
+    <span class="chip"><i></i>بدون نیاز به اینترنت</span>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,14 @@
+/* Shared look for Kifino store art. Fonts come from the app's own assets. */
+@font-face{font-family:Vazirmatn;font-weight:400;src:url(../../../assets/fonts/Vazirmatn-Regular.ttf)}
+@font-face{font-family:Vazirmatn;font-weight:500;src:url(../../../assets/fonts/Vazirmatn-Medium.ttf)}
+@font-face{font-family:Vazirmatn;font-weight:600;src:url(../../../assets/fonts/Vazirmatn-SemiBold.ttf)}
+@font-face{font-family:Vazirmatn;font-weight:700;src:url(../../../assets/fonts/Vazirmatn-Bold.ttf)}
+:root{--ink950:#0B1220;--ink900:#0F1B2E;--teal:#0B7F7A;--teal4:#2EC4B6;--teal1:#D5F1EE;--sand:#FAF8F4;--gold:#E2B84A}
+*{margin:0;padding:0;box-sizing:border-box}
+html{direction:ltr}
+body{font-family:Vazirmatn,sans-serif;direction:rtl;letter-spacing:0;-webkit-font-smoothing:antialiased}
+.phone{position:absolute;border-radius:9.5%/4.6%;padding:2.2%;background:linear-gradient(160deg,#2a3446,#0d131e);
+  box-shadow:0 40px 80px -20px rgba(3,10,20,.55),0 0 0 1.5px rgba(255,255,255,.08) inset}
+.phone img{display:block;width:100%;border-radius:8%/3.9%}
+.chip{display:inline-flex;align-items:center;gap:8px;border-radius:999px;font-weight:600;white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block}
