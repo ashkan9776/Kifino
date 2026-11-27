@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+
+import 'dart:convert';
+
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/file_transfer.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_kit.dart';
+import '../../../../core/widgets/export_sheet.dart';
 import '../../../transactions/domain/repositories/transaction_repository.dart';
 import '../../domain/services/backup_service.dart';
 
@@ -17,32 +23,31 @@ class BackupPage extends StatefulWidget {
 
 class _BackupPageState extends State<BackupPage> {
   final _passwordController = TextEditingController();
-  final _restorePathController = TextEditingController();
   final _restorePasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _isExportingCsv = false;
   bool _isRepairing = false;
-  String? _lastBackupPath;
+
+  void _toast(String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _exportCsv() async {
     setState(() => _isExportingCsv = true);
     try {
-      final result = await sl<BackupService>().exportTransactionsCsv();
+      final result = await sl<BackupService>().buildTransactionsCsv();
       if (!mounted) return;
-      result.fold(
-        onSuccess: (path) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('فایل اکسل (CSV) ساخته شد:\n$path'),
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        },
-        onFailure: (failure) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(failure.message)));
-        },
+      // The file is ready; the button shouldn't spin while the user picks
+      // where it goes.
+      setState(() => _isExportingCsv = false);
+      await result.fold(
+        onSuccess: (file) => showExportSheet(
+          context,
+          file: file,
+          title: 'فایل اکسل تراکنش‌ها آماده است',
+        ),
+        onFailure: (failure) async => _toast(failure.message),
       );
     } finally {
       if (mounted) setState(() => _isExportingCsv = false);
@@ -89,7 +94,7 @@ class _BackupPageState extends State<BackupPage> {
           };
 
           return AlertDialog(
-            title: const Text('پشتیبان‌گیری رمزنگاری‌شده (AES-GCM)'),
+            title: const Text('رمز فایل پشتیبان'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,29 +158,27 @@ class _BackupPageState extends State<BackupPage> {
                         Navigator.pop(ctx);
                         setState(() => _isLoading = true);
 
-                        final backupService = sl<BackupService>();
-                        final result = await backupService
-                            .createEncryptedBackup(password: pwd);
+                        final result = await sl<BackupService>()
+                            .buildEncryptedBackup(password: pwd);
 
+                        if (!mounted) return;
                         setState(() => _isLoading = false);
 
-                        result.fold(
-                          onSuccess: (filePath) {
-                            setState(() => _lastBackupPath = filePath);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'فایل پشتیبان با موفقیت در مسیر ذخیره شد:\n$filePath',
-                                ),
-                                duration: const Duration(seconds: 4),
-                              ),
-                            );
-                          },
-                          onFailure: (err) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('خطا: ${err.message}')),
-                            );
-                          },
+                        await result.fold(
+                          // The dialog (and its `context`) is gone by now;
+                          // the sheet belongs to the page.
+                          onSuccess: (file) => showExportSheet(
+                            this.context,
+                            file: file,
+                            title: 'فایل پشتیبان آماده است',
+                            note:
+                                'فایل را جایی نگه دارید که با حذف برنامه پاک '
+                                'نشود (مثلاً پوشه Download، کارت حافظه یا '
+                                'پیام‌های ذخیره‌شده تلگرام). بدون رمز عبور، '
+                                'بازیابی ممکن نیست.',
+                          ),
+                          onFailure: (err) async =>
+                              _toast('خطا: ${err.message}'),
                         );
                       }
                     : null,
@@ -188,27 +191,56 @@ class _BackupPageState extends State<BackupPage> {
     );
   }
 
-  void _showRestoreDialog() {
-    _restorePathController.text = _lastBackupPath ?? '';
+  /// Restore: the system file picker first (Downloads, SD card, Drive…),
+  /// then the password — with a clear warning that it replaces everything.
+  Future<void> _pickAndRestore() async {
+    final PickedFile? picked;
+    try {
+      picked = await sl<FileTransfer>().pick();
+    } catch (e) {
+      _toast('باز کردن فایل انجام نشد: $e');
+      return;
+    }
+    if (picked == null || !mounted) return;
+
+    final String content;
+    try {
+      content = utf8.decode(picked.bytes);
+    } on FormatException {
+      _toast('این فایل، پشتیبان کیفینو نیست.');
+      return;
+    }
+
     _restorePasswordController.clear();
-    showDialog(
+    final password = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('بازیابی اطلاعات'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _restorePathController,
-              decoration: const InputDecoration(
-                labelText: 'مسیر فایل پشتیبان (.kfn)',
-                prefixIcon: Icon(Icons.file_present_rounded),
-              ),
+            AppListGroup(
+              children: [
+                AppListRow(
+                  icon: Icons.insert_drive_file_outlined,
+                  title: picked!.name,
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.sm),
+            AppNotice(
+              icon: Icons.warning_amber_rounded,
+              color: AppColors.danger,
+              message:
+                  'همه اطلاعات فعلی این دفتر حذف و با محتوای این فایل '
+                  'جایگزین می‌شود.',
+            ),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _restorePasswordController,
               obscureText: true,
+              autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'رمز عبور پشتیبان',
                 prefixIcon: Icon(Icons.lock_outline_rounded),
@@ -221,57 +253,50 @@ class _BackupPageState extends State<BackupPage> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('انصراف'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_restorePathController.text.trim().isEmpty ||
-                  _restorePasswordController.text.trim().isEmpty) {
-                return;
-              }
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-
-              final backupService = sl<BackupService>();
-              final result = await backupService.restoreEncryptedBackup(
-                filePath: _restorePathController.text.trim(),
-                password: _restorePasswordController.text.trim(),
-              );
-
-              setState(() => _isLoading = false);
-
-              result.fold(
-                onSuccess: (metadata) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        metadata.isLegacyFormat
-                            ? 'اطلاعات با موفقیت بازیابی شد!\nتوجه: این پشتیبان با ساختار قدیمی بازیابی شد. برای امنیت بیشتر، پیشنهاد می‌شود یک پشتیبان جدید (AES-GCM) ایجاد کنید.'
-                            : 'اطلاعات با موفقیت بازیابی شد!\nتراکنش‌ها: ${metadata.entityCounts["transactions"] ?? 0} | حساب‌ها: ${metadata.entityCounts["accounts"] ?? 0}',
-                      ),
-                      duration: const Duration(seconds: 5),
-                      backgroundColor: metadata.isLegacyFormat
-                          ? AppColors.debtOrangeLight
-                          : null,
-                    ),
-                  );
-                },
-                onFailure: (err) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('خطای بازیابی: ${err.message}')),
-                  );
-                },
-              );
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () {
+              final pwd = _restorePasswordController.text.trim();
+              if (pwd.isNotEmpty) Navigator.pop(ctx, pwd);
             },
-            child: const Text('بازیابی'),
+            child: const Text('جایگزینی و بازیابی'),
           ),
         ],
       ),
+    );
+    if (password == null || !mounted) return;
+
+    setState(() => _isLoading = true);
+    final result = await sl<BackupService>().restoreEncryptedBackupContent(
+      content: content,
+      password: password,
+    );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    result.fold(
+      onSuccess: (metadata) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              metadata.isLegacyFormat
+                  ? 'اطلاعات با موفقیت بازیابی شد!\nتوجه: این پشتیبان با ساختار قدیمی بازیابی شد. برای امنیت بیشتر، پیشنهاد می‌شود یک پشتیبان جدید (AES-GCM) ایجاد کنید.'
+                  : 'اطلاعات با موفقیت بازیابی شد!\nتراکنش‌ها: ${metadata.entityCounts["transactions"] ?? 0} | حساب‌ها: ${metadata.entityCounts["accounts"] ?? 0}',
+            ),
+            duration: const Duration(seconds: 5),
+            backgroundColor: metadata.isLegacyFormat
+                ? AppColors.debtOrangeLight
+                : null,
+          ),
+        );
+      },
+      onFailure: (err) => _toast('خطای بازیابی: ${err.message}'),
     );
   }
 
   @override
   void dispose() {
     _passwordController.dispose();
-    _restorePathController.dispose();
     _restorePasswordController.dispose();
     super.dispose();
   }
@@ -337,15 +362,15 @@ class _BackupPageState extends State<BackupPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       const Text(
-                        'از تمامی حساب‌ها، تراکنش‌ها، چک‌ها، اقساط، فاکتورها و مخاطبان یک فایل رمزگذاری‌شده تهیه می‌شود.',
+                        'از تمامی حساب‌ها، تراکنش‌ها، چک‌ها، اقساط، فاکتورها و مخاطبان یک فایل رمزگذاری‌شده تهیه می‌شود. بعد انتخاب می‌کنید کجا ذخیره شود یا برای چه کسی ارسال شود.',
                         style: TextStyle(fontSize: 13, height: 1.5),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppButton(
                         label: _isLoading
                             ? 'در حال تهیه پشتیبان...'
-                            : 'ایجاد فایل پشتیبان جدید',
-                        icon: const Icon(Icons.download_rounded, size: 20),
+                            : 'تهیه فایل پشتیبان',
+                        icon: const Icon(Icons.lock_outline_rounded, size: 20),
                         isLoading: _isLoading,
                         onPressed: _isLoading ? null : _showCreateBackupDialog,
                       ),
@@ -469,15 +494,15 @@ class _BackupPageState extends State<BackupPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       const Text(
-                        'اطلاعات موجود درون فایل پشتیبان همراه با اعتبارسنجی چک‌سام بدون دستکاری وارد دیتابیس می‌شوند.',
+                        'فایل .kfn را از پوشه Download، کارت حافظه، Google Drive یا هر جای دیگری انتخاب کنید. اطلاعات فعلی با محتوای فایل جایگزین می‌شود.',
                         style: TextStyle(fontSize: 13, height: 1.5),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppButton(
-                        label: 'انتخاب و بازیابی فایل',
+                        label: 'انتخاب فایل پشتیبان',
                         variant: AppButtonVariant.outline,
                         icon: const Icon(Icons.upload_file_rounded, size: 20),
-                        onPressed: _isLoading ? null : _showRestoreDialog,
+                        onPressed: _isLoading ? null : _pickAndRestore,
                       ),
                     ],
                   ),
@@ -517,33 +542,6 @@ class _BackupPageState extends State<BackupPage> {
               ),
 
               const SizedBox(height: AppSpacing.lg),
-
-              if (_lastBackupPath != null)
-                AppCard(
-                  backgroundColor: isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSurfaceVariant,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'آخرین فایل ایجادشده:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        SelectableText(
-                          _lastBackupPath!,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
         ),

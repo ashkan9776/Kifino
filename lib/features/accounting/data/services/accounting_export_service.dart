@@ -323,9 +323,9 @@ class AccountingExportService {
 
   Future<String> _save(String baseName, List<XlsxSheetData> sheets) async {
     final bytes = await compute(_encodeIsolate, sheets);
-    final dir = await getApplicationDocumentsDirectory();
-    final exportDir = Directory(p.join(dir.path, 'exports'));
-    if (!await exportDir.exists()) await exportDir.create(recursive: true);
+    // Temp only: the UI hands the file to the system save dialog / share
+    // sheet right away (the app's private folder is unreachable without root).
+    final exportDir = await getTemporaryDirectory();
 
     final stamp = AppDateFormatter.formatShort(
       DateTime.now(),

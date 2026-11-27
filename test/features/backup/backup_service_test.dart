@@ -15,6 +15,9 @@ class FakePathProviderPlatform extends PathProviderPlatform {
 
   @override
   Future<String?> getApplicationDocumentsPath() async => tempDir.path;
+
+  @override
+  Future<String?> getTemporaryPath() async => tempDir.path;
 }
 
 void main() {
@@ -833,5 +836,48 @@ void main() {
       expect(restoreResult.isFailure, isTrue);
       expect(restoreResult.failureOrNull?.message, contains('جدیدتر است'));
     });
+
+    // Backups no longer live in the app's private folder: the bytes go to
+    // the system save dialog / share sheet and come back from the picker.
+    test(
+      'bytes from buildEncryptedBackup restore through the picker path',
+      () async {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        await db
+            .into(db.accountsTable)
+            .insert(
+              AccountsTableCompanion.insert(
+                id: 'acc-bytes',
+                name: 'حساب تست',
+                type: 'bank',
+                currency: 'TOMAN',
+                initialBalanceMinor: const Value(1000),
+                currentBalanceMinor: const Value(1000),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        final built = await service.buildEncryptedBackup(
+          password: 'correct-horse',
+          iterations: 1000,
+        );
+        final file = built.dataOrNull!;
+        expect(
+          file.name,
+          matches(RegExp(r'^kifino_backup_[\d-]+_\d{6}\.kfn$')),
+        );
+
+        await db.delete(db.accountsTable).go();
+
+        final restored = await service.restoreEncryptedBackupContent(
+          content: utf8.decode(file.bytes),
+          password: 'correct-horse',
+        );
+        expect(restored.isSuccess, isTrue);
+        final names = await db.select(db.accountsTable).get();
+        expect(names.map((a) => a.id), contains('acc-bytes'));
+      },
+    );
   });
 }

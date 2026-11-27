@@ -13,6 +13,8 @@ import '../../domain/entities/accounting_document_entity.dart';
 import '../../domain/repositories/accounting_repository.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../services/accounting_export_actions.dart';
+import '../../../../core/services/file_transfer.dart';
+import '../../../../core/widgets/export_sheet.dart';
 
 class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
@@ -405,9 +407,13 @@ void _showLegalBooksSheet(BuildContext context) {
                   Navigator.pop(sheetContext);
                   final path = await getIt<AccountingExportService>()
                       .exportLegalJournal();
+                  final file = await ExportFile.fromPath(path);
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('ذخیره شد: $path')));
+                  await showExportSheet(
+                    context,
+                    file: file,
+                    title: 'فایل اکسل آماده است',
+                  );
                 },
               ),
               ListTile(
@@ -422,9 +428,13 @@ void _showLegalBooksSheet(BuildContext context) {
                   Navigator.pop(sheetContext);
                   final path = await getIt<AccountingExportService>()
                       .exportLegalLedger();
+                  final file = await ExportFile.fromPath(path);
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('ذخیره شد: $path')));
+                  await showExportSheet(
+                    context,
+                    file: file,
+                    title: 'فایل اکسل آماده است',
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.sm),

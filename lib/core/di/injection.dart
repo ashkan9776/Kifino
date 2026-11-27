@@ -59,6 +59,7 @@ import '../database/currency_label_repair.dart';
 import '../utils/money.dart';
 import 'company_controller.dart';
 import '../database/company_registry.dart';
+import '../services/file_transfer.dart';
 
 final sl = GetIt.instance;
 final getIt = sl;
@@ -94,6 +95,7 @@ class ServiceLocator {
       aOptions: AndroidOptions(resetOnError: true),
     );
     sl.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
+    sl.registerLazySingleton<FileTransfer>(SystemFileTransfer.new);
   }
 
   static Future<void> init({String? companyId}) async {

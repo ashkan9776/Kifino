@@ -301,6 +301,16 @@ Existing v2 (empty AAD) and legacy v1 (AES-CBC) files remain restorable, and CSV
 exports neutralize formula injection (`=`, `+`, `-`, `@`, tab, CR) on text
 cells while keeping numeric amounts untouched.
 
+**Where files go.** Nothing the user exports is kept in the app's private
+folder (`/data/user/…`), which needs root to open and is wiped on uninstall.
+`BackupService.buildEncryptedBackup` / `buildTransactionsCsv` return bytes
+(`ExportFile`), and `showExportSheet` offers **ذخیره در گوشی** (the system Save
+dialog: Downloads, SD card, Drive…) or **ارسال** (share sheet). Restore opens
+the system file picker and calls `restoreEncryptedBackupContent`. Accounting
+Excel reports take the same route. All of it goes through `FileTransfer`
+(`lib/core/services/file_transfer.dart`, Storage Access Framework on Android),
+so no storage permission is needed; fake it in tests via `sl`.
+
 ### Sync
 
 Every write enqueues an outbox row (`sync_queue`). With no backend configured

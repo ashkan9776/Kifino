@@ -15,6 +15,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
+import '../../../../core/services/file_transfer.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/money.dart';
 import '../../../transactions/domain/entities/transaction_entity.dart';
@@ -60,6 +61,37 @@ class BackupMetadata {
 }
 
 class BackupService {
+  /// `2026-11-27_153012`: sortable, readable, valid on every filesystem.
+  static String _fileStamp() {
+    final n = DateTime.now();
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${n.year}-${two(n.month)}-${two(n.day)}_'
+        '${two(n.hour)}${two(n.minute)}${two(n.second)}';
+  }
+
+  /// Writes [built] to the temporary folder (shared or picked up from
+  /// there; the OS may clear it, it is never the backup's home).
+  Future<Result<String>> _writeTemp(Result<ExportFile> built) async {
+    final file = built.dataOrNull;
+    if (file == null) {
+      return FailureResult(built.failureOrNull!);
+    }
+    try {
+      final dir = await getTemporaryDirectory();
+      // Never overwrite an earlier export made in the same second.
+      final ext = p.extension(file.name);
+      final stem = p.basenameWithoutExtension(file.name);
+      var path = p.join(dir.path, file.name);
+      for (var i = 2; await File(path).exists(); i++) {
+        path = p.join(dir.path, '$stem-$i$ext');
+      }
+      await File(path).writeAsBytes(file.bytes, flush: true);
+      return Success(path);
+    } catch (e) {
+      return FailureResult(DatabaseFailure('خطا در نوشتن فایل: $e'));
+    }
+  }
+
   static const int currentFormatVersion = 3;
   static const int defaultKdfIterations = 300000;
   static const int minRestoreIterations = 1000;
@@ -111,10 +143,15 @@ class BackupService {
         }).join();
   }
 
-  /// Exports all non-deleted transactions to an Excel-compatible CSV file
+  /// Writes the CSV export to the app's temporary folder and returns its
+  /// path (for sharing). To save where the user chooses, use
+  /// [buildTransactionsCsv] and hand the bytes to the system save dialog.
+  Future<Result<String>> exportTransactionsCsv() async =>
+      _writeTemp(await buildTransactionsCsv());
+
+  /// Builds an Excel-compatible CSV of all non-deleted transactions
   /// (comma-separated, UTF-8 with BOM so Excel renders Persian correctly).
-  /// Returns the written file path.
-  Future<Result<String>> exportTransactionsCsv() async {
+  Future<Result<ExportFile>> buildTransactionsCsv() async {
     try {
       final transactions =
           await (_db.select(_db.transactionsTable)
@@ -158,13 +195,13 @@ class BackupService {
         );
       }
 
-      final dir = await getApplicationDocumentsDirectory();
-      final dateStr = DateTime.now().toIso8601String().replaceAll(':', '-');
-      final filePath = p.join(dir.path, 'kifino_transactions_$dateStr.csv');
-      final file = File(filePath);
-      await file.writeAsString(buffer.toString(), encoding: utf8);
-
-      return Success(filePath);
+      return Success(
+        ExportFile(
+          name: 'kifino_transactions_${_fileStamp()}.csv',
+          bytes: Uint8List.fromList(utf8.encode(buffer.toString())),
+          mimeType: 'text/csv',
+        ),
+      );
     } catch (e) {
       return FailureResult(DatabaseFailure('خطا در خروجی گرفتن تراکنش‌ها: $e'));
     }
@@ -369,8 +406,18 @@ class BackupService {
   static Uint8List _canonicalMetadataAad(BackupMetadata metadata) =>
       Uint8List.fromList(utf8.encode(jsonEncode(metadata.toJson())));
 
-  /// Exports all financial entities to an encrypted JSON file
+  /// Writes an encrypted backup to the app's temporary folder and returns
+  /// its path (for sharing). To save where the user chooses, use
+  /// [buildEncryptedBackup] and hand the bytes to the system save dialog.
   Future<Result<String>> createEncryptedBackup({
+    required String password,
+    int iterations = defaultKdfIterations,
+  }) async => _writeTemp(
+    await buildEncryptedBackup(password: password, iterations: iterations),
+  );
+
+  /// Builds an encrypted backup of all financial entities (`.kfn`, JSON).
+  Future<Result<ExportFile>> buildEncryptedBackup({
     required String password,
     int iterations = defaultKdfIterations,
   }) async {
@@ -554,13 +601,13 @@ class BackupService {
         'cipher': base64Encode(cipherWithTag),
       });
 
-      final dir = await getApplicationDocumentsDirectory();
-      final dateStr = DateTime.now().toIso8601String().replaceAll(':', '-');
-      final filePath = p.join(dir.path, 'kifino_backup_$dateStr.kfn');
-      final file = File(filePath);
-      await file.writeAsString(backupPackage);
-
-      return Success(filePath);
+      return Success(
+        ExportFile(
+          name: 'kifino_backup_${_fileStamp()}.kfn',
+          bytes: Uint8List.fromList(utf8.encode(backupPackage)),
+          mimeType: 'application/octet-stream',
+        ),
+      );
     } catch (e) {
       return FailureResult(
         DatabaseFailure('خطا در ایجاد پشتیبان رمزنگاری‌شده: $e'),
@@ -573,13 +620,23 @@ class BackupService {
     required String filePath,
     required String password,
   }) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists()) {
-        return const FailureResult(DatabaseFailure('فایل پشتیبان یافت نشد.'));
-      }
+    final file = File(filePath);
+    if (!await file.exists()) {
+      return const FailureResult(DatabaseFailure('فایل پشتیبان یافت نشد.'));
+    }
+    return restoreEncryptedBackupContent(
+      content: await file.readAsString(),
+      password: password,
+    );
+  }
 
-      final content = await file.readAsString();
+  /// Restores from the contents of a backup file — e.g. one the user picked
+  /// with the system file picker (Downloads, SD card, Drive, …).
+  Future<Result<BackupMetadata>> restoreEncryptedBackupContent({
+    required String content,
+    required String password,
+  }) async {
+    try {
       final decodedPackage = jsonDecode(content);
       if (decodedPackage is! Map) {
         return const FailureResult(

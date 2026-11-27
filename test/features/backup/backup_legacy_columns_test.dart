@@ -17,6 +17,9 @@ class _FakePathProvider extends PathProviderPlatform {
 
   @override
   Future<String?> getApplicationDocumentsPath() async => dir.path;
+
+  @override
+  Future<String?> getTemporaryPath() async => dir.path;
 }
 
 /// Writes a backup in the legacy V1 format (sha256/md5 + AES-CBC), the way
